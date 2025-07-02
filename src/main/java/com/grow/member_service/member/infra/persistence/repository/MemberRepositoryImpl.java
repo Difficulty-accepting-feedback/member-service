@@ -4,7 +4,7 @@ import com.grow.member_service.member.domain.model.Member;
 import com.grow.member_service.member.domain.repository.MemberRepository;
 import com.grow.member_service.member.infra.persistence.entity.MemberJpaEntity;
 import com.grow.member_service.member.infra.persistence.mapper.MemberMapper;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -12,11 +12,11 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Repository
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class MemberRepositoryImpl implements MemberRepository {
 
-    private final MemberJpaRepository memberJpaRepository;
     private final MemberMapper memberMapper;
+    private final MemberJpaRepository memberJpaRepository;
 
     @Override
     public Member save(Member member) {

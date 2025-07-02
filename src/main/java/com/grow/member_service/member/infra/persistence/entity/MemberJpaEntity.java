@@ -14,8 +14,8 @@ import java.time.LocalDateTime;
  * JPA 엔티티
  */
 @Entity
-@Table(name = "member")
 @Getter
+@Table(name = "member")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class MemberJpaEntity {
 
