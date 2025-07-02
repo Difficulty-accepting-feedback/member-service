@@ -19,10 +19,10 @@ public class Member {
 
     public Member(MemberProfile memberProfile,
                   MemberAdditionalInfo additionalInfo) {
-        this.memberId = null; // 생성 시 null, 저장 후 설정
+        this.memberId = null; // 생성 시 null, DB 저장 후 자동으로 생성
         this.memberProfile = memberProfile;
         this.additionalInfo = additionalInfo;
-        this.createAt = LocalDateTime.now();
+        this.createAt = null; // 생성 시 null, DB 저장 후 자동으로 생성
         this.totalPoint = 0;
         this.score = 0;
     }
