@@ -5,6 +5,6 @@ import com.grow.member_service.history.subscription.domain.model.SubscriptionHis
 import java.util.Optional;
 
 public interface SubscriptionHistoryRepository {
-    Long save(SubscriptionHistory domain);
+    SubscriptionHistory save(SubscriptionHistory domain);
     Optional<SubscriptionHistory> findByMemberId(Long memberId);
 }

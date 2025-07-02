@@ -17,9 +17,9 @@ public class SubscriptionHistoryRepositoryImpl implements SubscriptionHistoryRep
     private final SubscriptionHistoryJpaRepository jpaRepository;
 
     @Override
-    public Long save(SubscriptionHistory domain) {
+    public SubscriptionHistory save(SubscriptionHistory domain) {
         SubscriptionHistoryJpaEntity entity = mapper.toEntity(domain);
-        return jpaRepository.save(entity).getMemberId();
+        return mapper.toDomain(jpaRepository.save(entity));
     }
 
     @Override
