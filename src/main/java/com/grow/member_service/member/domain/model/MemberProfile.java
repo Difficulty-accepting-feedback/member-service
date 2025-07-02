@@ -28,11 +28,16 @@ public class MemberProfile {
         this.platformId = platformId;
     }
 
-    // 중복 확인 로직 추가 필요
+    /**
+     * 중복 확인 로직 추가 필요
+     */
     private String validateEmail(String email) {
         return email;
     }
 
+    /**
+     * 중복 확인 로직 추가 필요
+     */
     private String validateNickname(String nickname) {
         return nickname;
     }

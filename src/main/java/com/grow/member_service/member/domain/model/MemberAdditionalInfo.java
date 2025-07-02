@@ -17,7 +17,9 @@ public class MemberAdditionalInfo {
         this.address = address;
     }
 
-    // 중복 확인 로직 필요
+    /**
+     * 중복 확인 로직 추가 필요
+     */
     private String validatePhoneNumber(String phoneNumber) {
         if (phoneNumber == null || phoneNumber.trim().isEmpty()) {
             throw new IllegalArgumentException("전화번호는 필수입니다.");

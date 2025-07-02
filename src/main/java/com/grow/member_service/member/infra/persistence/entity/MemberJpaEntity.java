@@ -1,7 +1,9 @@
-package com.grow.member_service.member.infra.entity;
+package com.grow.member_service.member.infra.persistence.entity;
 
 import com.grow.member_service.member.domain.model.Platform;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -14,8 +16,8 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "member")
 @Getter
-@NoArgsConstructor
-public class MemberEntity {
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class MemberJpaEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,7 +39,7 @@ public class MemberEntity {
 
     @Column(name = "platformId", nullable = false)
     private String platformId;
-
+    
     @Column(name = "createAt", nullable = false)
     private LocalDateTime createAt; // 가입 날짜
 
@@ -56,14 +58,15 @@ public class MemberEntity {
     @Column(name = "address")
     private String address;
 
-    public MemberEntity(String email,
-                        String nickname,
-                        String platformId,
-                        String phoneNumber,
-                        String address,
-                        Platform platform,
-                        String profileImage,
-                        Clock createAt) {
+    @Builder
+    public MemberJpaEntity(String email,
+                           String nickname,
+                           String platformId,
+                           String phoneNumber,
+                           String address,
+                           Platform platform,
+                           String profileImage,
+                           Clock createAt) {
         this.email = email;
         this.nickname = nickname;
         this.platformId = platformId;
@@ -74,17 +77,11 @@ public class MemberEntity {
         this.score = 36.5;
 
         // 값을 집어넣으면 원하는 값으로, 값을 집어넣지 않으면 시스템 기본 값으로 적용될 수 있도록
-        if (createAt != null) {
-            this.createAt = LocalDateTime.now(createAt);
-        } else {
-            this.createAt = LocalDateTime.now();
-        }
+        if (createAt != null) this.createAt = LocalDateTime.now(createAt);
+        else this.createAt = LocalDateTime.now();
 
-        if (address != null) {
-            this.address = address;
-        } else {
-            this.address = "";
-        }
+        if (address != null) this.address = address;
+        else this.address = "";
     }
 
 }

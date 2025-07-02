@@ -1,9 +1,9 @@
-package com.grow.member_service.member.infra.repository;
+package com.grow.member_service.member.infra.persistence.repository;
 
 import com.grow.member_service.member.domain.model.Member;
 import com.grow.member_service.member.domain.repository.MemberRepository;
-import com.grow.member_service.member.infra.entity.MemberEntity;
-import com.grow.member_service.member.infra.mapper.MemberMapper;
+import com.grow.member_service.member.infra.persistence.entity.MemberJpaEntity;
+import com.grow.member_service.member.infra.persistence.mapper.MemberMapper;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -15,31 +15,30 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class MemberRepositoryImpl implements MemberRepository {
 
-    private final JpaMemberRepository jpaMemberRepository;
+    private final MemberJpaRepository memberJpaRepository;
     private final MemberMapper memberMapper;
 
     @Override
     public Member save(Member member) {
-        MemberEntity entity = memberMapper.toEntity(member);
-        MemberEntity savedEntity = jpaMemberRepository.save(entity);
-        return memberMapper.toDomain(savedEntity);
+        MemberJpaEntity entity = memberMapper.toEntity(member);
+        return memberMapper.toDomain(memberJpaRepository.save(entity));
     }
 
     @Override
     public Optional<Member> findById(Long id) {
-        return jpaMemberRepository.findById(id)
+        return memberJpaRepository.findById(id)
                 .map(memberMapper::toDomain);
     }
 
     @Override
     public Optional<Member> findByEmail(String email) {
-        return jpaMemberRepository.findByEmail(email)
+        return memberJpaRepository.findByEmail(email)
                 .map(memberMapper::toDomain);
     }
 
     @Override
     public List<Member> findAll() {
-        return jpaMemberRepository.findAll()
+        return memberJpaRepository.findAll()
                 .stream()
                 .map(memberMapper::toDomain)
                 .collect(Collectors.toList());
@@ -47,7 +46,6 @@ public class MemberRepositoryImpl implements MemberRepository {
 
     @Override
     public void delete(Member member) {
-        MemberEntity entity = memberMapper.toEntity(member);
-        jpaMemberRepository.delete(entity);
+        memberJpaRepository.delete(memberMapper.toEntity(member));
     }
 }
