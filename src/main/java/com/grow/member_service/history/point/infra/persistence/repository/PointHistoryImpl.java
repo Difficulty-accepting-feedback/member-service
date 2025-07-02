@@ -14,25 +14,24 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class PointHistoryImpl implements PointHistoryRepository {
 
-    private final PointHistoryJpaRepository jpa;
+    private final PointHistoryJpaRepository jpaRepository;
     private final PointHistoryMapper mapper;
 
     @Override
     public PointHistory save(PointHistory pointHistory) {
         PointHistoryJpaEntity entity = mapper.toEntity(pointHistory);
-        PointHistoryJpaEntity saved = jpa.save(entity);
-        return mapper.toDomain(saved);
+        return mapper.toDomain(jpaRepository.save(entity));
     }
 
     @Override
     public List<PointHistory> findByMemberId(Long id) {
-        return jpa.findByMemberId(id)
+        return jpaRepository.findByMemberId(id)
                 .stream().map(mapper::toDomain)
                 .collect(Collectors.toList());
     }
 
     @Override
     public void delete(PointHistory pointHistory) {
-        jpa.delete(mapper.toEntity(pointHistory));
+        jpaRepository.delete(mapper.toEntity(pointHistory));
     }
 }
