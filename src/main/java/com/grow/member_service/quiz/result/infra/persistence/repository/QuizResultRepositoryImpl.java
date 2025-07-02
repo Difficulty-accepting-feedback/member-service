@@ -2,6 +2,7 @@ package com.grow.member_service.quiz.result.infra.persistence.repository;
 
 import com.grow.member_service.quiz.result.domain.model.QuizResult;
 import com.grow.member_service.quiz.result.domain.repository.QuizResultRepository;
+import com.grow.member_service.quiz.result.infra.persistence.entity.QuizResultJpaEntity;
 import com.grow.member_service.quiz.result.infra.persistence.mapper.QuizResultMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -16,8 +17,9 @@ public class QuizResultRepositoryImpl implements QuizResultRepository {
     private final QuizResultJpaRepository jpaRepository;
 
     @Override
-    public Long save(QuizResult quizResult) {
-        return 0L;
+    public QuizResult save(QuizResult quizResult) {
+        QuizResultJpaEntity entity = mapper.toEntity(quizResult);
+        return mapper.toDomain(jpaRepository.save(entity));
     }
 
     @Override

@@ -5,7 +5,7 @@ import com.grow.member_service.quiz.result.domain.model.QuizResult;
 import java.util.List;
 
 public interface QuizResultRepository {
-    Long save(QuizResult quizResult);
+    QuizResult save(QuizResult quizResult);
     List<QuizResult> findByMemberId(Long memberId);
     List<QuizResult> findByQuizId(Long quizId);
 }
