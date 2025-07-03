@@ -15,8 +15,12 @@ public class SubscriptionHistoryMapper {
     // 엔티티에서 도메인으로 변환
     public SubscriptionHistory toDomain(SubscriptionHistoryJpaEntity entity) {
         return new SubscriptionHistory(
+                entity.getSubscriptionHistoryId(),
                 entity.getMemberId(),
-                toClock(entity.getStartAt())
+                entity.getSubscriptionStatus(),
+                entity.getStartAt(),
+                entity.getEndAt(),
+                entity.getChangeAt()
         );
     }
 
@@ -24,12 +28,8 @@ public class SubscriptionHistoryMapper {
     public SubscriptionHistoryJpaEntity toEntity(SubscriptionHistory domain) {
         return SubscriptionHistoryJpaEntity.builder()
                 .memberId(domain.getMemberId())
+                .startAt(domain.getStartAt())
+                .endAt(domain.getEndAt())
                 .build();
-    }
-
-    private Clock toClock(LocalDateTime time) {
-        ZoneId zone = ZoneId.systemDefault();
-        Instant instant = time.atZone(zone).toInstant();
-        return Clock.fixed(instant, zone);
     }
 }

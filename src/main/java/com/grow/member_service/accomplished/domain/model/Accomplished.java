@@ -5,9 +5,9 @@ import lombok.Getter;
 @Getter
 public class Accomplished {
 
-    private Long accomplishedId;
-    private Long memberId;
-    private Long challengeId;
+    private final Long accomplishedId;
+    private final Long memberId;
+    private final Long challengeId;
 
     public Accomplished(Long memberId,
                         Long challengeId
