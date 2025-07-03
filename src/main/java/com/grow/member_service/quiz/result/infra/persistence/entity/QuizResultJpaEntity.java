@@ -17,10 +17,14 @@ public class QuizResultJpaEntity {
     @Column(name = "quizResultId", nullable = false)
     private Long quizResultId;
 
-    @Column(name = "memberId", nullable = false)
+    @Column(name = "memberId",
+            nullable = false,
+            updatable = false,
+            unique = true
+    )
     private Long memberId; // 멤버 ID
 
-    @Column(name = "quizId", nullable = false)
+    @Column(name = "quizId", nullable = false, updatable = false)
     private Long quizId; // 퀴즈 (실제 문제) ID
 
     @Column(name = "isCorrect", nullable = false)

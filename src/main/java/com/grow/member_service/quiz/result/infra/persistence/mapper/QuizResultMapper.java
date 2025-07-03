@@ -10,6 +10,7 @@ public class QuizResultMapper {
     // 엔티티를 도메인으로 변경
     public QuizResult toDomain(QuizResultJpaEntity entity) {
         return new QuizResult(
+                entity.getQuizResultId(),
                 entity.getMemberId(),
                 entity.getQuizId(),
                 entity.getIsCorrect()
@@ -24,5 +25,4 @@ public class QuizResultMapper {
                 .isCorrect(result.getIsCorrect())
                 .build();
     }
-
 }

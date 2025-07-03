@@ -24,11 +24,8 @@ public class QuizResultRepositoryImpl implements QuizResultRepository {
 
     @Override
     public List<QuizResult> findByMemberId(Long memberId) {
-        return List.of();
-    }
-
-    @Override
-    public List<QuizResult> findByQuizId(Long quizId) {
-        return List.of();
+        return jpaRepository.findByMemberId(memberId).stream()
+                .map(mapper::toDomain)
+                .toList();
     }
 }

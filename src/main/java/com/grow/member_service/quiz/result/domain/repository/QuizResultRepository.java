@@ -7,5 +7,4 @@ import java.util.List;
 public interface QuizResultRepository {
     QuizResult save(QuizResult quizResult);
     List<QuizResult> findByMemberId(Long memberId);
-    List<QuizResult> findByQuizId(Long quizId);
 }
