@@ -7,7 +7,9 @@ import com.grow.member_service.history.subscription.infra.persistence.mapper.Sub
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
@@ -22,8 +24,16 @@ public class SubscriptionHistoryRepositoryImpl implements SubscriptionHistoryRep
         return mapper.toDomain(jpaRepository.save(entity));
     }
 
+    /**
+     * 멤버 ID를 기준으로 모든 구독 내역을 가져 온다
+     * @param memberId 멤버 ID
+     * @return 구독 내역
+     */
     @Override
-    public Optional<SubscriptionHistory> findByMemberId(Long memberId) {
-        return jpaRepository.findById(memberId).map(mapper::toDomain);
+    public List<SubscriptionHistory> findByMemberId(Long memberId) {
+        return jpaRepository.findById(memberId)
+                .stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
     }
 }

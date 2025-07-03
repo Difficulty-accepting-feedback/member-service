@@ -10,7 +10,7 @@ import lombok.Getter;
 public class MemberProfile {
 
     private final String email;
-    private final String nickname;
+    private String nickname;
     private final String profileImage;
     private final Platform platform;
     private final String platformId;

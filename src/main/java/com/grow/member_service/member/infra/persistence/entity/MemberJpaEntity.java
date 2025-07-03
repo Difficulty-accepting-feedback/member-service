@@ -24,7 +24,7 @@ public class MemberJpaEntity {
     @Column(name = "memberId", nullable = false)
     private Long memberId;
 
-    @Column(name = "email", nullable = false)
+    @Column(name = "email", nullable = false, updatable = false)
     private String email;
 
     @Column(name = "nickname", nullable = false)
@@ -34,25 +34,25 @@ public class MemberJpaEntity {
     private String profileImage;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "platform", nullable = false)
+    @Column(name = "platform", nullable = false, updatable = false)
     private Platform platform;
 
-    @Column(name = "platformId", nullable = false)
+    @Column(name = "platformId", nullable = false, updatable = false)
     private String platformId;
     
-    @Column(name = "createAt", nullable = false)
+    @Column(name = "createAt", nullable = false, updatable = false)
     private LocalDateTime createAt; // 가입 날짜
 
     @Column(name = "withdrawalAt")
     private LocalDateTime withdrawalAt; // 탈퇴 날짜
 
-    @Column(name = "totalPoint")
+    @Column(name = "totalPoint", nullable = false)
     private Integer totalPoint;
 
     @Column(name = "phoneNumber", nullable = false)
     private String phoneNumber;
 
-    @Column(name = "score")
+    @Column(name = "score",  nullable = false)
     private Double score;
 
     @Column(name = "address")
@@ -61,27 +61,22 @@ public class MemberJpaEntity {
     @Builder
     public MemberJpaEntity(String email,
                            String nickname,
-                           String platformId,
-                           String phoneNumber,
-                           String address,
-                           Platform platform,
                            String profileImage,
-                           Clock createAt) {
+                           Platform platform,
+                           String platformId,
+                           LocalDateTime createAt,
+                           String phoneNumber,
+                           String address
+    ) {
         this.email = email;
         this.nickname = nickname;
-        this.platformId = platformId;
         this.profileImage = profileImage;
-        this.phoneNumber = phoneNumber;
         this.platform = platform;
+        this.platformId = platformId;
+        this.createAt = createAt;
+        this.phoneNumber = phoneNumber;
+        this.address = address;
         this.totalPoint = 0;
         this.score = 36.5;
-
-        // 값을 집어넣으면 원하는 값으로, 값을 집어넣지 않으면 시스템 기본 값으로 적용될 수 있도록
-        if (createAt != null) this.createAt = LocalDateTime.now(createAt);
-        else this.createAt = LocalDateTime.now();
-
-        if (address != null) this.address = address;
-        else this.address = "";
     }
-
 }

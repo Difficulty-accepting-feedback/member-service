@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class MemberMapper {
 
-    // 엔티티를 도메인으로 변환
+    // 엔티티를 도메인으로 변환 (조회 용도)
     public Member toDomain(MemberJpaEntity entity) {
         MemberProfile memberProfile = new MemberProfile(
                 entity.getEmail(),
@@ -27,7 +27,14 @@ public class MemberMapper {
                 entity.getAddress()
         );
 
-        return new Member(memberProfile, additionalInfo);
+        return new Member(
+                entity.getMemberId(),
+                memberProfile,
+                additionalInfo,
+                entity.getCreateAt(),
+                entity.getTotalPoint(),
+                entity.getScore()
+        );
     }
 
     // 도메인을 엔티티로 변환
@@ -43,6 +50,7 @@ public class MemberMapper {
                 .platformId(memberProfile.getPlatformId())
                 .phoneNumber(additionalInfo.getPhoneNumber())
                 .address(additionalInfo.getAddress())
+                .createAt(domain.getCreateAt())
                 .build();
     }
 }

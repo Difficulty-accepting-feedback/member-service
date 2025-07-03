@@ -9,10 +9,12 @@ import lombok.Getter;
 @Getter
 public class MemberAdditionalInfo {
 
-    private final String phoneNumber;
-    private final String address;
+    private String phoneNumber;
+    private String address;
 
-    public MemberAdditionalInfo(String phoneNumber, String address) {
+    public MemberAdditionalInfo(String phoneNumber,
+                                String address
+    ) {
         this.phoneNumber = validatePhoneNumber(phoneNumber);
         this.address = address;
     }

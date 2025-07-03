@@ -2,9 +2,9 @@ package com.grow.member_service.history.subscription.domain.repository;
 
 import com.grow.member_service.history.subscription.domain.model.SubscriptionHistory;
 
-import java.util.Optional;
+import java.util.List;
 
 public interface SubscriptionHistoryRepository {
     SubscriptionHistory save(SubscriptionHistory domain);
-    Optional<SubscriptionHistory> findByMemberId(Long memberId);
+    List<SubscriptionHistory> findByMemberId(Long memberId);
 }
