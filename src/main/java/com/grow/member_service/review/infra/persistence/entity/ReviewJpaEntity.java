@@ -16,20 +16,24 @@ public class ReviewJpaEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long reviewId;
 
-    @Column(name = "reviewerId",  nullable = false)
+    @Column(name = "reviewerId",  nullable = false, updatable = false)
     private Long reviewerId; // 리뷰 작성자 ID
 
-    @Column(name = "revieweeId",  nullable = false)
+    @Column(name = "revieweeId", nullable = false, updatable = false)
     private Long revieweeId; // 리뷰 대상자 ID
 
-    @Column(name = "revieweeId")
+    @Column(name = "content",
+            nullable = false,
+            updatable = false,
+            columnDefinition = "TEXT"
+    )
     private String content; // 평가 내용
 
     /**
      * 점수에 대한 항목을 전체 다 저장해야 할 필요가 있을지 고민해 보아야 함
      * 피어리뷰처럼 전체 항목을 전부 다 보여 주는 게 더 좋은지,,,?
      */
-    @Column(name = "totalScore")
+    @Column(name = "totalScore", nullable = false, updatable = false)
     private Double totalScore; // 총 점수
 
     @Builder

@@ -9,7 +9,9 @@ public class ReviewMapper {
 
     // 엔티티를 도메인으로 변경
     public Review toDomain(ReviewJpaEntity entity) {
-        return new Review(entity.getReviewerId(),
+        return new Review(
+                entity.getReviewId(),
+                entity.getReviewerId(),
                 entity.getRevieweeId(),
                 entity.getContent(),
                 entity.getTotalScore());

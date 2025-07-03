@@ -24,12 +24,10 @@ public class ReviewRepositoryImpl implements ReviewRepository {
     }
 
     @Override
-    public List<Review> findByReviewerId(Long reviewerId) {
-        return List.of();
-    }
-
-    @Override
     public List<Review> findByRevieweeId(Long revieweeId) {
-        return List.of();
+        return jpaRepository.findByRevieweeId(revieweeId)
+                .stream()
+                .map(mapper::toDomain)
+                .toList();
     }
 }
