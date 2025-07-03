@@ -10,10 +10,11 @@ public class PointHistoryMapper {
     // 엔티티를 도메인으로 변환
     public PointHistory toDomain(PointHistoryJpaEntity entity) {
         return new PointHistory(
+                entity.getPointHistoryId(),
                 entity.getMemberId(),
                 entity.getAmount(),
-                entity.getContent()
-        );
+                entity.getContent(),
+                entity.getAddAt());
     }
 
     // 도메인을 엔티티로 변환
@@ -22,6 +23,7 @@ public class PointHistoryMapper {
                 .memberId(pointHistory.getMemberId())
                 .amount(pointHistory.getAmount())
                 .content(pointHistory.getContent())
+                .addAt(pointHistory.getAddAt())
                 .build();
     }
 }
