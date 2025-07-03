@@ -15,32 +15,32 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AccomplishedRepositoryImpl implements AccomplishedRepository {
 
-    private final AccomplishedMapper accomplishedMapper;
-    private final AccomplishedJpaRepository accomplishedJpaRepository;
+    private final AccomplishedMapper mapper;
+    private final AccomplishedJpaRepository jpaRepository;
 
     @Override
     public Accomplished save(Accomplished domain) {
-        AccomplishedJpaEntity entity = accomplishedMapper.toEntity(domain);
-        return accomplishedMapper.toDomain(accomplishedJpaRepository.save(entity));
+        AccomplishedJpaEntity entity = mapper.toEntity(domain);
+        return mapper.toDomain(jpaRepository.save(entity));
     }
 
     @Override
     public Optional<Accomplished> findById(Long id) {
-        return accomplishedJpaRepository.findById(id)
-                .map(accomplishedMapper::toDomain);
+        return jpaRepository.findById(id)
+                .map(mapper::toDomain);
     }
 
     @Override
     public Optional<Accomplished> findByMemberId(Long memberId) {
-        return accomplishedJpaRepository.findByMemberId(memberId)
-                .map(accomplishedMapper::toDomain);
+        return jpaRepository.findByMemberId(memberId)
+                .map(mapper::toDomain);
     }
 
     @Override
     public List<Accomplished> findAll() {
-        return accomplishedJpaRepository.findAll()
+        return jpaRepository.findAll()
                 .stream()
-                .map(accomplishedMapper::toDomain)
+                .map(mapper::toDomain)
                 .collect(Collectors.toList());
     }
 }

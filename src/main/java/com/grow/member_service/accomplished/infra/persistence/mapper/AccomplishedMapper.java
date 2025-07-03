@@ -9,11 +9,18 @@ public class AccomplishedMapper {
 
     // 엔티티를 도메인으로 변환
     public Accomplished toDomain(AccomplishedJpaEntity entity) {
-        return new Accomplished(entity.getMemberId(), entity.getAccomplishedId());
+        return new Accomplished(
+                entity.getAccomplishedId(),
+                entity.getMemberId(),
+                entity.getChallengeId()
+        );
     }
 
     // 도메인을 엔티티로 변환
     public AccomplishedJpaEntity toEntity(Accomplished domain) {
-        return new AccomplishedJpaEntity(domain.getMemberId(), domain.getAccomplishedId());
+        return new AccomplishedJpaEntity(
+                domain.getMemberId(),
+                domain.getAccomplishedId()
+        );
     }
 }

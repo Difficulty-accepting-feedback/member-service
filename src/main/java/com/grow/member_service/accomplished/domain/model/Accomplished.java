@@ -17,6 +17,15 @@ public class Accomplished {
         this.challengeId = challengeId;
     }
 
+    public Accomplished(Long accomplishedId,
+                        Long memberId,
+                        Long challengeId
+    ) {
+        this.accomplishedId = accomplishedId;
+        this.memberId = memberId;
+        this.challengeId = challengeId;
+    }
+
     /**
      * 비즈니스 로직 메서드
      */
