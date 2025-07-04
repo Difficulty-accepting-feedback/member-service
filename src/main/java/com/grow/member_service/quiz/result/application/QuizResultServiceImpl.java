@@ -17,7 +17,7 @@ public class QuizResultServiceImpl implements QuizResultService {
 
 	@Override
 	public QuizResult recordResult(Long memberId, Long quizId, Boolean isCorrect) {
-		return repository.save(new QuizResult(memberId, quizId, isCorrect));
+		return repository.save(new QuizResult(memberId, quizId, isCorrect)); // 중복체크나 예외처리 필요
 	}
 
 	@Override
