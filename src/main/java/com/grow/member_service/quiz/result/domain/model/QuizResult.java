@@ -14,6 +14,19 @@ public class QuizResult {
                       Long quizId,
                       Boolean isCorrect
     ) {
+
+        if (memberId == null) {
+            throw new IllegalArgumentException("유효한 멤버 ID가 필요합니다.");
+        }
+
+        if (quizId == null) {
+            throw new IllegalArgumentException("유효한 퀴즈 ID가 필요합니다.");
+        }
+
+        if( isCorrect == null) {
+            throw new IllegalArgumentException("정답 여부는 null이 될 수 없습니다.");
+        }
+
         this.quizResultId = null;
         this.memberId = memberId;
         this.quizId = quizId;
@@ -29,5 +42,13 @@ public class QuizResult {
         this.memberId = memberId;
         this.quizId = quizId;
         this.isCorrect = isCorrect;
+    }
+
+    public void markCorrect()   {
+        this.isCorrect = true;
+    }
+
+    public void markIncorrect() {
+        this.isCorrect = false;
     }
 }

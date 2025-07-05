@@ -20,7 +20,7 @@ public class AccomplishedJpaEntity {
     @Column(name = "memberId",  nullable = false, unique = true, updatable = false)
     private Long memberId; // 멤버 ID
 
-    @Column(name = "memberId",  nullable = false, updatable = false)
+    @Column(name = "challengeId",  nullable = false, updatable = false)
     private Long challengeId; // 업적 ID 값
 
     @Builder
