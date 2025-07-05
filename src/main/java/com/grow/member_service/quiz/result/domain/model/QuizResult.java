@@ -1,5 +1,7 @@
 package com.grow.member_service.quiz.result.domain.model;
 
+import com.grow.member_service.quiz.result.domain.exception.QuizResultDomainException;
+
 import lombok.Getter;
 
 @Getter
@@ -16,15 +18,13 @@ public class QuizResult {
     ) {
 
         if (memberId == null) {
-            throw new IllegalArgumentException("유효한 멤버 ID가 필요합니다.");
+            throw QuizResultDomainException.InvalidMemberId();
         }
-
         if (quizId == null) {
-            throw new IllegalArgumentException("유효한 퀴즈 ID가 필요합니다.");
+            throw QuizResultDomainException.invalidQuizId();
         }
-
-        if( isCorrect == null) {
-            throw new IllegalArgumentException("정답 여부는 null이 될 수 없습니다.");
+        if (isCorrect == null) {
+            throw QuizResultDomainException.nullCorrectness();
         }
 
         this.quizResultId = null;
