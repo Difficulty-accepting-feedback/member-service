@@ -24,7 +24,7 @@ public class MemberAdditionalInfo {
      */
     private String validatePhoneNumber(String phoneNumber) {
         if (phoneNumber == null || phoneNumber.trim().isEmpty()) {
-            throw new IllegalArgumentException("전화번호는 필수입니다.");
+            return null; // 소셜로그인 테스트 위해 임시로 null 허용
         }
         return phoneNumber;
     }

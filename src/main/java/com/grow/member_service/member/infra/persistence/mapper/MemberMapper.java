@@ -1,10 +1,11 @@
 package com.grow.member_service.member.infra.persistence.mapper;
 
+import org.springframework.stereotype.Component;
+
 import com.grow.member_service.member.domain.model.Member;
 import com.grow.member_service.member.domain.model.MemberAdditionalInfo;
 import com.grow.member_service.member.domain.model.MemberProfile;
 import com.grow.member_service.member.infra.persistence.entity.MemberJpaEntity;
-import org.springframework.stereotype.Component;
 
 /**
  * 도메인 - 엔티티 변환 클래스
@@ -39,18 +40,22 @@ public class MemberMapper {
 
     // 도메인을 엔티티로 변환
     public MemberJpaEntity toEntity(Member domain) {
-        MemberAdditionalInfo additionalInfo = domain.getAdditionalInfo();
-        MemberProfile memberProfile = domain.getMemberProfile();
+        MemberProfile profile     = domain.getMemberProfile();
+        MemberAdditionalInfo info = domain.getAdditionalInfo();
 
         return MemberJpaEntity.builder()
-                .email(memberProfile.getEmail())
-                .nickname(memberProfile.getNickname())
-                .profileImage(memberProfile.getProfileImage())
-                .platform(memberProfile.getPlatform())
-                .platformId(memberProfile.getPlatformId())
-                .phoneNumber(additionalInfo.getPhoneNumber())
-                .address(additionalInfo.getAddress())
-                .createAt(domain.getCreateAt())
-                .build();
+            .memberId(domain.getMemberId())              // 기존 ID 또는 null
+            .email(profile.getEmail())
+            .nickname(profile.getNickname())
+            .profileImage(profile.getProfileImage())
+            .platform(profile.getPlatform())
+            .platformId(profile.getPlatformId())
+            .phoneNumber(info.getPhoneNumber())
+            .address(info.getAddress())
+            .createAt(domain.getCreateAt())
+            .withdrawalAt(domain.getWithdrawalAt())       // 탈퇴 일시(없으면 null)
+            .totalPoint(domain.getTotalPoint())
+            .score(domain.getScore())
+            .build();
     }
 }

@@ -1,21 +1,31 @@
 package com.grow.member_service.member.infra.persistence.entity;
 
+import java.time.LocalDateTime;
+
 import com.grow.member_service.member.domain.model.Platform;
-import jakarta.persistence.*;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.time.Clock;
-import java.time.LocalDateTime;
 
 /**
  * JPA 엔티티
  */
 @Entity
 @Getter
+@Builder
 @Table(name = "member")
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class MemberJpaEntity {
 
@@ -49,7 +59,7 @@ public class MemberJpaEntity {
     @Column(name = "totalPoint", nullable = false)
     private Integer totalPoint;
 
-    @Column(name = "phoneNumber", nullable = false)
+    @Column(name = "phoneNumber")
     private String phoneNumber;
 
     @Column(name = "score",  nullable = false)
