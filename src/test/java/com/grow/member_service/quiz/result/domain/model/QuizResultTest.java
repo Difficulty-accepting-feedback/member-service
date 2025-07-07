@@ -1,35 +1,36 @@
 package com.grow.member_service.quiz.result.domain.model;
 
 import static org.assertj.core.api.AssertionsForClassTypes.*;
-import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.grow.member_service.quiz.result.domain.exception.QuizResultDomainException;
+
 class QuizResultTest {
 
 	@Test
-	@DisplayName("memberId가 null이면 IllegalArgumentException 발생")
-	void constructor_nullMember_throwsIllegalArgumentException() {
+	@DisplayName("memberId가 null이면 QuizResultDomainException 발생")
+	void constructor_nullMember_throwsQuizResultDomainException() {
 		assertThatThrownBy(() -> new QuizResult(null, 1L, true))
-			.isInstanceOf(IllegalArgumentException.class)
-			.hasMessageContaining("유효한 멤버 ID");
+			.isInstanceOf(QuizResultDomainException.class)
+			.hasMessageContaining("유효한 멤버 ID가 필요합니다.");
 	}
 
 	@Test
-	@DisplayName("quizId가 null이면 IllegalArgumentException 발생")
-	void constructor_nullQuiz_throwsIllegalArgumentException() {
+	@DisplayName("quizId가 null이면 QuizResultDomainException 발생")
+	void constructor_nullQuiz_throwsQuizResultDomainException() {
 		assertThatThrownBy(() -> new QuizResult(1L, null, true))
-			.isInstanceOf(IllegalArgumentException.class)
-			.hasMessageContaining("유효한 퀴즈 ID");
+			.isInstanceOf(QuizResultDomainException.class)
+			.hasMessageContaining("유효한 퀴즈 ID가 필요합니다.");
 	}
 
 	@Test
-	@DisplayName("isCorrect가 null이면 IllegalArgumentException 발생")
-	void constructor_nullIsCorrect_throwsIllegalArgumentException() {
+	@DisplayName("isCorrect가 null이면 QuizResultDomainException 발생")
+	void constructor_nullIsCorrect_throwsQuizResultDomainException() {
 		assertThatThrownBy(() -> new QuizResult(1L, 1L, null))
-			.isInstanceOf(IllegalArgumentException.class)
-			.hasMessageContaining("정답 여부는 null");
+			.isInstanceOf(QuizResultDomainException.class)
+			.hasMessageContaining("정답 여부는 null일 수 없습니다.");
 	}
 
 	@Test
