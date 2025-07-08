@@ -1,4 +1,4 @@
-package com.grow.member_service.member.config;
+package com.grow.member_service.auth.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

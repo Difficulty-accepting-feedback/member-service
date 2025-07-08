@@ -1,7 +1,8 @@
-package com.grow.member_service.member.infra.oauth2;
+package com.grow.member_service.auth.infra.oauth2;
 
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
@@ -12,8 +13,8 @@ import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Component;
 
-import com.grow.member_service.member.application.dto.TokenResponse;
 import com.grow.member_service.member.application.service.OAuth2LoginService;
+import com.grow.member_service.member.domain.model.Member;
 
 import lombok.RequiredArgsConstructor;
 
@@ -25,16 +26,27 @@ public class CustomOAuth2Service implements OAuth2UserService<OAuth2UserRequest,
 
 	@Override
 	public OAuth2User loadUser(OAuth2UserRequest req) throws OAuth2AuthenticationException {
+		// 1) OAuth 공급자에서 유저 정보 조회
 		OAuth2User oauth2User = delegate.loadUser(req);
-		String regId = req.getClientRegistration().getRegistrationId();
-		String code  = req.getAdditionalParameters().get("code").toString();
 
-		TokenResponse tokens = loginService.login(regId, code);
+		// 2) 회원 가입/조회 처리
+		String registrationId = req.getClientRegistration().getRegistrationId();
+		Member member = loginService.processOAuth2User(registrationId, oauth2User.getAttributes());
+
+		// 3) attributes 복사 + memberId 추가
+		Map<String, Object> mapped = new HashMap<>(oauth2User.getAttributes());
+		mapped.put("memberId", member.getMemberId());
+
+		// 4) nameAttributeKey
+		String userNameAttr = req.getClientRegistration()
+			.getProviderDetails()
+			.getUserInfoEndpoint()
+			.getUserNameAttributeName();
 
 		return new DefaultOAuth2User(
 			List.of(new SimpleGrantedAuthority("ROLE_USER")),
-			Collections.singletonMap("token", tokens.getAccessToken()),
-			"token"
+			mapped,
+			userNameAttr
 		);
 	}
 }

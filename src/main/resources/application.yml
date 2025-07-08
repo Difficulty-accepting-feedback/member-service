@@ -1,1 +1,30 @@
-spring.application.name=member-service
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            client-id: ${oauth.kakao.client-id}
+            client-secret: ${oauth.kakao.client-secret}
+            client-authentication-method: client_secret_post
+            authorization-grant-type: authorization_code
+            redirect-uri: "${oauth.kakao.redirect-uri}"
+            scope:
+              - profile_nickname
+              - profile_image
+              - account_email
+        provider:
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri:         https://kauth.kakao.com/oauth/token
+            user-info-uri:     https://kapi.kakao.com/v2/user/me
+            user-name-attribute: id
+
+oauth:
+  kakao:
+    client-id:     81d5f99c66bd613b895ca7ab97e84e00
+    client-secret: sM0VEKLj9wUpz6Zidw2tT3uROZhNKJYO
+    redirect-uri:  http://localhost:8080/login/oauth2/code/kakao
+
+jwt:
+  secret: 202de6643ccc9300ccb9fd1c2e5b4f5b15da5feecf100358c2a9d289d10fdc98

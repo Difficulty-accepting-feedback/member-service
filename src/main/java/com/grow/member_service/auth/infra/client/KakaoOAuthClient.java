@@ -1,4 +1,4 @@
-package com.grow.member_service.member.infra.client;
+package com.grow.member_service.auth.infra.client;
 
 import java.util.Map;
 

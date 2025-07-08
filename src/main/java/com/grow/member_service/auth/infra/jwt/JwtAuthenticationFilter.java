@@ -1,4 +1,4 @@
-package com.grow.member_service.member.infra.jwt;
+package com.grow.member_service.auth.infra.jwt;
 
 import java.io.IOException;
 import java.util.Collections;

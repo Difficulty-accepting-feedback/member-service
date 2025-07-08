@@ -1,4 +1,4 @@
-package com.grow.member_service.member.config;
+package com.grow.member_service.auth.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -6,10 +6,10 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import com.grow.member_service.member.infra.jwt.JwtAuthenticationFilter;
-import com.grow.member_service.member.infra.oauth2.CustomOAuth2Service;
-import com.grow.member_service.member.infra.oauth2.OAuth2AuthenticationFailureHandler;
-import com.grow.member_service.member.infra.oauth2.OAuth2AuthenticationSuccessHandler;
+import com.grow.member_service.auth.infra.jwt.JwtAuthenticationFilter;
+import com.grow.member_service.auth.infra.oauth2.CustomOAuth2Service;
+import com.grow.member_service.auth.infra.oauth2.OAuth2AuthenticationFailureHandler;
+import com.grow.member_service.auth.infra.oauth2.OAuth2AuthenticationSuccessHandler;
 
 import lombok.RequiredArgsConstructor;
 

@@ -1,6 +1,6 @@
 package com.grow.member_service.member.application.service;
 
-import static com.grow.member_service.member.infra.oauth2.KakaoUserProcessor.*;
+import static com.grow.member_service.auth.infra.oauth2.KakaoUserProcessor.*;
 
 import java.time.Clock;
 import java.util.List;
@@ -10,17 +10,18 @@ import java.util.Objects;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.grow.member_service.member.application.dto.TokenResponse;
+import com.grow.member_service.auth.infra.jwt.TokenResponse;
 import com.grow.member_service.member.domain.model.Member;
 import com.grow.member_service.member.domain.model.MemberAdditionalInfo;
 import com.grow.member_service.member.domain.model.MemberProfile;
 import com.grow.member_service.member.domain.model.Platform;
 import com.grow.member_service.member.domain.repository.MemberRepository;
 import com.grow.member_service.member.domain.service.OAuth2UserProcessor;
-import com.grow.member_service.member.infra.client.KakaoOAuthClient;
-import com.grow.member_service.member.infra.jwt.JwtTokenProvider;
+import com.grow.member_service.auth.infra.client.KakaoOAuthClient;
+import com.grow.member_service.auth.infra.jwt.JwtTokenProvider;
 
 import lombok.RequiredArgsConstructor;
+
 
 @Service
 @RequiredArgsConstructor
@@ -31,45 +32,53 @@ public class OAuth2LoginService {
 	private final MemberRepository memberRepository;
 	private final JwtTokenProvider jwtProvider;
 
+	/**
+	 * 컨트롤러에서 호출할 로그인 메서드
+	 */
 	@Transactional
 	public TokenResponse login(String registrationId, String code) {
-		// 1) 토큰 발급 & OAuth2User attributes 조회
+		Member member = processOAuth2UserByCode(registrationId, code);
+		String accessToken  = jwtProvider.createAccessToken(member.getMemberId());
+		String refreshToken = jwtProvider.createRefreshToken(member.getMemberId());
+		return new TokenResponse(accessToken, refreshToken);
+	}
+
+	/**
+	 * OAuth2 필터 기반 처리(성공 핸들러 등)에서 호출할 회원 동기화 메서드
+	 */
+	@Transactional
+	public Member processOAuth2UserByCode(String registrationId, String code) {
 		Map<String,Object> rawAttrs = kakaoClient.getUserAttributesByCode(code);
-		// 2) 플랫폼별 파싱
+		return processOAuth2User(registrationId, rawAttrs);
+	}
+
+
+	/**
+	 * CustomOAuth2Service 에서 호출할 회원 동기화 메서드 (이미 userInfo 호출된 경우)
+	 */
+	@Transactional
+	public Member processOAuth2User(String registrationId, Map<String,Object> rawAttrs) {
 		Platform platform = Platform.valueOf(registrationId.toUpperCase());
 		OAuth2UserProcessor proc = processors.stream()
 			.filter(p -> p.supports(platform))
 			.findFirst()
-			.orElseThrow(() -> new IllegalArgumentException("Unsupported platform"));
+			.orElseThrow(() -> new IllegalArgumentException("Unsupported platform: " + registrationId));
 		Map<String,Object> attrs = proc.parseAttributes(rawAttrs);
 
-		// 3) 가입 또는 조회
 		String platformId = (String) attrs.get(PLATFORM_ID_KEY);
-		Member member = memberRepository.findByPlatformId(platformId, platform)
-			.orElseGet(() -> registerNew(attrs, platform));
-
-		// 4) JWT 발급
-		return new TokenResponse(
-			jwtProvider.createAccessToken(member.getMemberId()),
-			jwtProvider.createRefreshToken(member.getMemberId())
-		);
+		return memberRepository.findByPlatformId(platformId, platform)
+			.orElseGet(() -> registerNewMember(attrs, platform));
 	}
 
-	private Member registerNew(Map<String,Object> parsed, Platform platform) {
-		// 이메일·닉네임 등 필수 값 검증
-		String email    = Objects.requireNonNull((String) parsed.get("email"),
-			"이메일이 없습니다");
-		String nickname = (String) parsed.get("nickname");
-		String image    = (String) parsed.get("profileImage");
-		String pid      = (String) parsed.get("platformId");
+	private Member registerNewMember(Map<String,Object> parsed, Platform platform) {
+		String email    = Objects.requireNonNull((String) parsed.get(EMAIL_KEY),   "이메일이 없습니다");
+		String nickname = (String) parsed.get(NICKNAME_KEY);
+		String image    = (String) parsed.get(PROFILE_IMAGE_KEY);
+		String pid      = (String) parsed.get(PLATFORM_ID_KEY);
 
-		MemberProfile profile = new MemberProfile(
-			email, nickname, image, platform, pid
-		);
-		// 기본 값 없으면 빈 문자열로 초기화
+		MemberProfile profile = new MemberProfile(email, nickname, image, platform, pid);
 		MemberAdditionalInfo addInfo = new MemberAdditionalInfo("", "");
 
-		Member newMember = new Member(profile, addInfo, Clock.systemDefaultZone());
-		return memberRepository.save(newMember);
+		return memberRepository.save(new Member(profile, addInfo, Clock.systemDefaultZone()));
 	}
 }

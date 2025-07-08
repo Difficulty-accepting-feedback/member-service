@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.grow.member_service.member.application.dto.MemberInfoResponse;
-import com.grow.member_service.member.application.dto.TokenResponse;
+import com.grow.member_service.auth.infra.jwt.TokenResponse;
 import com.grow.member_service.member.application.service.MemberService;
 import com.grow.member_service.member.application.service.OAuth2LoginService;
 

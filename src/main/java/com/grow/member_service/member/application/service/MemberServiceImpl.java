@@ -3,7 +3,7 @@ package com.grow.member_service.member.application.service;
 import org.springframework.stereotype.Service;
 
 import com.grow.member_service.member.application.dto.MemberInfoResponse;
-import com.grow.member_service.member.application.dto.TokenResponse;
+import com.grow.member_service.auth.infra.jwt.TokenResponse;
 import com.grow.member_service.member.domain.repository.MemberRepository;
 
 import lombok.RequiredArgsConstructor;

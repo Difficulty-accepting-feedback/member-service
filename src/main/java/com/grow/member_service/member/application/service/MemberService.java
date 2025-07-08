@@ -1,7 +1,7 @@
 package com.grow.member_service.member.application.service;
 
 import com.grow.member_service.member.application.dto.MemberInfoResponse;
-import com.grow.member_service.member.application.dto.TokenResponse;
+import com.grow.member_service.auth.infra.jwt.TokenResponse;
 
 public interface MemberService {
 	TokenResponse loginWithKakao(String code);
