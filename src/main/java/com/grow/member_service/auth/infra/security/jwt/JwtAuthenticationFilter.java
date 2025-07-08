@@ -1,7 +1,6 @@
 package com.grow.member_service.auth.infra.security.jwt;
 
 import java.io.IOException;
-import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
@@ -14,9 +13,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import io.jsonwebtoken.ExpiredJwtException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +28,7 @@ import lombok.RequiredArgsConstructor;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 	private final JwtTokenProvider tokenProvider;
+	private final JwtProperties props;
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest req,
@@ -50,13 +50,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 				if (refreshOpt.isPresent() && tokenProvider.validateToken(refreshOpt.get())) {
 					Long memberId = tokenProvider.getMemberId(refreshOpt.get());
 					// 새 토큰 생성
+					long accessMaxAge  = props.getAccessTokenExpiryDuration().getSeconds();
+					long refreshMaxAge = props.getRefreshTokenExpiryDuration().getSeconds();
+
 					String newAccess  = tokenProvider.createAccessToken(memberId);
 					String newRefresh = tokenProvider.createRefreshToken(memberId);
 					// 쿠키 재설정
 					ResponseCookie aCookie = ResponseCookie.from("access_token", newAccess)
-						.httpOnly(true).secure(true).path("/").maxAge(Duration.ofMinutes(30)).sameSite("Strict").build();
+						.httpOnly(true).secure(true).path("/").maxAge(accessMaxAge).sameSite("Strict").build();
 					ResponseCookie rCookie = ResponseCookie.from("refresh_token", newRefresh)
-						.httpOnly(true).secure(true).path("/").maxAge(Duration.ofDays(7)).sameSite("Strict").build();
+						.httpOnly(true).secure(true).path("/").maxAge(refreshMaxAge).sameSite("Strict").build();
 					res.addHeader(HttpHeaders.SET_COOKIE, aCookie.toString());
 					res.addHeader(HttpHeaders.SET_COOKIE, rCookie.toString());
 					authenticate(memberId);
