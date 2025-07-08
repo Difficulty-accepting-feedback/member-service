@@ -1,6 +1,6 @@
-package com.grow.member_service.member.application.service;
+package com.grow.member_service.auth.application.service;
 
-import static com.grow.member_service.auth.infra.oauth2.KakaoUserProcessor.*;
+import static com.grow.member_service.auth.infra.security.oauth2.processor.KakaoUserProcessor.*;
 
 import java.time.Clock;
 import java.util.List;
@@ -10,7 +10,7 @@ import java.util.Objects;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.grow.member_service.auth.infra.jwt.TokenResponse;
+import com.grow.member_service.auth.application.dto.TokenResponse;
 import com.grow.member_service.member.domain.model.Member;
 import com.grow.member_service.member.domain.model.MemberAdditionalInfo;
 import com.grow.member_service.member.domain.model.MemberProfile;
@@ -18,7 +18,7 @@ import com.grow.member_service.member.domain.model.Platform;
 import com.grow.member_service.member.domain.repository.MemberRepository;
 import com.grow.member_service.member.domain.service.OAuth2UserProcessor;
 import com.grow.member_service.auth.infra.client.KakaoOAuthClient;
-import com.grow.member_service.auth.infra.jwt.JwtTokenProvider;
+import com.grow.member_service.auth.infra.security.jwt.JwtTokenProvider;
 
 import lombok.RequiredArgsConstructor;
 

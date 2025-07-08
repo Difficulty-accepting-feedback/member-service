@@ -1,4 +1,4 @@
-package com.grow.member_service.auth.infra.jwt;
+package com.grow.member_service.auth.application.dto;
 
 public class TokenResponse {
 	private final String accessToken;

@@ -6,10 +6,10 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import com.grow.member_service.auth.infra.jwt.JwtAuthenticationFilter;
-import com.grow.member_service.auth.infra.oauth2.CustomOAuth2Service;
-import com.grow.member_service.auth.infra.oauth2.OAuth2AuthenticationFailureHandler;
-import com.grow.member_service.auth.infra.oauth2.OAuth2AuthenticationSuccessHandler;
+import com.grow.member_service.auth.infra.security.jwt.JwtAuthenticationFilter;
+import com.grow.member_service.auth.infra.security.oauth2.adapter.CustomOAuth2Service;
+import com.grow.member_service.auth.infra.security.oauth2.handler.OAuth2AuthenticationFailureHandler;
+import com.grow.member_service.auth.infra.security.oauth2.handler.OAuth2AuthenticationSuccessHandler;
 
 import lombok.RequiredArgsConstructor;
 
@@ -28,6 +28,7 @@ public class SecurityConfig {
 				.requestMatchers("/api/members/oauth/**").permitAll()
 				.anyRequest().authenticated()
 			)
+			// OAuth2 로그인 설정
 			.oauth2Login(o -> o
 				.userInfoEndpoint(u -> u.userService(oauth2Service))
 				.successHandler(successHandler)

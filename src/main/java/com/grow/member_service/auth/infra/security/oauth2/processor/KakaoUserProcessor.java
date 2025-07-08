@@ -1,4 +1,4 @@
-package com.grow.member_service.auth.infra.oauth2;
+package com.grow.member_service.auth.infra.security.oauth2.processor;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -9,6 +9,9 @@ import org.springframework.stereotype.Component;
 import com.grow.member_service.member.domain.model.Platform;
 import com.grow.member_service.member.domain.service.OAuth2UserProcessor;
 
+/**
+ * 카카오 소셜 로그인 사용자 정보를 처리하는 클래스
+ */
 @Component
 public class KakaoUserProcessor implements OAuth2UserProcessor {
 	public static final String EMAIL_KEY = "email";

@@ -1,4 +1,4 @@
-package com.grow.member_service.auth.infra.oauth2;
+package com.grow.member_service.auth.infra.security.oauth2.adapter;
 
 import java.util.HashMap;
 import java.util.List;
@@ -13,7 +13,7 @@ import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Component;
 
-import com.grow.member_service.member.application.service.OAuth2LoginService;
+import com.grow.member_service.auth.application.service.OAuth2LoginService;
 import com.grow.member_service.member.domain.model.Member;
 
 import lombok.RequiredArgsConstructor;
@@ -26,18 +26,19 @@ public class CustomOAuth2Service implements OAuth2UserService<OAuth2UserRequest,
 
 	@Override
 	public OAuth2User loadUser(OAuth2UserRequest req) throws OAuth2AuthenticationException {
-		// 1) OAuth 공급자에서 유저 정보 조회
+		// OAuth 공급자에서 유저 정보 조회
 		OAuth2User oauth2User = delegate.loadUser(req);
 
-		// 2) 회원 가입/조회 처리
+		// 어떤 플랫폼에서 로그인 했는지 식별
 		String registrationId = req.getClientRegistration().getRegistrationId();
+
+		// 가입 또는 기존 회원 조회
 		Member member = loginService.processOAuth2User(registrationId, oauth2User.getAttributes());
 
-		// 3) attributes 복사 + memberId 추가
 		Map<String, Object> mapped = new HashMap<>(oauth2User.getAttributes());
 		mapped.put("memberId", member.getMemberId());
 
-		// 4) nameAttributeKey
+		// nameAttributeKey
 		String userNameAttr = req.getClientRegistration()
 			.getProviderDetails()
 			.getUserInfoEndpoint()

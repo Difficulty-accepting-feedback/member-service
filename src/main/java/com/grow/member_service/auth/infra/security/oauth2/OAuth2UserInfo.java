@@ -1,4 +1,4 @@
-package com.grow.member_service.auth.infra.oauth2;
+package com.grow.member_service.auth.infra.security.oauth2;
 
 import java.util.Map;
 

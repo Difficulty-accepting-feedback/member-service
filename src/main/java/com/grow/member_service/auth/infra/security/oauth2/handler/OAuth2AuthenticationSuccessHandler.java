@@ -1,4 +1,4 @@
-package com.grow.member_service.auth.infra.oauth2;
+package com.grow.member_service.auth.infra.security.oauth2.handler;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -10,12 +10,17 @@ import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
-import com.grow.member_service.auth.infra.jwt.JwtTokenProvider;
+import com.grow.member_service.auth.infra.security.jwt.JwtTokenProvider;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * OAuth2 인증 성공 시 JWT 토큰을 생성하고
+ * HttpOnly 쿠키에 담아 리다이렉트하는 핸들러
+ * 지정된 URL로 리다이렉트 (변경 필요)
+ */
 @Component
 @RequiredArgsConstructor
 public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
@@ -33,16 +38,16 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 		String accessToken  = jwtProvider.createAccessToken(memberId);
 		String refreshToken = jwtProvider.createRefreshToken(memberId);
 
-		// HttpOnly 쿠키에 담기 (필요하면 리프레시 쿠키도 추가)
-		ResponseCookie accessCookie = ResponseCookie.from("ACCESS_TOKEN", accessToken)
+		// HttpOnly 쿠키에 담기
+		ResponseCookie accessCookie = ResponseCookie.from("access_token", accessToken)
 			.httpOnly(true).secure(true).path("/").maxAge(Duration.ofMinutes(15)).sameSite("Strict").build();
-		ResponseCookie refreshCookie = ResponseCookie.from("REFRESH_TOKEN", refreshToken)
+		ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", refreshToken)
 			.httpOnly(true).secure(true).path("/").maxAge(Duration.ofDays(7)).sameSite("Strict").build();
 
 		res.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
 		res.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
 
-		// 최종 리디렉트
+		// 최종 리다이렉트
 		getRedirectStrategy().sendRedirect(req, res, frontUrl);
 	}
 }

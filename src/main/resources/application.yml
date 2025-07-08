@@ -28,3 +28,5 @@ oauth:
 
 jwt:
   secret: 202de6643ccc9300ccb9fd1c2e5b4f5b15da5feecf100358c2a9d289d10fdc98
+  access-token-expiration: 1800 # 30 minutes
+  refresh-token-expiration: 604800 # 7 days
