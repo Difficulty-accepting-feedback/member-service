@@ -7,7 +7,6 @@ import java.util.Optional;
 import org.springframework.stereotype.Component;
 
 import com.grow.member_service.member.domain.model.Platform;
-import com.grow.member_service.member.domain.service.OAuth2UserProcessor;
 
 /**
  * 카카오 소셜 로그인 사용자 정보를 처리하는 클래스

@@ -1,7 +1,5 @@
 package com.grow.member_service.auth.application.service;
 
-import static com.grow.member_service.auth.infra.security.oauth2.processor.KakaoUserProcessor.*;
-
 import java.time.Clock;
 import java.util.List;
 import java.util.Map;
@@ -10,71 +8,61 @@ import java.util.Objects;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.grow.member_service.auth.application.dto.TokenResponse;
+import com.grow.member_service.auth.infra.security.oauth2.processor.KakaoUserProcessor;
 import com.grow.member_service.member.domain.model.Member;
 import com.grow.member_service.member.domain.model.MemberAdditionalInfo;
 import com.grow.member_service.member.domain.model.MemberProfile;
 import com.grow.member_service.member.domain.model.Platform;
 import com.grow.member_service.member.domain.repository.MemberRepository;
-import com.grow.member_service.member.domain.service.OAuth2UserProcessor;
-import com.grow.member_service.auth.infra.client.KakaoOAuthClient;
-import com.grow.member_service.auth.infra.security.jwt.JwtTokenProvider;
+import com.grow.member_service.auth.infra.security.oauth2.processor.OAuth2UserProcessor;
 
 import lombok.RequiredArgsConstructor;
 
-
+/**
+ * OAuth2 로그인 처리 서비스
+ */
 @Service
 @RequiredArgsConstructor
 public class OAuth2LoginService {
-
-	private final KakaoOAuthClient kakaoClient;
 	private final List<OAuth2UserProcessor> processors;
 	private final MemberRepository memberRepository;
-	private final JwtTokenProvider jwtProvider;
 
 	/**
-	 * 컨트롤러에서 호출할 로그인 메서드
+	 * OAuth2 로그인 후 사용자 정보를 처리하는 메서드
+	 * @param registrationId ex) kakao, google, etc.
+	 * @param rawAttrs provider로부터 받은 원본 사용자 정보
+	 * @return 기존 회원 또는 새로 가입된 회원 엔티티
 	 */
 	@Transactional
-	public TokenResponse login(String registrationId, String code) {
-		Member member = processOAuth2UserByCode(registrationId, code);
-		String accessToken  = jwtProvider.createAccessToken(member.getMemberId());
-		String refreshToken = jwtProvider.createRefreshToken(member.getMemberId());
-		return new TokenResponse(accessToken, refreshToken);
-	}
-
-	/**
-	 * OAuth2 필터 기반 처리(성공 핸들러 등)에서 호출할 회원 동기화 메서드
-	 */
-	@Transactional
-	public Member processOAuth2UserByCode(String registrationId, String code) {
-		Map<String,Object> rawAttrs = kakaoClient.getUserAttributesByCode(code);
-		return processOAuth2User(registrationId, rawAttrs);
-	}
-
-
-	/**
-	 * CustomOAuth2Service 에서 호출할 회원 동기화 메서드 (이미 userInfo 호출된 경우)
-	 */
-	@Transactional
-	public Member processOAuth2User(String registrationId, Map<String,Object> rawAttrs) {
+	public Member processOAuth2User(String registrationId, Map<String, Object> rawAttrs) {
 		Platform platform = Platform.valueOf(registrationId.toUpperCase());
-		OAuth2UserProcessor proc = processors.stream()
+
+		// 지원하는 플랫폼인지 확인하고, 해당 플랫폼에 맞는 프로세서 찾기
+		OAuth2UserProcessor processor = processors.stream()
 			.filter(p -> p.supports(platform))
 			.findFirst()
 			.orElseThrow(() -> new IllegalArgumentException("Unsupported platform: " + registrationId));
-		Map<String,Object> attrs = proc.parseAttributes(rawAttrs);
 
-		String platformId = (String) attrs.get(PLATFORM_ID_KEY);
+		// 사용자 정보 파싱
+		Map<String, Object> attrs = processor.parseAttributes(rawAttrs);
+		String platformId = (String) attrs.get(KakaoUserProcessor.PLATFORM_ID_KEY);
+
+		// 기존 회원 조회
 		return memberRepository.findByPlatformId(platformId, platform)
 			.orElseGet(() -> registerNewMember(attrs, platform));
 	}
 
+	/**
+	 * 회원 가입 처리 (최초 로그인 시 호출)
+	 * @param parsed 파싱된 사용자 정보
+	 * @param platform 로그인 플랫폼 정보
+	 * @return 새로 등록된 회원 엔티티
+	 */
 	private Member registerNewMember(Map<String,Object> parsed, Platform platform) {
-		String email    = Objects.requireNonNull((String) parsed.get(EMAIL_KEY),   "이메일이 없습니다");
-		String nickname = (String) parsed.get(NICKNAME_KEY);
-		String image    = (String) parsed.get(PROFILE_IMAGE_KEY);
-		String pid      = (String) parsed.get(PLATFORM_ID_KEY);
+		String email    = Objects.requireNonNull((String) parsed.get(KakaoUserProcessor.EMAIL_KEY));
+		String nickname = (String) parsed.get(KakaoUserProcessor.NICKNAME_KEY);
+		String image    = (String) parsed.get(KakaoUserProcessor.PROFILE_IMAGE_KEY);
+		String pid      = (String) parsed.get(KakaoUserProcessor.PLATFORM_ID_KEY);
 
 		MemberProfile profile = new MemberProfile(email, nickname, image, platform, pid);
 		MemberAdditionalInfo addInfo = new MemberAdditionalInfo("", "");
