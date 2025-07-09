@@ -1,11 +1,14 @@
 package com.grow.member_service.auth.infra.security.oauth2.processor;
 
+import static com.grow.member_service.global.exception.ErrorCode.*;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.stereotype.Component;
 
+import com.grow.member_service.common.OAuthException;
 import com.grow.member_service.member.domain.model.Platform;
 
 /**
@@ -40,6 +43,6 @@ public class KakaoUserProcessor implements OAuth2UserProcessor {
 	private Map<String,Object> cast(Object o) {
 		return (Map<String,Object>) Optional.ofNullable(o)
 			.filter(m -> m instanceof Map)
-			.orElseThrow(() -> new IllegalArgumentException("Invalid OAuth2 attributes"));
+			.orElseThrow(() -> new OAuthException(OAUTH_INVALID_STRUCTURE));
 	}
 }

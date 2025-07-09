@@ -1,5 +1,7 @@
 package com.grow.member_service.auth.infra.security.oauth2.handler;
 
+import static com.grow.member_service.global.exception.ErrorCode.*;
+
 import java.io.IOException;
 import java.time.Duration;
 
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Component;
 
 import com.grow.member_service.auth.infra.security.jwt.JwtProperties;
 import com.grow.member_service.auth.infra.security.jwt.JwtTokenProvider;
+import com.grow.member_service.common.OAuthException;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -35,8 +38,12 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 		HttpServletResponse res,
 		Authentication auth) throws IOException {
 		DefaultOAuth2User oauthUser = (DefaultOAuth2User) auth.getPrincipal();
-		Long memberId = Long.valueOf(oauthUser.getAttributes().get("memberId").toString());
-
+		Long memberId;
+		try {
+			memberId = Long.valueOf(oauthUser.getAttributes().get("memberId").toString());
+		} catch (Exception e) {
+			throw new OAuthException(OAUTH_MEMBER_ID_PARSE_ERROR, e);
+		}
 		// JWT 생성
 		String accessToken = jwtProvider.createAccessToken(memberId);
 		String refreshToken = jwtProvider.createRefreshToken(memberId);

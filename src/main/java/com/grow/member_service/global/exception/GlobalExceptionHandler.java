@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.grow.member_service.common.DomainException;
+import com.grow.member_service.common.OAuthException;
 import com.grow.member_service.global.exception.message.MessageService;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -73,6 +74,19 @@ public class GlobalExceptionHandler {
 			.build();
 
 		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+	}
+
+	/**
+	 * OAuth 관련 예외 처리
+	 */
+	@ExceptionHandler(OAuthException.class)
+	public ResponseEntity<ErrorResponse> handleOAuthException(OAuthException e,
+		HttpServletRequest request) {
+		log.error("OAuth 예외 발생 - URI: {} | code: {} | message: {}", request.getRequestURI(),
+			e.getErrorCode().getCode(), e.getMessage());
+
+		ErrorResponse errorResponse = ErrorResponse.of(e, request, messageService);
+		return ResponseEntity.status(e.getErrorCode().getStatus()).body(errorResponse);
 	}
 
 	/**

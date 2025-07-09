@@ -9,12 +9,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.grow.member_service.auth.infra.security.oauth2.processor.KakaoUserProcessor;
+import com.grow.member_service.auth.infra.security.oauth2.processor.OAuth2UserProcessor;
+import com.grow.member_service.common.OAuthException;
+import com.grow.member_service.global.exception.ErrorCode;
 import com.grow.member_service.member.domain.model.Member;
 import com.grow.member_service.member.domain.model.MemberAdditionalInfo;
 import com.grow.member_service.member.domain.model.MemberProfile;
 import com.grow.member_service.member.domain.model.Platform;
 import com.grow.member_service.member.domain.repository.MemberRepository;
-import com.grow.member_service.auth.infra.security.oauth2.processor.OAuth2UserProcessor;
 
 import lombok.RequiredArgsConstructor;
 
@@ -35,18 +37,32 @@ public class OAuth2LoginService {
 	 */
 	@Transactional
 	public Member processOAuth2User(String registrationId, Map<String, Object> rawAttrs) {
-		Platform platform = Platform.valueOf(registrationId.toUpperCase());
+		Platform platform;
+		try {
+			platform = Platform.valueOf(registrationId.toUpperCase());
+		} catch (IllegalArgumentException e) {
+			throw new OAuthException(ErrorCode.OAUTH_UNSUPPORTED_PLATFORM);
+		}
 
 		// 지원하는 플랫폼인지 확인하고, 해당 플랫폼에 맞는 프로세서 찾기
 		OAuth2UserProcessor processor = processors.stream()
 			.filter(p -> p.supports(platform))
 			.findFirst()
-			.orElseThrow(() -> new IllegalArgumentException("Unsupported platform: " + registrationId));
+			.orElseThrow(() -> new OAuthException(ErrorCode.OAUTH_UNSUPPORTED_PLATFORM));
 
 		// 사용자 정보 파싱
-		Map<String, Object> attrs = processor.parseAttributes(rawAttrs);
+		Map<String, Object> attrs;
+		try {
+			attrs = processor.parseAttributes(rawAttrs);
+		} catch (Exception e) {
+			throw new OAuthException(ErrorCode.OAUTH_INVALID_STRUCTURE, e);
+		}
+
 		String platformId = (String) attrs.get(KakaoUserProcessor.PLATFORM_ID_KEY);
 
+		if (platformId == null) {
+			throw new OAuthException(ErrorCode.OAUTH_INVALID_STRUCTURE);
+		}
 		// 기존 회원 조회
 		return memberRepository.findByPlatformId(platformId, platform)
 			.orElseGet(() -> registerNewMember(attrs, platform));

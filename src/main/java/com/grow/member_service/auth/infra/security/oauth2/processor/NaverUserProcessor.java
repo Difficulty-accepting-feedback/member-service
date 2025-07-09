@@ -1,11 +1,14 @@
 package com.grow.member_service.auth.infra.security.oauth2.processor;
 
+import static com.grow.member_service.global.exception.ErrorCode.*;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.stereotype.Component;
 
+import com.grow.member_service.common.OAuthException;
 import com.grow.member_service.member.domain.model.Platform;
 
 @Component
@@ -27,7 +30,7 @@ public class NaverUserProcessor implements OAuth2UserProcessor {
 		Map<String, Object> response = Optional.ofNullable(attributes.get("response"))
 			.filter(m -> m instanceof Map)
 			.map(m -> (Map<String, Object>) m)
-			.orElseThrow(() -> new IllegalArgumentException("Invalid Naver OAuth2 attributes"));
+			.orElseThrow(() -> new OAuthException(OAUTH_INVALID_STRUCTURE));
 
 		Map<String, Object> result = new HashMap<>();
 		result.put(EMAIL_KEY, response.get("email"));
