@@ -55,13 +55,13 @@ public class OAuth2LoginService {
 		try {
 			attrs = processor.parseAttributes(rawAttrs);
 		} catch (Exception e) {
-			throw new OAuthException(ErrorCode.OAUTH_INVALID_STRUCTURE, e);
+			throw new OAuthException(ErrorCode.OAUTH_INVALID_ATTRIBUTE, e);
 		}
 
 		String platformId = (String) attrs.get(KakaoUserProcessor.PLATFORM_ID_KEY);
 
 		if (platformId == null) {
-			throw new OAuthException(ErrorCode.OAUTH_INVALID_STRUCTURE);
+			throw new OAuthException(ErrorCode.OAUTH_INVALID_ATTRIBUTE);
 		}
 		// 기존 회원 조회
 		return memberRepository.findByPlatformId(platformId, platform)

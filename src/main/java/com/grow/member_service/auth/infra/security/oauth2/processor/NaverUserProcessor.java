@@ -1,14 +1,12 @@
 package com.grow.member_service.auth.infra.security.oauth2.processor;
 
-import static com.grow.member_service.global.exception.ErrorCode.*;
-
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 import org.springframework.stereotype.Component;
 
 import com.grow.member_service.common.OAuthException;
+import com.grow.member_service.global.exception.ErrorCode;
 import com.grow.member_service.member.domain.model.Platform;
 
 @Component
@@ -25,18 +23,28 @@ public class NaverUserProcessor implements OAuth2UserProcessor {
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public Map<String, Object> parseAttributes(Map<String, Object> attributes) {
-		@SuppressWarnings("unchecked")
-		Map<String, Object> response = Optional.ofNullable(attributes.get("response"))
-			.filter(m -> m instanceof Map)
-			.map(m -> (Map<String, Object>) m)
-			.orElseThrow(() -> new OAuthException(OAUTH_INVALID_STRUCTURE));
+		Map<String, Object> response = (Map<String, Object>) attributes.get("response");
+		if (response == null) {
+			throw new OAuthException(ErrorCode.OAUTH_INVALID_ATTRIBUTE);
+		}
+
+		String email = (String) response.get("email");
+		String id = (String) response.get("id");
+		String name = (String) response.get("name");
+		String profileImage = (String) response.get("profile_image");
+
+		if (email == null || id == null) {
+			throw new OAuthException(ErrorCode.OAUTH_INVALID_ATTRIBUTE);
+		}
 
 		Map<String, Object> result = new HashMap<>();
-		result.put(EMAIL_KEY, response.get("email"));
-		result.put(NICKNAME_KEY, response.get("nickname"));
-		result.put(PROFILE_IMAGE_KEY, response.get("profile_image"));
-		result.put(PLATFORM_ID_KEY, response.get("id"));
+		result.put(EMAIL_KEY, email);
+		result.put(NICKNAME_KEY, name);
+		result.put(PROFILE_IMAGE_KEY, profileImage);
+		result.put(PLATFORM_ID_KEY, id);
+
 		return result;
 	}
 }
