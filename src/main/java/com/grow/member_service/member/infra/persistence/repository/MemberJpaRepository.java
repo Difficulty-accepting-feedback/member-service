@@ -1,10 +1,13 @@
 package com.grow.member_service.member.infra.persistence.repository;
 
-import com.grow.member_service.member.infra.persistence.entity.MemberJpaEntity;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.Optional;
+import com.grow.member_service.member.domain.model.Platform;
+import com.grow.member_service.member.infra.persistence.entity.MemberJpaEntity;
 
 public interface MemberJpaRepository extends JpaRepository<MemberJpaEntity, Long> {
     Optional<MemberJpaEntity> findByEmail(String email);
+	Optional<MemberJpaEntity> findByPlatformIdAndPlatform(String platformId, Platform platform);
 }
