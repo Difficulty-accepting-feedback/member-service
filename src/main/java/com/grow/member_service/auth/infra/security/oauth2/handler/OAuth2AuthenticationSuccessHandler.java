@@ -11,10 +11,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import com.grow.member_service.auth.infra.security.jwt.JwtProperties;
 import com.grow.member_service.auth.infra.security.jwt.JwtTokenProvider;
 import com.grow.member_service.common.OAuthException;
+import com.grow.member_service.member.application.service.PhoneVerificationService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -23,14 +25,14 @@ import lombok.RequiredArgsConstructor;
 /**
  * OAuth2 인증 성공 시 JWT 토큰을 생성하고
  * HttpOnly 쿠키에 담아 리다이렉트하는 핸들러
- * 지정된 URL로 리다이렉트 (변경 필요)
+ * 지정된 URL로 리다이렉트 (변경 필요-> 핸드폰 인증 화면으로 바로 리다이렉트)
  */
 @Component
 @RequiredArgsConstructor
 public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 	private final JwtTokenProvider jwtProvider;
 	private final JwtProperties jwtProperties;
-
+	private final PhoneVerificationService phoneVerificationService;
 	private final String frontUrl = "http://localhost:3000/oauth/redirect";
 
 	@Override
@@ -73,6 +75,19 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
 		res.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
 		res.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
+
+		// 핸드폰 인증 여부 확인
+		boolean verified = phoneVerificationService.isPhoneVerified(memberId);
+		String step = verified ? "complete" : "enter-phone";
+
+		// frontUrl 로 분기 리다이렉트
+		String target = UriComponentsBuilder
+			.fromUriString(frontUrl)
+			.queryParam("step", step)
+			.build()
+			.toUriString();
+
+		getRedirectStrategy().sendRedirect(req, res, target);
 
 		getRedirectStrategy().sendRedirect(req, res, frontUrl);
 	}
