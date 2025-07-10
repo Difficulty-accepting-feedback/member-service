@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import com.grow.member_service.common.DomainException;
-import com.grow.member_service.common.OAuthException;
+import com.grow.member_service.common.exception.DomainException;
+import com.grow.member_service.common.exception.OAuthException;
 import com.grow.member_service.global.exception.message.MessageService;
 
 import jakarta.servlet.http.HttpServletRequest;

@@ -18,7 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.grow.member_service.auth.infra.security.oauth2.processor.KakaoUserProcessor;
 import com.grow.member_service.auth.infra.security.oauth2.processor.OAuth2UserProcessor;
-import com.grow.member_service.common.OAuthException;
+import com.grow.member_service.common.exception.OAuthException;
 import com.grow.member_service.global.exception.ErrorCode;
 import com.grow.member_service.member.domain.model.Member;
 import com.grow.member_service.member.domain.model.MemberAdditionalInfo;

@@ -1,9 +1,9 @@
 package com.grow.member_service.member.domain.model;
 
-import lombok.Getter;
-
 import java.time.Clock;
 import java.time.LocalDateTime;
+
+import lombok.Getter;
 
 /**
  * 순수 도메인 엔티티
@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 public class Member {
     private final Long memberId;
     private final MemberProfile memberProfile;
-    private final MemberAdditionalInfo additionalInfo;
+    private MemberAdditionalInfo additionalInfo;
     private final LocalDateTime createAt;
     private LocalDateTime withdrawalAt;
     private int totalPoint;
@@ -63,5 +63,15 @@ public class Member {
             throw new IllegalArgumentException("포인트는 0 이상이어야 합니다.");
         }
         this.totalPoint += points;
+    }
+
+    /** 핸드폰 인증 완료 처리 */
+    public void verifyPhone(String phoneNumber) {
+        this.additionalInfo = this.additionalInfo.verifyPhone(phoneNumber);
+    }
+
+    /** 인증 여부 조회 편의 메서드 */
+    public boolean isPhoneVerified() {
+        return this.additionalInfo.isPhoneVerified();
     }
 }

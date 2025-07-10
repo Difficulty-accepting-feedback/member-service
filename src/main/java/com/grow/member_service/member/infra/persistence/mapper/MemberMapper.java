@@ -25,7 +25,8 @@ public class MemberMapper {
 
         MemberAdditionalInfo additionalInfo = new MemberAdditionalInfo(
                 entity.getPhoneNumber(),
-                entity.getAddress()
+                entity.getAddress(),
+                entity.isPhoneVerified()
         );
 
         return new Member(
@@ -51,6 +52,7 @@ public class MemberMapper {
             .platform(profile.getPlatform())
             .platformId(profile.getPlatformId())
             .phoneNumber(info.getPhoneNumber())
+            .phoneVerified(info.isPhoneVerified())
             .address(info.getAddress())
             .createAt(domain.getCreateAt())
             .withdrawalAt(domain.getWithdrawalAt())       // 탈퇴 일시(없으면 null)

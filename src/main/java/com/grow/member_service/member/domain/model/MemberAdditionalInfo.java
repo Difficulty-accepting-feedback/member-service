@@ -9,19 +9,28 @@ import lombok.Getter;
 @Getter
 public class MemberAdditionalInfo {
 
-    private String phoneNumber;
-    private String address;
+    private final String phoneNumber;
+    private final String address;
+    private final boolean phoneVerified;
 
-    public MemberAdditionalInfo(String phoneNumber,
-                                String address
-    ) {
-        this.phoneNumber = validatePhoneNumber(phoneNumber);
-        this.address = address;
+    // 최초 생성 시엔 verified=false
+    public MemberAdditionalInfo(String phoneNumber, String address) {
+        this(phoneNumber, address, false);
     }
 
-    /**
-     * 중복 확인 로직 추가 필요
-     */
+    public MemberAdditionalInfo(String phoneNumber,
+        String address,
+        boolean phoneVerified) {
+        this.phoneNumber     = validatePhoneNumber(phoneNumber);
+        this.address         = address;
+        this.phoneVerified   = phoneVerified;
+    }
+
+    /** 전화번호 검증 후, 인증 완료 상태로 반환 */
+    public MemberAdditionalInfo verifyPhone(String phoneNumber) {
+        return new MemberAdditionalInfo(phoneNumber, this.address, true);
+    }
+
     private String validatePhoneNumber(String phoneNumber) {
         if (phoneNumber == null || phoneNumber.trim().isEmpty()) {
             return null; // 소셜로그인 테스트 위해 임시로 null 허용
