@@ -2,6 +2,7 @@ package com.grow.member_service.member.presentation.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,8 +21,6 @@ public class MemberController {
 
 	/**
 	 * 내 정보 조회 API
-	 * @param memberId
-	 * @return ResponseEntity<RsData<MemberInfoResponse>>
 	 */
 	@GetMapping("/me")
 	public ResponseEntity<RsData<MemberInfoResponse>> getMyInfo(
@@ -30,6 +29,19 @@ public class MemberController {
 		MemberInfoResponse info = memberService.getMyInfo(memberId);
 		return ResponseEntity.ok(
 			new RsData<>("200", "내 정보 조회 성공", info)
+		);
+	}
+
+	/**
+	 * 내 계정 탈퇴 (soft-delete)
+	 */
+	@DeleteMapping("/withdraw")
+	public ResponseEntity<RsData<Void>> withdraw(
+		@AuthenticationPrincipal Long memberId
+	) {
+		memberService.withdraw(memberId);
+		return ResponseEntity.ok(
+			new RsData<>("200", "회원 탈퇴 성공", null)
 		);
 	}
 }

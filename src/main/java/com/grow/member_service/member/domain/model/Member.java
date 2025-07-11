@@ -51,6 +51,7 @@ public class Member {
     }
 
     // 비즈니스 로직 메서드
+    /** 회원 탈퇴 처리 */
     public void withdraw() {
         if (this.withdrawalAt != null) {
             throw new IllegalStateException("이미 탈퇴한 회원입니다.");
@@ -58,6 +59,12 @@ public class Member {
         this.withdrawalAt = LocalDateTime.now();
     }
 
+    /** 회원 탈퇴 여부 조회 */
+    public boolean isWithdrawn() {
+        return this.withdrawalAt != null;
+    }
+
+    /** 포인트 추가 메서드 */
     public void addPoint(int points) {
         if (points < 0) {
             throw new IllegalArgumentException("포인트는 0 이상이어야 합니다.");

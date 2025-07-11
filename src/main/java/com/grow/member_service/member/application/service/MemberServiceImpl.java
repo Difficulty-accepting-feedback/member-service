@@ -1,9 +1,11 @@
 package com.grow.member_service.member.application.service;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.grow.member_service.auth.application.service.OAuth2LoginService;
 import com.grow.member_service.member.application.dto.MemberInfoResponse;
+import com.grow.member_service.member.domain.model.Member;
 import com.grow.member_service.member.domain.repository.MemberRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -19,5 +21,16 @@ public class MemberServiceImpl implements MemberService {
 		return memberRepository.findById(memberId)
 			.map(MemberInfoResponse::from)
 			.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+	}
+
+	@Override
+	@Transactional
+	public void withdraw(Long memberId) {
+		Member member = memberRepository.findById(memberId)
+			.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+
+		member.withdraw();
+
+		memberRepository.save(member);
 	}
 }
