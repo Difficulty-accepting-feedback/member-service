@@ -31,9 +31,10 @@ public class MemberAdditionalInfo {
         return new MemberAdditionalInfo(phoneNumber, this.address, true);
     }
 
+    /** 전화번호 검증 메서드 (소셜 로그인 시 핸드폰 번호 초기값 못 받아오기 때문) */
     private String validatePhoneNumber(String phoneNumber) {
         if (phoneNumber == null || phoneNumber.trim().isEmpty()) {
-            return null; // 소셜로그인 테스트 위해 임시로 null 허용
+            return null;
         }
         return phoneNumber;
     }
