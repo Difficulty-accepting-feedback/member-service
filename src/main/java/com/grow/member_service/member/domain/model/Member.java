@@ -1,9 +1,11 @@
 package com.grow.member_service.member.domain.model;
 
-import lombok.Getter;
-
 import java.time.Clock;
 import java.time.LocalDateTime;
+
+import com.grow.member_service.member.domain.exception.MemberDomainException;
+
+import lombok.Getter;
 
 /**
  * 순수 도메인 엔티티
@@ -12,7 +14,7 @@ import java.time.LocalDateTime;
 public class Member {
     private final Long memberId;
     private final MemberProfile memberProfile;
-    private final MemberAdditionalInfo additionalInfo;
+    private MemberAdditionalInfo additionalInfo;
     private final LocalDateTime createAt;
     private LocalDateTime withdrawalAt;
     private int totalPoint;
@@ -51,17 +53,40 @@ public class Member {
     }
 
     // 비즈니스 로직 메서드
+    /** 회원 탈퇴 처리 */
     public void withdraw() {
         if (this.withdrawalAt != null) {
-            throw new IllegalStateException("이미 탈퇴한 회원입니다.");
+            throw MemberDomainException.alreadyWithdrawn();
         }
         this.withdrawalAt = LocalDateTime.now();
     }
 
+    /** 회원 탈퇴 여부 조회 */
+    public boolean isWithdrawn() {
+        return this.withdrawalAt != null;
+    }
+
+    /** 포인트 추가 메서드 */
     public void addPoint(int points) {
         if (points < 0) {
-            throw new IllegalArgumentException("포인트는 0 이상이어야 합니다.");
+            throw MemberDomainException.negativePoints(points);
         }
         this.totalPoint += points;
+    }
+
+    /** 핸드폰 인증 완료 처리 */
+    public void verifyPhone(String phoneNumber) {
+        if (this.isPhoneVerified()) {
+            throw MemberDomainException.alreadyPhoneVerified();
+        }
+        if (phoneNumber == null || phoneNumber.isBlank()) {
+            throw MemberDomainException.invalidPhoneNumber();
+        }
+        this.additionalInfo = this.additionalInfo.verifyPhone(phoneNumber);
+    }
+
+    /** 인증 여부 조회 편의 메서드 */
+    public boolean isPhoneVerified() {
+        return this.additionalInfo.isPhoneVerified();
     }
 }

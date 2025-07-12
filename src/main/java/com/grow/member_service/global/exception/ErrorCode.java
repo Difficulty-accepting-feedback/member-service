@@ -17,6 +17,14 @@ public enum ErrorCode {
 	INVALID_QUIZ_ID(HttpStatus.BAD_REQUEST, "400-1", "quizResult.result.invalid.id"),
 	NULL_CORRECTNESS(HttpStatus.BAD_REQUEST, "400-2", "quizResult.null.correctness"),
 
+	//멤버 도메인
+	MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "404-0", "member.not.found"),
+	MEMBER_ALREADY_WITHDRAWN(HttpStatus.BAD_REQUEST, "400-9", "member.already.withdrawn"),
+	MEMBER_REJOIN_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "400-10", "member.rejoin.not.allowed"),
+	PHONE_VERIFICATION_NOT_REQUESTED(HttpStatus.BAD_REQUEST, "400-11", "phone.verification.not.requested"),
+	SMS_SEND_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "500-1", "sms.send.failed"),
+
+
 	// OAuth 관련
 	OAUTH_UNSUPPORTED_PLATFORM(HttpStatus.BAD_REQUEST, "400-3", "oauth.unsupported.platform"),
 	OAUTH_MISSING_PLATFORM_ID(HttpStatus.BAD_REQUEST, "400-4", "oauth.missing.platform.id"),

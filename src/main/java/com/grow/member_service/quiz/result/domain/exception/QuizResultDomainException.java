@@ -1,6 +1,6 @@
 package com.grow.member_service.quiz.result.domain.exception;
 
-import com.grow.member_service.common.DomainException;
+import com.grow.member_service.common.exception.DomainException;
 
 public class QuizResultDomainException extends DomainException {
 	public QuizResultDomainException(String message) {

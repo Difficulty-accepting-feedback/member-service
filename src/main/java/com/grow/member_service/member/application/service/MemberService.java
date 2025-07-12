@@ -4,4 +4,5 @@ import com.grow.member_service.member.application.dto.MemberInfoResponse;
 
 public interface MemberService {
 	MemberInfoResponse getMyInfo(Long memberId);
+	void withdraw(Long memberId);
 }

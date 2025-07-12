@@ -62,6 +62,9 @@ public class MemberJpaEntity {
     @Column(name = "phoneNumber")
     private String phoneNumber;
 
+    @Column(name = "phoneVerified", nullable = false)
+    private boolean phoneVerified;
+
     @Column(name = "score",  nullable = false)
     private Double score;
 
@@ -88,5 +91,6 @@ public class MemberJpaEntity {
         this.address = address;
         this.totalPoint = 0;
         this.score = 36.5;
+        this.phoneVerified = false;
     }
 }

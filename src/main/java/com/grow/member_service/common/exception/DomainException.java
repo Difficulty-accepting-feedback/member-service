@@ -1,4 +1,4 @@
-package com.grow.member_service.common;
+package com.grow.member_service.common.exception;
 
 
 public class DomainException extends RuntimeException {

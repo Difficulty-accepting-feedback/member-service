@@ -15,6 +15,8 @@ public class MemberInfoResponse {
 	private LocalDateTime joinedAt;
 	private int totalPoint;
 	private double score;
+	private boolean phoneVerified;
+	private String phoneNumber;
 
 	// Member → DTO 변환 팩토리 메서드
 	public static MemberInfoResponse from(Member m) {
@@ -26,6 +28,10 @@ public class MemberInfoResponse {
 		dto.joinedAt     = m.getCreateAt();
 		dto.totalPoint   = m.getTotalPoint();
 		dto.score        = m.getScore();
+		dto.phoneVerified = m.isPhoneVerified();
+		dto.phoneNumber   = m.getAdditionalInfo() != null
+			? m.getAdditionalInfo().getPhoneNumber()
+			: null;
 		return dto;
 	}
 }

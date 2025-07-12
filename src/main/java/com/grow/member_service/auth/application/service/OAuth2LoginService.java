@@ -8,9 +8,9 @@ import java.util.Objects;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.grow.member_service.auth.infra.security.oauth2.processor.KakaoUserProcessor;
+import com.grow.member_service.auth.infra.security.oauth2.OAuth2AttributeKey;
 import com.grow.member_service.auth.infra.security.oauth2.processor.OAuth2UserProcessor;
-import com.grow.member_service.common.OAuthException;
+import com.grow.member_service.common.exception.OAuthException;
 import com.grow.member_service.global.exception.ErrorCode;
 import com.grow.member_service.member.domain.model.Member;
 import com.grow.member_service.member.domain.model.MemberAdditionalInfo;
@@ -26,8 +26,10 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class OAuth2LoginService {
+
 	private final List<OAuth2UserProcessor> processors;
 	private final MemberRepository memberRepository;
+	private final Clock clock;
 
 	/**
 	 * OAuth2 로그인 후 사용자 정보를 처리하는 메서드
@@ -37,12 +39,7 @@ public class OAuth2LoginService {
 	 */
 	@Transactional
 	public Member processOAuth2User(String registrationId, Map<String, Object> rawAttrs) {
-		Platform platform;
-		try {
-			platform = Platform.valueOf(registrationId.toUpperCase());
-		} catch (IllegalArgumentException e) {
-			throw new OAuthException(ErrorCode.OAUTH_UNSUPPORTED_PLATFORM);
-		}
+		Platform platform = parsePlatform(registrationId);
 
 		// 지원하는 플랫폼인지 확인하고, 해당 플랫폼에 맞는 프로세서 찾기
 		OAuth2UserProcessor processor = processors.stream()
@@ -58,31 +55,57 @@ public class OAuth2LoginService {
 			throw new OAuthException(ErrorCode.OAUTH_INVALID_ATTRIBUTE, e);
 		}
 
-		String platformId = (String) attrs.get(KakaoUserProcessor.PLATFORM_ID_KEY);
-
-		if (platformId == null) {
-			throw new OAuthException(ErrorCode.OAUTH_INVALID_ATTRIBUTE);
-		}
+		String platformId = extractPlatformId(attrs);
 		// 기존 회원 조회
 		return memberRepository.findByPlatformId(platformId, platform)
 			.orElseGet(() -> registerNewMember(attrs, platform));
 	}
 
 	/**
+	 * 등록된 플랫폼 ID를 기반으로 Platform enum 파싱
+	 * @param registrationId ex) kakao, google, etc.
+	 * @return Platform enum
+	 */
+	private Platform parsePlatform(String registrationId) {
+		try {
+			return Platform.valueOf(registrationId.toUpperCase());
+		} catch (IllegalArgumentException e) {
+			throw new OAuthException(ErrorCode.OAUTH_UNSUPPORTED_PLATFORM, e);
+		}
+	}
+
+	/**
+	 * 파싱된 사용자 정보에서 플랫폼 ID 추출
+	 * @param attrs 파싱된 사용자 정보
+	 * @return 플랫폼 ID
+	 */
+	private String extractPlatformId(Map<String, Object> attrs) {
+		String platformId = (String)attrs.get(OAuth2AttributeKey.PLATFORM_ID);
+		if (platformId == null) {
+			throw new OAuthException(ErrorCode.OAUTH_INVALID_ATTRIBUTE);
+		}
+		return platformId;
+	}
+
+	/**
 	 * 회원 가입 처리 (최초 로그인 시 호출)
-	 * @param parsed 파싱된 사용자 정보
+	 * @param attrs 파싱된 사용자 정보
 	 * @param platform 로그인 플랫폼 정보
 	 * @return 새로 등록된 회원 엔티티
 	 */
-	private Member registerNewMember(Map<String,Object> parsed, Platform platform) {
-		String email    = Objects.requireNonNull((String) parsed.get(KakaoUserProcessor.EMAIL_KEY));
-		String nickname = (String) parsed.get(KakaoUserProcessor.NICKNAME_KEY);
-		String image    = (String) parsed.get(KakaoUserProcessor.PROFILE_IMAGE_KEY);
-		String pid      = (String) parsed.get(KakaoUserProcessor.PLATFORM_ID_KEY);
+	private Member registerNewMember(Map<String, Object> attrs, Platform platform) {
+		String email = Objects.requireNonNull((String)attrs.get(OAuth2AttributeKey.EMAIL));
+		String nickname = (String)attrs.get(OAuth2AttributeKey.NICKNAME);
+		String image = (String)attrs.get(OAuth2AttributeKey.PROFILE_IMAGE);
+		String platformId = (String)attrs.get(OAuth2AttributeKey.PLATFORM_ID);
 
-		MemberProfile profile = new MemberProfile(email, nickname, image, platform, pid);
-		MemberAdditionalInfo addInfo = new MemberAdditionalInfo("", "");
+		MemberProfile profile =
+			new MemberProfile(email, nickname, image, platform, platformId);
+		MemberAdditionalInfo addInfo =
+			new MemberAdditionalInfo("", "");
 
-		return memberRepository.save(new Member(profile, addInfo, Clock.systemDefaultZone()));
+		return memberRepository.save(
+			new Member(profile, addInfo, clock)
+		);
 	}
 }
