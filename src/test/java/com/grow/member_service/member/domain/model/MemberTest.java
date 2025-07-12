@@ -11,6 +11,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.grow.member_service.member.domain.exception.MemberDomainException;
+
 class MemberTest {
 
 	private Clock fixedClock;
@@ -60,13 +62,13 @@ class MemberTest {
 	}
 
 	@Test
-	@DisplayName("withdraw(): 이미 탈퇴된 회원에 대해 두 번째 호출 시 IllegalStateException 발생")
+	@DisplayName("withdraw(): 이미 탈퇴된 회원에 대해 두 번째 호출 시 예외 발생")
 	void withdraw_SecondTime_ThrowsIllegalStateException() {
 		Member member = new Member(profile, additionalInfo, fixedClock);
 		member.withdraw();
 
-		IllegalStateException ex = assertThrows(
-			IllegalStateException.class,
+		MemberDomainException ex = assertThrows(
+			MemberDomainException.class,
 			member::withdraw
 		);
 		assertEquals("이미 탈퇴한 회원입니다.", ex.getMessage());
@@ -85,15 +87,15 @@ class MemberTest {
 	}
 
 	@Test
-	@DisplayName("addPoint(): 음수 포인트 추가 시 IllegalArgumentException 발생")
+	@DisplayName("addPoint(): 음수 포인트 추가 시 예외 발생")
 	void addPoint_Negative_ThrowsIllegalArgumentException() {
 		Member member = new Member(profile, additionalInfo, fixedClock);
 
-		IllegalArgumentException ex = assertThrows(
-			IllegalArgumentException.class,
+		MemberDomainException ex = assertThrows(
+			MemberDomainException.class,
 			() -> member.addPoint(-1)
 		);
-		assertEquals("포인트는 0 이상이어야 합니다.", ex.getMessage());
+		assertEquals("부여할 포인트는 0 이상이어야 합니다. 입력값: -1", ex.getMessage());
 	}
 
 	@Test

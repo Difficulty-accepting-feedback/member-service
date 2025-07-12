@@ -7,6 +7,8 @@ import java.time.Instant;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.grow.member_service.member.domain.exception.MemberDomainException;
+
 class PhoneVerificationTest {
 
 	@Test
@@ -47,16 +49,16 @@ class PhoneVerificationTest {
 	}
 
 	@Test
-	@DisplayName("verify(): 잘못된 코드 입력 시 IllegalArgumentException 발생")
+	@DisplayName("verify(): 잘못된 코드 입력 시 예외 발생")
 	void verify_IncorrectCode_ThrowsException() {
 		PhoneVerification original = new PhoneVerification(
 			1L, 2L, "01000000000", "654321", Instant.now(), false
 		);
 
-		IllegalArgumentException ex = assertThrows(
-			IllegalArgumentException.class,
+		MemberDomainException ex = assertThrows(
+			MemberDomainException.class,
 			() -> original.verify("000000")
 		);
-		assertEquals("인증 코드가 일치하지 않습니다.", ex.getMessage());
+		assertEquals("유효하지 않은 인증 코드입니다.", ex.getMessage());
 	}
 }
