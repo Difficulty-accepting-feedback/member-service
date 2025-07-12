@@ -2,6 +2,8 @@ package com.grow.member_service.member.domain.model;
 
 import java.time.Instant;
 
+import com.grow.member_service.member.domain.exception.MemberDomainException;
+
 import lombok.Getter;
 
 @Getter
@@ -45,7 +47,7 @@ public class PhoneVerification {
 	/** 인증 코드 검증 후, verified=true 상태의 새 인스턴스 반환 */
 	public PhoneVerification verify(String inputCode) {
 		if (!this.code.equals(inputCode)) {
-			throw new IllegalArgumentException("인증 코드가 일치하지 않습니다.");
+			throw MemberDomainException.codeNotVerified();
 		}
 		return new PhoneVerification(
 			this.id,

@@ -6,6 +6,8 @@ import net.nurigo.sdk.NurigoApp;
 import net.nurigo.sdk.message.model.Message;
 import net.nurigo.sdk.message.service.DefaultMessageService;
 
+import com.grow.member_service.common.exception.MemberException;
+import com.grow.member_service.global.exception.ErrorCode;
 import com.grow.member_service.member.domain.service.SmsService;
 import com.grow.member_service.member.infra.config.SmsProperties;
 
@@ -39,7 +41,7 @@ public class CoolsmsSmsService implements SmsService {
 		try {
 			messageService.send(msg);
 		} catch (Exception e) {
-			throw new RuntimeException("SMS 전송 실패", e);
+			throw new MemberException(ErrorCode.SMS_SEND_FAILED, e);
 		}
 	}
 }

@@ -3,6 +3,8 @@ package com.grow.member_service.member.domain.model;
 import java.time.Clock;
 import java.time.LocalDateTime;
 
+import com.grow.member_service.member.domain.exception.MemberDomainException;
+
 import lombok.Getter;
 
 /**
@@ -54,7 +56,7 @@ public class Member {
     /** 회원 탈퇴 처리 */
     public void withdraw() {
         if (this.withdrawalAt != null) {
-            throw new IllegalStateException("이미 탈퇴한 회원입니다.");
+            throw MemberDomainException.alreadyWithdrawn();
         }
         this.withdrawalAt = LocalDateTime.now();
     }
@@ -67,13 +69,19 @@ public class Member {
     /** 포인트 추가 메서드 */
     public void addPoint(int points) {
         if (points < 0) {
-            throw new IllegalArgumentException("포인트는 0 이상이어야 합니다.");
+            throw MemberDomainException.negativePoints(points);
         }
         this.totalPoint += points;
     }
 
     /** 핸드폰 인증 완료 처리 */
     public void verifyPhone(String phoneNumber) {
+        if (this.isPhoneVerified()) {
+            throw MemberDomainException.alreadyPhoneVerified();
+        }
+        if (phoneNumber == null || phoneNumber.isBlank()) {
+            throw MemberDomainException.invalidPhoneNumber();
+        }
         this.additionalInfo = this.additionalInfo.verifyPhone(phoneNumber);
     }
 

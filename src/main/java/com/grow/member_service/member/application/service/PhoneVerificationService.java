@@ -3,6 +3,8 @@ package com.grow.member_service.member.application.service;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.grow.member_service.common.exception.MemberException;
+import com.grow.member_service.global.exception.ErrorCode;
 import com.grow.member_service.member.domain.model.Member;
 import com.grow.member_service.member.domain.model.PhoneVerification;
 import com.grow.member_service.member.domain.repository.MemberRepository;
@@ -43,13 +45,13 @@ public class PhoneVerificationService {
 	public void verifyCode(Long memberId, String code) {
 		// 1) PhoneVerification 검증
 		PhoneVerification v = repository.findByMemberId(memberId)
-			.orElseThrow(() -> new IllegalArgumentException("인증 요청이 없습니다."));
+			.orElseThrow(() -> new MemberException(ErrorCode.PHONE_VERIFICATION_NOT_REQUESTED));
 		PhoneVerification verified = v.verify(code);
 		repository.save(verified);
 
 		// 2) Member 도메인에 인증 정보 반영
 		Member member = memberRepository.findById(memberId)
-			.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+			.orElseThrow(() -> new MemberException(ErrorCode.MEMBER_NOT_FOUND));
 		member.verifyPhone(verified.getPhoneNumber());
 		memberRepository.save(member);
 	}
