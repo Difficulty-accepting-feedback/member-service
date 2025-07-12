@@ -12,12 +12,18 @@ import com.grow.member_service.member.application.service.PhoneVerificationServi
 import com.grow.member_service.member.presentation.dto.CodeRequestDto;
 import com.grow.member_service.member.presentation.dto.PhoneRequestDto;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/verification")
 @RequiredArgsConstructor
+@RequestMapping("/api/verification")
+@SecurityRequirement(name = "cookieAuth")
+@Tag(name = "PhoneVerification", description = "전화번호 인증 API")
 public class PhoneVerificationController {
 
 	private final PhoneVerificationService phoneVerificationService;
@@ -25,8 +31,10 @@ public class PhoneVerificationController {
 	/**
 	 * 사용자로부터 전화번호를 받아 SMS 인증 코드를 전송합니다.
 	 */
+	@Operation(summary = "인증 코드 요청", description = "로그인한 회원의 전화번호로 SMS 인증 코드를 전송합니다.")
 	@PostMapping("/request")
 	public ResponseEntity<RsData<Long>> requestCode(
+		@Parameter(hidden = true)
 		@AuthenticationPrincipal Long memberId,
 		@RequestBody @Valid PhoneRequestDto request
 	) {
@@ -43,8 +51,10 @@ public class PhoneVerificationController {
 	/**
 	 * 사용자로부터 받은 인증 코드를 검증합니다.
 	 */
+	@Operation(summary = "인증 코드 검증", description = "로그인한 회원이 입력한 SMS 인증 코드를 검증합니다.")
 	@PostMapping("/verify")
 	public ResponseEntity<RsData<Void>> verifyCode(
+		@Parameter(hidden = true)
 		@AuthenticationPrincipal Long memberId,
 		@RequestBody @Valid CodeRequestDto request
 	) {

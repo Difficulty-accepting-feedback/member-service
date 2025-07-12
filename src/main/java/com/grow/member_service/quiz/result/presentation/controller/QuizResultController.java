@@ -20,12 +20,15 @@ import com.grow.member_service.quiz.result.presentation.dto.QuizResultResponse;
 import com.grow.member_service.quiz.result.presentation.dto.QuizStatsResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/quizzes")
+@SecurityRequirement(name = "cookieAuth")
 @Tag(name = "QuizResult", description = "퀴즈 결과 관리 API")
 public class QuizResultController {
 	private final QuizResultService quizResultService;
@@ -38,6 +41,7 @@ public class QuizResultController {
 	@Operation(summary = "퀴즈 결과 기록", description = "특정 퀴즈에 대한 회원의 결과를 기록합니다.")
 	@PostMapping("/{quizId}/results")
 	public ResponseEntity<RsData<QuizResultResponse>> recordResult(
+		@Parameter(hidden = true)
 		@AuthenticationPrincipal Long memberId,
 		@PathVariable Long quizId,
 		@RequestBody QuizResultRequest quizResultRequest
@@ -58,6 +62,7 @@ public class QuizResultController {
 	@Operation(summary = "퀴즈 결과 목록 조회", description = "회원별 퀴즈 결과 리스트를 조회합니다.")
 	@GetMapping("/results")
 	public ResponseEntity<RsData<List<QuizResultResponse>>> getMyResults(
+		@Parameter(hidden = true)
 		@AuthenticationPrincipal Long memberId
 	) {
 		List<QuizResult> results = quizResultService.getResultsForMember(memberId);
@@ -75,6 +80,7 @@ public class QuizResultController {
 	@Operation(summary = "퀴즈 통계 조회", description = "회원의 퀴즈 정답 개수 및 성공률을 조회합니다.")
 	@GetMapping("/stats")
 	public ResponseEntity<RsData<QuizStatsResponse>> getMyStats(
+		@Parameter(hidden = true)
 		@AuthenticationPrincipal Long memberId
 	) {
 		long correctCount = quizResultService.countCorrectAnswers(memberId);
