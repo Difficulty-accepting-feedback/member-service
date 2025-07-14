@@ -1,5 +1,7 @@
 package com.grow.member_service.member.domain.model;
 
+import java.util.Objects;
+
 import lombok.Getter;
 
 /**
@@ -42,5 +44,13 @@ public class MemberAdditionalInfo {
     /** 회원 탈퇴 시 민감 정보 마스킹 처리 */
     public MemberAdditionalInfo eraseSensitiveInfo() {
         return new MemberAdditionalInfo(null, this.address, false);
+    }
+
+    public MemberAdditionalInfo withAddress(String newAddress) {
+        return new MemberAdditionalInfo(
+            this.phoneNumber,
+            Objects.requireNonNull(newAddress, "새 주소는 null일 수 없습니다."),
+            this.phoneVerified
+        );
     }
 }

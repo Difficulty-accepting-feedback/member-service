@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 import com.grow.member_service.member.domain.exception.MemberDomainException;
+import com.grow.member_service.member.domain.service.MemberService;
 
 import lombok.Getter;
 
@@ -109,4 +110,27 @@ public class Member {
             this.getWithdrawalAt()
         );
     }
+
+    /**
+     * 닉네임 변경
+     */
+    public void changeNickname(String newNickname, MemberService memberService) {
+        String nickname = java.util.Objects.requireNonNull(newNickname, "변경할 닉네임은 null일 수 없습니다.");
+        if (!memberService.isNicknameUnique(nickname)) {
+            throw MemberDomainException.nicknameAlreadyExists(nickname);
+        }
+        this.memberProfile = this.memberProfile.withNickname(nickname);
+    }
+
+    /** 프로필 이미지 변경 */
+    public void changeProfileImage(String newProfileImage) {
+        this.memberProfile = this.memberProfile.withProfileImage(newProfileImage);
+    }
+
+    /** 주소 변경 */
+    public void changeAddress(String newAddress) {
+        String addr = java.util.Objects.requireNonNull(newAddress, "변경할 주소는 null일 수 없습니다.");
+        this.additionalInfo = this.additionalInfo.withAddress(addr);
+    }
+
 }

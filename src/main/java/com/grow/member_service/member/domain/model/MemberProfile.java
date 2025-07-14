@@ -1,5 +1,7 @@
 package com.grow.member_service.member.domain.model;
 
+import java.util.Objects;
+
 import lombok.Getter;
 
 /**
@@ -21,25 +23,31 @@ public class MemberProfile {
                          Platform platform,
                          String platformId
     ) {
-        this.email = validateEmail(email);
-        this.nickname = validateNickname(nickname);
+        this.email = email;
+        this.nickname = nickname;
         this.profileImage = profileImage;
         this.platform = platform;
         this.platformId = platformId;
     }
 
-    /**
-     * 중복 확인 로직 추가 필요
-     */
-    private String validateEmail(String email) {
-        return email;
+    public MemberProfile withNickname(String newNickname) {
+        return new MemberProfile(
+            this.email,
+            Objects.requireNonNull(newNickname, "새 닉네임은 null일 수 없습니다."),
+            this.profileImage,
+            this.platform,
+            this.platformId
+        );
     }
 
-    /**
-     * 중복 확인 로직 추가 필요
-     */
-    private String validateNickname(String nickname) {
-        return nickname;
+    public MemberProfile withProfileImage(String newProfileImage) {
+        return new MemberProfile(
+            this.email,
+            this.nickname,
+            newProfileImage,
+            this.platform,
+            this.platformId
+        );
     }
 
     /** 회원 탈퇴 시 민감 정보 마스킹 처리 */
