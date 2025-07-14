@@ -41,4 +41,15 @@ public class MemberProfile {
     private String validateNickname(String nickname) {
         return nickname;
     }
+
+    /** 회원 탈퇴 시 민감 정보 마스킹 처리 */
+    public MemberProfile maskSensitiveInfo(Long memberId, String suffix) {
+        return new MemberProfile(
+            "withdrawn_" + memberId + "_" + suffix + "@masked.com",
+            "탈퇴회원_" + suffix,
+            null,
+            Platform.NONE,
+            "withdrawn_" + memberId + "_" + suffix
+        );
+    }
 }

@@ -2,6 +2,7 @@ package com.grow.member_service.member.domain.model;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import com.grow.member_service.member.domain.exception.MemberDomainException;
 
@@ -13,7 +14,7 @@ import lombok.Getter;
 @Getter
 public class Member {
     private final Long memberId;
-    private final MemberProfile memberProfile;
+    private MemberProfile memberProfile;
     private MemberAdditionalInfo additionalInfo;
     private final LocalDateTime createAt;
     private LocalDateTime withdrawalAt;
@@ -53,14 +54,6 @@ public class Member {
     }
 
     // 비즈니스 로직 메서드
-    /** 회원 탈퇴 처리 */
-    public void withdraw() {
-        if (this.withdrawalAt != null) {
-            throw MemberDomainException.alreadyWithdrawn();
-        }
-        this.withdrawalAt = LocalDateTime.now();
-    }
-
     /** 회원 탈퇴 여부 조회 */
     public boolean isWithdrawn() {
         return this.withdrawalAt != null;
@@ -88,5 +81,26 @@ public class Member {
     /** 인증 여부 조회 편의 메서드 */
     public boolean isPhoneVerified() {
         return this.additionalInfo.isPhoneVerified();
+    }
+
+    /** 회원 탈퇴 처리 및 개인정보 마스킹 */
+    public void markAsWithdrawn(UUID uuid) {
+        String suffix = uuid + "_" + LocalDateTime.now();
+        this.memberProfile = this.memberProfile.maskSensitiveInfo(this.memberId, suffix);
+        this.additionalInfo = this.additionalInfo.eraseSensitiveInfo();
+        this.withdrawalAt = LocalDateTime.now();
+    }
+
+    /** 회원 탈퇴 로그로 변환 */
+    public MemberWithdrawalLog toWithdrawalLog() {
+        return new MemberWithdrawalLog(
+            this.getMemberId(),
+            this.getMemberProfile().getEmail(),
+            this.getMemberProfile().getNickname(),
+            this.getMemberProfile().getPlatform(),
+            this.getMemberProfile().getPlatformId(),
+            this.additionalInfo.getPhoneNumber(),
+            this.getWithdrawalAt()
+        );
     }
 }

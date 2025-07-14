@@ -38,4 +38,9 @@ public class MemberAdditionalInfo {
         }
         return phoneNumber;
     }
+
+    /** 회원 탈퇴 시 민감 정보 마스킹 처리 */
+    public MemberAdditionalInfo eraseSensitiveInfo() {
+        return new MemberAdditionalInfo(null, this.address, false);
+    }
 }
