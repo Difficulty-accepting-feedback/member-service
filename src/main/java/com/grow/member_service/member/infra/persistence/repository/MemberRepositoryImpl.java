@@ -48,14 +48,8 @@ public class MemberRepositoryImpl implements MemberRepository {
 
     @Override
     public List<Member> findAll() {
-        return memberJpaRepository.findAll()
-            .stream()
+        return memberJpaRepository.findAll().stream()
             .map(memberMapper::toDomain)
             .collect(Collectors.toList());
-    }
-
-    @Override
-    public void delete(Member member) {
-        memberJpaRepository.delete(memberMapper.toEntity(member));
     }
 }

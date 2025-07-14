@@ -1,23 +1,57 @@
 package com.grow.member_service.member.presentation.controller;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.grow.member_service.global.dto.RsData;
 import com.grow.member_service.member.application.dto.MemberInfoResponse;
 import com.grow.member_service.member.application.service.MemberService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/members")
 @RequiredArgsConstructor
+@RequestMapping("/api/members")
+@SecurityRequirement(name = "cookieAuth")
+@Tag(name= "Member", description = "회원 관련 API")
 public class MemberController {
 	private final MemberService memberService;
 
+	/**
+	 * 내 정보 조회 API
+	 */
+	@Operation(summary = "내 정보 조회", description = "로그인한 사용자의 정보를 조회합니다.")
 	@GetMapping("/me")
-	public MemberInfoResponse getMyInfo(@AuthenticationPrincipal Long memberId) {
-		return memberService.getMyInfo(memberId);
+	public ResponseEntity<RsData<MemberInfoResponse>> getMyInfo(
+		@Parameter(hidden = true)
+		@AuthenticationPrincipal Long memberId
+	) {
+		MemberInfoResponse info = memberService.getMyInfo(memberId);
+		return ResponseEntity.ok(
+			new RsData<>("200", "내 정보 조회 성공", info)
+		);
+	}
+
+	/**
+	 * 내 계정 탈퇴 (soft-delete)
+	 */
+	@Operation(summary = "회원 탈퇴", description = "로그인한 사용자의 계정을 탈퇴합니다. (soft-delete 처리)")
+	@DeleteMapping("/withdraw")
+	public ResponseEntity<RsData<Void>> withdraw(
+		@Parameter(hidden = true)
+		@AuthenticationPrincipal Long memberId
+	) {
+		memberService.withdraw(memberId);
+		return ResponseEntity.ok(
+			new RsData<>("200", "회원 탈퇴 성공", null)
+		);
 	}
 }

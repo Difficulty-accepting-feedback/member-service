@@ -7,6 +7,8 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationFa
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import com.grow.member_service.auth.infra.config.OAuthProperties;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -18,14 +20,14 @@ import lombok.RequiredArgsConstructor;
 @Component
 @RequiredArgsConstructor
 public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationFailureHandler {
-	private final String frontUrl = "http://localhost:3000/oauth/redirect";
+	private final OAuthProperties oAuthProperties;
 
 	@Override
 	public void onAuthenticationFailure(HttpServletRequest req,
 		HttpServletResponse res,
 		AuthenticationException ex) throws IOException {
 		String target = UriComponentsBuilder
-			.fromUriString(frontUrl)
+			.fromUriString(oAuthProperties.getRedirectUri())
 			.queryParam("error", ex.getMessage())
 			.build().toUriString();
 		getRedirectStrategy().sendRedirect(req, res, target);

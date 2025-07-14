@@ -34,7 +34,7 @@ public class MemberJpaEntity {
     @Column(name = "memberId", nullable = false)
     private Long memberId;
 
-    @Column(name = "email", nullable = false, updatable = false)
+    @Column(name = "email", nullable = false)
     private String email;
 
     @Column(name = "nickname", nullable = false)
@@ -44,10 +44,10 @@ public class MemberJpaEntity {
     private String profileImage;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "platform", nullable = false, updatable = false)
+    @Column(name = "platform", nullable = false)
     private Platform platform;
 
-    @Column(name = "platformId", nullable = false, updatable = false)
+    @Column(name = "platformId", nullable = false)
     private String platformId;
     
     @Column(name = "createAt", nullable = false, updatable = false)
@@ -61,6 +61,9 @@ public class MemberJpaEntity {
 
     @Column(name = "phoneNumber")
     private String phoneNumber;
+
+    @Column(name = "phoneVerified", nullable = false)
+    private boolean phoneVerified;
 
     @Column(name = "score",  nullable = false)
     private Double score;
@@ -88,5 +91,6 @@ public class MemberJpaEntity {
         this.address = address;
         this.totalPoint = 0;
         this.score = 36.5;
+        this.phoneVerified = false;
     }
 }
