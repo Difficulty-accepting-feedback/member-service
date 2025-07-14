@@ -85,10 +85,16 @@ public class Member {
 
     /** 회원 탈퇴 처리 및 개인정보 마스킹 */
     public void markAsWithdrawn(UUID uuid) {
-        String suffix = uuid + "_" + LocalDateTime.now();
-        this.memberProfile = this.memberProfile.maskSensitiveInfo(this.memberId, suffix);
-        this.additionalInfo = this.additionalInfo.eraseSensitiveInfo();
+        // 이미 탈퇴된 회원인지 검사
+        if (this.withdrawalAt != null) {
+            throw MemberDomainException.alreadyWithdrawn();
+        }
+        // 탈퇴 시각 설정
         this.withdrawalAt = LocalDateTime.now();
+        String suffix = uuid + "_" + this.withdrawalAt;
+        // 개인정보 마스킹
+        this.memberProfile  = this.memberProfile.maskSensitiveInfo(this.memberId, suffix);
+        this.additionalInfo = this.additionalInfo.eraseSensitiveInfo();
     }
 
     /** 회원 탈퇴 로그로 변환 */

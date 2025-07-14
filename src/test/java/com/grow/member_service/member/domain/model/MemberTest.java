@@ -6,6 +6,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -50,26 +51,29 @@ class MemberTest {
 	}
 
 	@Test
-	@DisplayName("withdraw(): 처음 호출 시 withdrawalAt이 설정되고 isWithdrawn()이 true가 됨")
-	void withdraw_FirstTime_SetsWithdrawalAtAndIsWithdrawn() {
+	@DisplayName("markAsWithdrawn(): 처음 호출 시 withdrawalAt이 설정되고 isWithdrawn()이 true가 됨")
+	void markAsWithdrawn_FirstTime_SetsWithdrawalAtAndIsWithdrawn() {
 		Member member = new Member(profile, additionalInfo, fixedClock);
 		assertFalse(member.isWithdrawn());
 
-		member.withdraw();
+		UUID fixedUuid = UUID.fromString("00000000-0000-0000-0000-000000000000");
+		member.markAsWithdrawn(fixedUuid);
 
 		assertNotNull(member.getWithdrawalAt());
 		assertTrue(member.isWithdrawn());
 	}
 
 	@Test
-	@DisplayName("withdraw(): 이미 탈퇴된 회원에 대해 두 번째 호출 시 예외 발생")
-	void withdraw_SecondTime_ThrowsIllegalStateException() {
+	@DisplayName("markAsWithdrawn(): 이미 탈퇴된 회원에 대해 두 번째 호출 시 예외 발생")
+	void markAsWithdrawn_SecondTime_ThrowsAlreadyWithdrawn() {
 		Member member = new Member(profile, additionalInfo, fixedClock);
-		member.withdraw();
+
+		UUID fixedUuid = UUID.fromString("00000000-0000-0000-0000-000000000000");
+		member.markAsWithdrawn(fixedUuid);
 
 		MemberDomainException ex = assertThrows(
 			MemberDomainException.class,
-			member::withdraw
+			() -> member.markAsWithdrawn(fixedUuid)
 		);
 		assertEquals("이미 탈퇴한 회원입니다.", ex.getMessage());
 	}
