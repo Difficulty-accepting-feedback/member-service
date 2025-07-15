@@ -68,6 +68,11 @@ public class Member {
         this.totalPoint += points;
     }
 
+    /** 프로필 점수(온도) 조정 메서드 */
+    public void adjustScore(double scoreChange) {
+        this.score += scoreChange;
+    }
+
     /** 핸드폰 인증 완료 처리 */
     public void verifyPhone(String phoneNumber) {
         if (this.isPhoneVerified()) {

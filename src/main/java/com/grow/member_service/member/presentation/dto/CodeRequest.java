@@ -6,7 +6,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class PhoneRequestDto {
+public class CodeRequest {
 	@NotBlank
-	private String phoneNumber;
+	private String code;
 }

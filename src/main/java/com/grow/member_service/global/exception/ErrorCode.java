@@ -24,6 +24,10 @@ public enum ErrorCode {
 	PHONE_VERIFICATION_NOT_REQUESTED(HttpStatus.BAD_REQUEST, "400-11", "phone.verification.not.requested"),
 	SMS_SEND_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "500-1", "sms.send.failed"),
 
+	// 리뷰 도메인
+	REVIEW_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "400-12", "review.already.exists"),
+	REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "404-1", "review.not.found"),
+	REVIEW_SELF_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "400-13", "review.self.not.allowed"),
 
 	// OAuth 관련
 	OAUTH_UNSUPPORTED_PLATFORM(HttpStatus.BAD_REQUEST, "400-3", "oauth.unsupported.platform"),
