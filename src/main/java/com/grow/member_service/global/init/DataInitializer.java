@@ -4,13 +4,18 @@ import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import javax.crypto.SecretKey;
 
 import org.springframework.stereotype.Component;
 
 import com.grow.member_service.auth.infra.security.jwt.JwtProperties;
+import com.grow.member_service.history.point.domain.model.PointHistory;
+import com.grow.member_service.history.point.domain.repository.PointHistoryRepository;
 import com.grow.member_service.member.domain.model.Member;
 import com.grow.member_service.member.domain.model.MemberAdditionalInfo;
 import com.grow.member_service.member.domain.model.MemberProfile;
@@ -30,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 public class DataInitializer {
 
 	private final MemberRepository memberRepository;
+	private final PointHistoryRepository pointHistoryRepository;
 	private final JwtProperties props;
 
 	@PostConstruct
@@ -60,6 +66,24 @@ public class DataInitializer {
 		}
 
 		long memberId = testUser.getMemberId();
+
+		if (pointHistoryRepository.findByMemberId(memberId).isEmpty()) {
+			Clock clock = Clock.systemUTC();
+			List<PointHistory> mocks = IntStream.rangeClosed(1, 60)
+				.mapToObj(i -> {
+					// 홀수는 +50, 짝수는 +100, 5의 배수는 -200 차감
+					int amount = (i % 5 == 0)
+						? -200
+						: ((i % 2 == 0) ? +100 : +50);
+					String content = "모의 포인트 내역 #" + i
+						+ (amount > 0 ? " 적립" : " 사용");
+					return new PointHistory(memberId, amount, content, clock);
+				})
+				.collect(Collectors.toList());
+
+			mocks.forEach(pointHistoryRepository::save);
+			log.info("테스트용 포인트 내역 {}건 생성 완료", mocks.size());
+		}
 
 		// 토큰 생성
 		SecretKey key = Keys.hmacShaKeyFor(
