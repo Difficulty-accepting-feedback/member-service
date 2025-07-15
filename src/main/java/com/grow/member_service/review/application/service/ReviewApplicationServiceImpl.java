@@ -8,6 +8,9 @@ import org.springframework.transaction.annotation.Transactional;
 import com.grow.member_service.common.exception.ReviewException;
 import com.grow.member_service.global.exception.ErrorCode;
 import com.grow.member_service.member.application.service.MemberProfileService;
+import com.grow.member_service.member.domain.model.Member;
+import com.grow.member_service.member.domain.repository.MemberRepository;
+import com.grow.member_service.review.application.dto.ReviewCandidateResponse;
 import com.grow.member_service.review.domain.model.Review;
 import com.grow.member_service.review.domain.repository.ReviewRepository;
 
@@ -19,6 +22,7 @@ public class ReviewApplicationServiceImpl implements ReviewApplicationService {
 
 	private final ReviewRepository reviewRepository;
 	private final MemberProfileService memberProfileService;
+	private final MemberRepository memberRepository;
 
 	/**
 	 * 리뷰를 남기는 메소드
@@ -84,5 +88,26 @@ public class ReviewApplicationServiceImpl implements ReviewApplicationService {
 		}
 
 		return reviews;
+	}
+
+	/**
+	 * 작성 가능한 리뷰 대상자를 조회하는 메소드
+	 * @param reviewerId 리뷰어의 ID
+	 * @return 리뷰 대상자 목록
+	 */
+	@Override
+	@Transactional(readOnly = true)
+	public List<ReviewCandidateResponse> getReviewCandidates(Long reviewerId) {
+
+		List<Long> reviewedIds = reviewRepository.findRevieweeIdsByReviewerId(reviewerId);
+
+		// 전체 멤버 대상 (추후에 스터디 연결 시 수정 필요)
+		List<Member> all = memberRepository.findAllExcept(reviewerId);
+
+		// 아직 리뷰하지 않은 대상 필터링
+		return all.stream()
+			.filter(member -> !reviewedIds.contains(member.getMemberId()))
+			.map(ReviewCandidateResponse::from)
+			.toList();
 	}
 }

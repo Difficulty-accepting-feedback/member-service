@@ -9,4 +9,5 @@ public interface ReviewRepository {
     Review save(Review review);
     List<Review> findByRevieweeId(Long revieweeId);
     Optional<Review> findByReviewerIdAndRevieweeId(Long reviewerId, Long revieweeId);
+    List<Long> findRevieweeIdsByReviewerId(Long reviewerId);
 }

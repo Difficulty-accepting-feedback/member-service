@@ -30,7 +30,7 @@ public class ReviewJpaEntity {
 	private String content; // 평가 내용
 
 	@Column(name = "sincerity_score", nullable = false, updatable = false)
-	private int sincerityScore; // .성실성 점수
+	private int sincerityScore; // 성실성 점수
 
 	@Column(name = "enthusiasm_score", nullable = false, updatable = false)
 	private int enthusiasmScore; // 적극성 점수

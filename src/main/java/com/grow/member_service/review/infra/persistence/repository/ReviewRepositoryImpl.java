@@ -39,4 +39,12 @@ public class ReviewRepositoryImpl implements ReviewRepository {
         return jpaRepository.findByReviewerIdAndRevieweeId(reviewerId, revieweeId)
             .map(mapper::toDomain);
     }
+
+    @Override
+    public List<Long> findRevieweeIdsByReviewerId(Long reviewerId) {
+        return jpaRepository.findByReviewerId(reviewerId)
+            .stream()
+            .map(ReviewJpaEntity::getRevieweeId)
+            .toList();
+    }
 }

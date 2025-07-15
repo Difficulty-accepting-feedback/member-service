@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.grow.member_service.global.dto.RsData;
+import com.grow.member_service.review.application.dto.ReviewCandidateResponse;
 import com.grow.member_service.review.application.service.ReviewApplicationService;
 import com.grow.member_service.review.domain.model.Review;
 import com.grow.member_service.review.presentation.dto.ReviewSubmitRequest;
@@ -63,5 +64,15 @@ public class ReviewController {
 		return ResponseEntity.ok(
 			new RsData<>("200", "내가 받은 리뷰 조회 성공", reviews)
 		);
+	}
+
+	@Operation(summary = "작성 가능한 리뷰 목록 조회", description = "아직 리뷰하지 않은 멤버 목록을 조회합니다.")
+	@GetMapping("/candidates")
+	public ResponseEntity<RsData<List<ReviewCandidateResponse>>> getReviewCandidates(
+		@Parameter(hidden = true)
+		@AuthenticationPrincipal Long reviewerId
+	) {
+		List<ReviewCandidateResponse> candidates = reviewApplicationService.getReviewCandidates(reviewerId);
+		return ResponseEntity.ok(new RsData<>("200", "작성 가능한 리뷰 목록 조회 성공", candidates));
 	}
 }

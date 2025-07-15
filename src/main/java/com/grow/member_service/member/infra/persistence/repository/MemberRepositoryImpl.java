@@ -58,4 +58,12 @@ public class MemberRepositoryImpl implements MemberRepository {
         return memberJpaRepository.findByNickname(nickname)
             .map(memberMapper::toDomain);
     }
+
+    @Override
+    public List<Member> findAllExcept(Long exceptMemberId) {
+        return memberJpaRepository.findByMemberIdNot(exceptMemberId)
+            .stream()
+            .map(memberMapper::toDomain)
+            .toList();
+    }
 }

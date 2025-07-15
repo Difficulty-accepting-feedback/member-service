@@ -14,4 +14,5 @@ public interface MemberJpaRepository extends JpaRepository<MemberJpaEntity, Long
 	Optional<MemberJpaEntity> findByPlatformIdAndPlatform(String platformId, Platform platform);
 	List<MemberJpaEntity> findAllByWithdrawalAtBefore(LocalDateTime threshold);
 	Optional<MemberJpaEntity> findByNickname(String nickname);
+	List<MemberJpaEntity> findByMemberIdNot(Long memberId);
 }

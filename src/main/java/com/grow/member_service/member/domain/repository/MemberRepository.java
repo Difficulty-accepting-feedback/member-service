@@ -16,4 +16,5 @@ public interface MemberRepository {
     Optional<Member> findByPlatformId(String platformId, Platform platform);
     List<Member> findAll();
     Optional<Object> findByNickname(String nickname);
+    List<Member> findAllExcept(Long exceptMemberId);
 }
