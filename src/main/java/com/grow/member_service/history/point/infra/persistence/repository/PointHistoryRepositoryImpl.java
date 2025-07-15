@@ -17,7 +17,7 @@ import lombok.RequiredArgsConstructor;
 
 @Repository
 @RequiredArgsConstructor
-public class PointHistoryImpl implements PointHistoryRepository {
+public class PointHistoryRepositoryImpl implements PointHistoryRepository {
 
     private final PointHistoryJpaRepository jpaRepository;
     private final PointHistoryMapper mapper;
