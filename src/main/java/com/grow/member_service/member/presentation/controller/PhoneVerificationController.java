@@ -9,8 +9,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.grow.member_service.global.dto.RsData;
 import com.grow.member_service.member.application.service.PhoneVerificationService;
-import com.grow.member_service.member.presentation.dto.CodeRequestDto;
-import com.grow.member_service.member.presentation.dto.PhoneRequestDto;
+import com.grow.member_service.member.presentation.dto.CodeRequest;
+import com.grow.member_service.member.presentation.dto.PhoneRequest;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -36,7 +36,7 @@ public class PhoneVerificationController {
 	public ResponseEntity<RsData<Long>> requestCode(
 		@Parameter(hidden = true)
 		@AuthenticationPrincipal Long memberId,
-		@RequestBody @Valid PhoneRequestDto request
+		@RequestBody @Valid PhoneRequest request
 	) {
 		Long verificationId = phoneVerificationService.requestVerification(
 			memberId, request.getPhoneNumber()
@@ -56,7 +56,7 @@ public class PhoneVerificationController {
 	public ResponseEntity<RsData<Void>> verifyCode(
 		@Parameter(hidden = true)
 		@AuthenticationPrincipal Long memberId,
-		@RequestBody @Valid CodeRequestDto request
+		@RequestBody @Valid CodeRequest request
 	) {
 		phoneVerificationService.verifyCode(memberId, request.getCode());
 		return ResponseEntity.ok(new RsData<>(
