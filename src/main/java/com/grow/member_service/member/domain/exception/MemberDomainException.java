@@ -26,4 +26,8 @@ public class MemberDomainException extends DomainException {
 	public static MemberDomainException invalidPhoneNumber() {
 		return new MemberDomainException("유효하지 않은 핸드폰 번호입니다.");
 	}
+
+	public static MemberDomainException nicknameAlreadyExists(String nickname) {
+		return new MemberDomainException("이미 사용 중인 닉네임입니다: " + nickname);
+	}
 }

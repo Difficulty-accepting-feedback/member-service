@@ -15,4 +15,5 @@ public interface MemberRepository {
     Optional<Member> findByEmail(String email);
     Optional<Member> findByPlatformId(String platformId, Platform platform);
     List<Member> findAll();
+    Optional<Object> findByNickname(String nickname);
 }

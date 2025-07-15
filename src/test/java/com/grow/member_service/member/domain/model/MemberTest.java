@@ -13,6 +13,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.grow.member_service.member.domain.exception.MemberDomainException;
+import com.grow.member_service.member.domain.service.MemberService;
 
 class MemberTest {
 
@@ -112,5 +113,59 @@ class MemberTest {
 
 		assertTrue(member.isPhoneVerified());
 		assertEquals("01012345678", member.getAdditionalInfo().getPhoneNumber());
+	}
+
+	@Test
+	@DisplayName("changeNickname(): 고유한 닉네임 입력 시 nickname이 변경된다")
+	void changeNickname_Unique_SetsNewNickname() {
+		Member member = new Member(profile, additionalInfo, fixedClock);
+		MemberService memberService = new MemberService() {
+			@Override
+			public boolean isNicknameUnique(String nickname) {
+				return true;
+			}
+		};
+
+		member.changeNickname("newNickname", memberService);
+
+		assertEquals("newNickname", member.getMemberProfile().getNickname());
+	}
+
+	@Test
+	@DisplayName("changeNickname(): 중복된 닉네임 입력 시 예외 발생")
+	void changeNickname_Duplicate_ThrowsNicknameAlreadyExists() {
+		Member member = new Member(profile, additionalInfo, fixedClock);
+		MemberService memberService = new MemberService() {
+			@Override
+			public boolean isNicknameUnique(String nickname) {
+				return false;
+			}
+		};
+
+		MemberDomainException ex = assertThrows(
+			MemberDomainException.class,
+			() -> member.changeNickname("dupNickname", memberService)
+		);
+		assertTrue(ex.getMessage().contains("dupNickname"));
+	}
+
+	@Test
+	@DisplayName("changeProfileImage(): 새로운 프로필 이미지 입력 시 변경된다")
+	void changeProfileImage_SetsNewProfileImage() {
+		Member member = new Member(profile, additionalInfo, fixedClock);
+
+		member.changeProfileImage("http://example.com/new.png");
+
+		assertEquals("http://example.com/new.png", member.getMemberProfile().getProfileImage());
+	}
+
+	@Test
+	@DisplayName("changeAddress(): 새로운 주소 입력 시 변경된다")
+	void changeAddress_SetsNewAddress() {
+		Member member = new Member(profile, additionalInfo, fixedClock);
+
+		member.changeAddress("Busan");
+
+		assertEquals("Busan", member.getAdditionalInfo().getAddress());
 	}
 }

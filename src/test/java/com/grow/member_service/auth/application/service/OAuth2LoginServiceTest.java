@@ -4,6 +4,7 @@ import static com.grow.member_service.auth.infra.security.oauth2.OAuth2Attribute
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
+import static org.mockito.ArgumentMatchers.anyString;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -22,6 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.grow.member_service.auth.infra.security.oauth2.processor.OAuth2UserProcessor;
 import com.grow.member_service.common.exception.OAuthException;
 import com.grow.member_service.global.exception.ErrorCode;
+import com.grow.member_service.member.application.port.NicknameGeneratorPort;
 import com.grow.member_service.member.domain.model.Member;
 import com.grow.member_service.member.domain.model.MemberAdditionalInfo;
 import com.grow.member_service.member.domain.model.MemberProfile;
@@ -37,6 +39,8 @@ class OAuth2LoginServiceTest {
 	private MemberRepository memberRepository;
 	@Mock
 	private OAuth2UserProcessor kakaoProcessor;
+	@Mock
+	private NicknameGeneratorPort nicknameGenerator;
 
 	private Clock fixedClock;
 
@@ -46,9 +50,13 @@ class OAuth2LoginServiceTest {
 
 		lenient().when(kakaoProcessor.supports(Platform.KAKAO)).thenReturn(true);
 
+		lenient().when(nicknameGenerator.generate(anyString()))
+			.thenAnswer(invocation -> invocation.getArgument(0));
+
 		oAuth2LoginService = new OAuth2LoginService(
 			List.of(kakaoProcessor),
 			memberRepository,
+			nicknameGenerator,
 			fixedClock
 		);
 	}
@@ -59,10 +67,10 @@ class OAuth2LoginServiceTest {
 		// given
 		Map<String, Object> rawAttrs = Map.of();
 		Map<String, Object> parsed = Map.of(
-			PLATFORM_ID, "12345",
-			EMAIL,       "test@kakao.com",
-			NICKNAME,    "장무영",
-			PROFILE_IMAGE, "http://img.com"
+			PLATFORM_ID,    "12345",
+			EMAIL,          "test@kakao.com",
+			NICKNAME,       "장무영",
+			PROFILE_IMAGE,  "http://img.com"
 		);
 		Member existing = new Member(
 			new MemberProfile("test@kakao.com", "장무영", "http://img.com", Platform.KAKAO, "12345"),
@@ -87,16 +95,15 @@ class OAuth2LoginServiceTest {
 		// given
 		Map<String, Object> rawAttrs = Map.of();
 		Map<String, Object> parsed = Map.of(
-			PLATFORM_ID, "67890",
-			EMAIL,       "new@kakao.com",
-			NICKNAME,    "신규유저",
-			PROFILE_IMAGE, "http://img.com"
+			PLATFORM_ID,    "67890",
+			EMAIL,          "new@kakao.com",
+			NICKNAME,       "신규유저",
+			PROFILE_IMAGE,  "http://img.com"
 		);
 
 		given(kakaoProcessor.parseAttributes(rawAttrs)).willReturn(parsed);
 		given(memberRepository.findByPlatformId("67890", Platform.KAKAO))
 			.willReturn(Optional.empty());
-		// save 시 입력한 Member 객체를 그대로 반환
 		given(memberRepository.save(any(Member.class)))
 			.willAnswer(invocation -> invocation.getArgument(0));
 
@@ -106,6 +113,7 @@ class OAuth2LoginServiceTest {
 		// then
 		assertThat(result.getMemberProfile().getEmail()).isEqualTo("new@kakao.com");
 		assertThat(result.getMemberProfile().getPlatformId()).isEqualTo("67890");
+		assertThat(result.getMemberProfile().getNickname()).isEqualTo("신규유저");
 	}
 
 	@Test
@@ -117,9 +125,7 @@ class OAuth2LoginServiceTest {
 			() -> oAuth2LoginService.processOAuth2User("not-supported", Map.of())
 		);
 
-		// then
-		assertThat(ex.getErrorCode())
-			.isEqualTo(ErrorCode.OAUTH_UNSUPPORTED_PLATFORM);
+		assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.OAUTH_UNSUPPORTED_PLATFORM);
 	}
 
 	@Test
@@ -128,11 +134,10 @@ class OAuth2LoginServiceTest {
 		// given
 		Map<String, Object> rawAttrs = Map.of();
 		Map<String, Object> invalid = Map.of(
-			EMAIL,    "noid@kakao.com",
-			NICKNAME, "익명",
+			EMAIL,         "noid@kakao.com",
+			NICKNAME,      "익명",
 			PROFILE_IMAGE, "http://img.com"
 		);
-
 		given(kakaoProcessor.parseAttributes(rawAttrs)).willReturn(invalid);
 
 		// when

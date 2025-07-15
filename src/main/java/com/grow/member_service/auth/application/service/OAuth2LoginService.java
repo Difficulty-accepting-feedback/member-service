@@ -12,6 +12,7 @@ import com.grow.member_service.auth.infra.security.oauth2.OAuth2AttributeKey;
 import com.grow.member_service.auth.infra.security.oauth2.processor.OAuth2UserProcessor;
 import com.grow.member_service.common.exception.OAuthException;
 import com.grow.member_service.global.exception.ErrorCode;
+import com.grow.member_service.member.application.port.NicknameGeneratorPort;
 import com.grow.member_service.member.domain.model.Member;
 import com.grow.member_service.member.domain.model.MemberAdditionalInfo;
 import com.grow.member_service.member.domain.model.MemberProfile;
@@ -29,6 +30,7 @@ public class OAuth2LoginService {
 
 	private final List<OAuth2UserProcessor> processors;
 	private final MemberRepository memberRepository;
+	private final NicknameGeneratorPort nicknameGenerator;
 	private final Clock clock;
 
 	/**
@@ -94,16 +96,25 @@ public class OAuth2LoginService {
 	 * @return 새로 등록된 회원 엔티티
 	 */
 	private Member registerNewMember(Map<String, Object> attrs, Platform platform) {
-		String email = Objects.requireNonNull((String)attrs.get(OAuth2AttributeKey.EMAIL));
-		String nickname = (String)attrs.get(OAuth2AttributeKey.NICKNAME);
-		String image = (String)attrs.get(OAuth2AttributeKey.PROFILE_IMAGE);
-		String platformId = (String)attrs.get(OAuth2AttributeKey.PLATFORM_ID);
+		String email      = Objects.requireNonNull((String) attrs.get(OAuth2AttributeKey.EMAIL));
+		String rawNickname    = (String) attrs.get(OAuth2AttributeKey.NICKNAME);
+		String image      = (String) attrs.get(OAuth2AttributeKey.PROFILE_IMAGE);
+		String platformId = (String) attrs.get(OAuth2AttributeKey.PLATFORM_ID);
 
-		MemberProfile profile =
-			new MemberProfile(email, nickname, image, platform, platformId);
-		MemberAdditionalInfo addInfo =
-			new MemberAdditionalInfo("", "");
+		// 유니크 닉네임 생성
+		String uniqueNickname = nicknameGenerator.generate(rawNickname);
 
+		// MemberProfile, MemberAdditionalInfo 생성
+		MemberProfile profile = new MemberProfile(
+			email,
+			uniqueNickname,
+			image,
+			platform,
+			platformId
+		);
+		MemberAdditionalInfo addInfo = new MemberAdditionalInfo("", "");
+
+		// Member 엔티티 생성 & 저장
 		return memberRepository.save(
 			new Member(profile, addInfo, clock)
 		);

@@ -52,4 +52,10 @@ public class MemberRepositoryImpl implements MemberRepository {
             .map(memberMapper::toDomain)
             .collect(Collectors.toList());
     }
+
+    @Override
+    public Optional<Object> findByNickname(String nickname) {
+        return memberJpaRepository.findByNickname(nickname)
+            .map(memberMapper::toDomain);
+    }
 }

@@ -12,6 +12,7 @@ public class MemberInfoResponse {
 	private String email;
 	private String nickname;
 	private String profileImage;
+	private String address;
 	private LocalDateTime joinedAt;
 	private int totalPoint;
 	private double score;
@@ -25,6 +26,7 @@ public class MemberInfoResponse {
 		dto.email        = m.getMemberProfile().getEmail();
 		dto.nickname     = m.getMemberProfile().getNickname();
 		dto.profileImage = m.getMemberProfile().getProfileImage();
+		dto.address 	= m.getAdditionalInfo().getAddress();
 		dto.joinedAt     = m.getCreateAt();
 		dto.totalPoint   = m.getTotalPoint();
 		dto.score        = m.getScore();

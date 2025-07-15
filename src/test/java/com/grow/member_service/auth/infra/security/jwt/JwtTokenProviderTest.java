@@ -16,7 +16,7 @@ class JwtTokenProviderTest {
 	void setUp() {
 		JwtProperties props = new JwtProperties();
 		props.setSecret("test-secret-key-test-secret-key-1234567890");
-		props.setAccessTokenExpiration(1);  // 1초 유효 기간
+		props.setAccessTokenExpiration(5);  // 5초 유효 기간
 		props.setRefreshTokenExpiration(2); // 2초 유효 기간
 
 		provider = new JwtTokenProvider(props);
@@ -40,9 +40,9 @@ class JwtTokenProviderTest {
 	@Test
 	@DisplayName("만료된 토큰은 검증에 실패한다")
 	void tokenExpired() throws InterruptedException {
-		// Access 토큰 유효기간 1초
+		// Access 토큰 유효기간 5초
 		String token = provider.createAccessToken(1L);
-		Thread.sleep(Duration.ofSeconds(2).toMillis());
+		Thread.sleep(Duration.ofSeconds(5).toMillis());
 		assertThat(provider.validateToken(token)).isFalse();
 	}
 
