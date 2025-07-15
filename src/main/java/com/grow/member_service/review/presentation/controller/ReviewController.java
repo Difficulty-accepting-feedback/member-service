@@ -19,14 +19,12 @@ import com.grow.member_service.review.presentation.dto.ReviewSubmitRequest;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/reviews")
-@SecurityRequirement(name = "cookieAuth")
 @Tag(name = "Review", description = "리뷰 관련 API")
 public class ReviewController {
 

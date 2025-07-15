@@ -21,14 +21,12 @@ import com.grow.member_service.quiz.result.presentation.dto.QuizStatsResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/quizzes")
-@SecurityRequirement(name = "cookieAuth")
 @Tag(name = "QuizResult", description = "퀴즈 결과 관리 API")
 public class QuizResultController {
 	private final QuizResultService quizResultService;
