@@ -29,6 +29,10 @@ public enum ErrorCode {
 	REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "404-1", "review.not.found"),
 	REVIEW_SELF_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "400-13", "review.self.not.allowed"),
 
+	// 포인트 도메인
+	POINT_PERIOD_INCOMPLETE(HttpStatus.BAD_REQUEST, "400-14", "point.period.incomplete"),
+	POINT_PERIOD_INVALID_RANGE( HttpStatus.BAD_REQUEST, "400-15", "point.period.invalid.range"),
+
 	// OAuth 관련
 	OAUTH_UNSUPPORTED_PLATFORM(HttpStatus.BAD_REQUEST, "400-3", "oauth.unsupported.platform"),
 	OAUTH_MISSING_PLATFORM_ID(HttpStatus.BAD_REQUEST, "400-4", "oauth.missing.platform.id"),
