@@ -12,39 +12,50 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ReviewJpaEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long reviewId;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long reviewId;
 
-    @Column(name = "reviewerId",  nullable = false, updatable = false)
-    private Long reviewerId; // 리뷰 작성자 ID
+	@Column(name = "reviewerId", nullable = false, updatable = false)
+	private Long reviewerId; // 리뷰 작성자 ID
 
-    @Column(name = "revieweeId", nullable = false, updatable = false)
-    private Long revieweeId; // 리뷰 대상자 ID
+	@Column(name = "revieweeId", nullable = false, updatable = false)
+	private Long revieweeId; // 리뷰 대상자 ID
 
-    @Column(name = "content",
-            nullable = false,
-            updatable = false,
-            columnDefinition = "TEXT"
-    )
-    private String content; // 평가 내용
+	@Column(name = "content",
+		nullable = false,
+		updatable = false,
+		columnDefinition = "TEXT"
+	)
+	private String content; // 평가 내용
 
-    /**
-     * 점수에 대한 항목을 전체 다 저장해야 할 필요가 있을지 고민해 보아야 함
-     * 피어리뷰처럼 전체 항목을 전부 다 보여 주는 게 더 좋은지,,,?
-     */
-    @Column(name = "totalScore", nullable = false, updatable = false)
-    private Double totalScore; // 총 점수
+	@Column(name = "sincerity_score", nullable = false, updatable = false)
+	private int sincerityScore; // .성실성 점수
 
-    @Builder
-    public ReviewJpaEntity(Long reviewerId,
-                           Long revieweeId,
-                           String content,
-                           Double totalScore
-    ) {
-        this.reviewerId = reviewerId;
-        this.revieweeId = revieweeId;
-        this.content = content;
-        this.totalScore = totalScore;
-    }
+	@Column(name = "enthusiasm_score", nullable = false, updatable = false)
+	private int enthusiasmScore; // 적극성 점수
+
+	@Column(name = "communication_score", nullable = false, updatable = false)
+	private int communicationScore; // 커뮤니케이션 점수
+
+	@Column(name = "totalScore", nullable = false, updatable = false)
+	private Double totalScore; // 총 점수
+
+	@Builder
+	public ReviewJpaEntity(
+		Long reviewerId,
+		Long revieweeId,
+		String content,
+		int sincerityScore,
+		int enthusiasmScore,
+		int communicationScore,
+		Double totalScore) {
+		this.reviewerId = reviewerId;
+		this.revieweeId = revieweeId;
+		this.content = content;
+		this.sincerityScore = sincerityScore;
+		this.enthusiasmScore = enthusiasmScore;
+		this.communicationScore = communicationScore;
+		this.totalScore = totalScore;
+	}
 }
