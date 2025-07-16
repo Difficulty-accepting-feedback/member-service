@@ -1,12 +1,19 @@
 package com.grow.member_service.history.subscription.infra.persistence.entity;
 
-import jakarta.persistence.*;
+import java.time.LocalDateTime;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -22,6 +29,7 @@ public class SubscriptionHistoryJpaEntity {
     @Column(name = "memberId", nullable = false, updatable = false)
     private Long memberId; //
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "subscriptionStatus", nullable = false, updatable = false)
     private SubscriptionStatus subscriptionStatus; // 구독 상태
 
@@ -35,13 +43,17 @@ public class SubscriptionHistoryJpaEntity {
     private LocalDateTime changeAt; // 구독 상태 변경 날짜 (해지 날짜)
 
     @Builder
-    public SubscriptionHistoryJpaEntity(Long memberId,
-                                        LocalDateTime startAt,
-                                        LocalDateTime endAt
+    public SubscriptionHistoryJpaEntity(
+        Long memberId,
+        SubscriptionStatus subscriptionStatus,
+        LocalDateTime startAt,
+        LocalDateTime endAt,
+        LocalDateTime changeAt
     ) {
-        this.memberId = memberId;
-        this.subscriptionStatus = SubscriptionStatus.ACTIVE;
-        this.startAt = startAt;
-        this.endAt = endAt;
+        this.memberId           = memberId;
+        this.subscriptionStatus = subscriptionStatus;
+        this.startAt            = startAt;
+        this.endAt              = endAt;
+        this.changeAt           = changeAt;
     }
 }
