@@ -32,6 +32,7 @@ public enum ErrorCode {
 	// 포인트 도메인
 	POINT_PERIOD_INCOMPLETE(HttpStatus.BAD_REQUEST, "400-14", "point.period.incomplete"),
 	POINT_PERIOD_INVALID_RANGE( HttpStatus.BAD_REQUEST, "400-15", "point.period.invalid.range"),
+	POINT_PERIOD_EMPTY(HttpStatus.NOT_FOUND, "404-2", "point.period.empty"),
 
 	// OAuth 관련
 	OAUTH_UNSUPPORTED_PLATFORM(HttpStatus.BAD_REQUEST, "400-3", "oauth.unsupported.platform"),
