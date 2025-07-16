@@ -50,7 +50,7 @@ public class QuizResultController {
 			quizResultRequest.getIsCorrect()
 		);
 		QuizResultResponse dto = QuizResultResponse.from(quizResult);
-		return ResponseEntity.ok(new RsData<>("200", "퀴즈 결과 기록 완료", dto));
+		return ResponseEntity.ok(new RsData<>("201", "퀴즈 결과 기록 완료", dto));
 	}
 
 	/**

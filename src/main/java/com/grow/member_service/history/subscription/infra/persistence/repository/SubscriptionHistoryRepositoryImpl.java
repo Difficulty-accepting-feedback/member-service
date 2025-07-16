@@ -1,15 +1,16 @@
 package com.grow.member_service.history.subscription.infra.persistence.repository;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Repository;
+
 import com.grow.member_service.history.subscription.domain.model.SubscriptionHistory;
 import com.grow.member_service.history.subscription.domain.repository.SubscriptionHistoryRepository;
 import com.grow.member_service.history.subscription.infra.persistence.entity.SubscriptionHistoryJpaEntity;
 import com.grow.member_service.history.subscription.infra.persistence.mapper.SubscriptionHistoryMapper;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 
 @Repository
 @RequiredArgsConstructor
@@ -31,9 +32,8 @@ public class SubscriptionHistoryRepositoryImpl implements SubscriptionHistoryRep
      */
     @Override
     public List<SubscriptionHistory> findByMemberId(Long memberId) {
-        return jpaRepository.findById(memberId)
-                .stream()
-                .map(mapper::toDomain)
-                .collect(Collectors.toList());
+        return jpaRepository.findAllByMemberId(memberId).stream()
+            .map(mapper::toDomain)
+            .collect(Collectors.toList());
     }
 }

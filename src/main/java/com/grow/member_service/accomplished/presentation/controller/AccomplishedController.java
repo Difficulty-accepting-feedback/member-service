@@ -43,7 +43,7 @@ public class AccomplishedController {
 		@Valid @RequestBody CreateAccomplishedRequest req
 	) {
 		AccomplishedResponse res = accomplishedApplicationService.createAccomplishment(memberId, req);
-		return ResponseEntity.ok(new RsData<>("200", "업적 달성 성공", res));
+		return ResponseEntity.ok(new RsData<>("201", "업적 달성 성공", res));
 	}
 
 	@Operation(summary = "내가 달성한 업적 조회", description = "옵션으로 기간을 파라미터로 받아 페이징/정렬하여 조회")

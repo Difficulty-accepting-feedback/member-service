@@ -16,6 +16,7 @@ public enum ErrorCode {
 	// 퀴즈 결과 도메인
 	INVALID_QUIZ_ID(HttpStatus.BAD_REQUEST, "400-1", "quizResult.result.invalid.id"),
 	NULL_CORRECTNESS(HttpStatus.BAD_REQUEST, "400-2", "quizResult.null.correctness"),
+	QUIZ_RESULT_NOT_FOUND(HttpStatus.NOT_FOUND, "404-20", "quiz.result.not.found"),
 
 	//멤버 도메인
 	MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "404-0", "member.not.found"),
@@ -39,6 +40,8 @@ public enum ErrorCode {
 	ACCOMPLISHED_PERIOD_INVALID_RANGE(HttpStatus.BAD_REQUEST,"400-17", "accomplished.period.invalid.range"),
 	ACCOMPLISHED_PERIOD_EMPTY(HttpStatus.NOT_FOUND, "404-3", "accomplished.period.empty"),
 
+	// 구독 내역 도메인
+	SUBSCRIPTION_NOT_FOUND(HttpStatus.NOT_FOUND, "404-4", "subscription.not.found"),
 
 	// OAuth 관련
 	OAUTH_UNSUPPORTED_PLATFORM(HttpStatus.BAD_REQUEST, "400-3", "oauth.unsupported.platform"),
