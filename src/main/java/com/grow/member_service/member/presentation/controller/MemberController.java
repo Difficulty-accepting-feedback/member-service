@@ -16,14 +16,12 @@ import com.grow.member_service.member.presentation.dto.MemberUpdateRequest;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/members")
-@SecurityRequirement(name = "cookieAuth")
 @Tag(name= "Member", description = "회원 관련 API")
 public class MemberController {
 	private final MemberApplicationService memberApplicationService;
