@@ -39,6 +39,8 @@ public enum ErrorCode {
 	ACCOMPLISHED_PERIOD_INVALID_RANGE(HttpStatus.BAD_REQUEST,"400-17", "accomplished.period.invalid.range"),
 	ACCOMPLISHED_PERIOD_EMPTY(HttpStatus.NOT_FOUND, "404-3", "accomplished.period.empty"),
 
+	// 구독 내역 도메인
+	SUBSCRIPTION_NOT_FOUND(HttpStatus.NOT_FOUND, "404-4", "subscription.not.found"),
 
 	// OAuth 관련
 	OAUTH_UNSUPPORTED_PLATFORM(HttpStatus.BAD_REQUEST, "400-3", "oauth.unsupported.platform"),
