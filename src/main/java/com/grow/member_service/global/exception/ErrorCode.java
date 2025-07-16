@@ -16,6 +16,7 @@ public enum ErrorCode {
 	// 퀴즈 결과 도메인
 	INVALID_QUIZ_ID(HttpStatus.BAD_REQUEST, "400-1", "quizResult.result.invalid.id"),
 	NULL_CORRECTNESS(HttpStatus.BAD_REQUEST, "400-2", "quizResult.null.correctness"),
+	QUIZ_RESULT_NOT_FOUND(HttpStatus.NOT_FOUND, "404-20", "quiz.result.not.found"),
 
 	//멤버 도메인
 	MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "404-0", "member.not.found"),
