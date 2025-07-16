@@ -3,6 +3,7 @@ package com.grow.member_service.global.init;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +14,8 @@ import javax.crypto.SecretKey;
 
 import org.springframework.stereotype.Component;
 
+import com.grow.member_service.accomplished.domain.model.Accomplished;
+import com.grow.member_service.accomplished.domain.repository.AccomplishedRepository;
 import com.grow.member_service.auth.infra.security.jwt.JwtProperties;
 import com.grow.member_service.history.point.domain.model.PointHistory;
 import com.grow.member_service.history.point.domain.repository.PointHistoryRepository;
@@ -36,6 +39,7 @@ public class DataInitializer {
 
 	private final MemberRepository memberRepository;
 	private final PointHistoryRepository pointHistoryRepository;
+	private final AccomplishedRepository accomplishedRepository;
 	private final JwtProperties props;
 
 	@PostConstruct
@@ -66,9 +70,9 @@ public class DataInitializer {
 		}
 
 		long memberId = testUser.getMemberId();
+		Clock clock = Clock.systemUTC();
 
 		if (pointHistoryRepository.findByMemberId(memberId).isEmpty()) {
-			Clock clock = Clock.systemUTC();
 			List<PointHistory> mocks = IntStream.rangeClosed(1, 60)
 				.mapToObj(i -> {
 					// 홀수는 +50, 짝수는 +100, 5의 배수는 -200 차감
@@ -84,6 +88,19 @@ public class DataInitializer {
 			mocks.forEach(pointHistoryRepository::save);
 			log.info("테스트용 포인트 내역 {}건 생성 완료", mocks.size());
 		}
+
+		if (accomplishedRepository.findAllByMemberId(memberId).isEmpty()) {
+			List<Accomplished> accomplishments = IntStream.rangeClosed(1, 60)
+				.mapToObj(i -> {
+					LocalDateTime now = LocalDateTime.now(clock);
+					return new Accomplished(memberId, (long) i, now);
+				})
+				.collect(Collectors.toList());
+
+			accomplishments.forEach(accomplishedRepository::save);
+			log.info("테스트용 업적 {}건 생성 완료", accomplishments.size());
+		}
+
 
 		// 토큰 생성
 		SecretKey key = Keys.hmacShaKeyFor(
