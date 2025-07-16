@@ -48,7 +48,7 @@ public class ReviewController {
 		);
 
 		return ResponseEntity.ok(
-			new RsData<>("200", "리뷰 작성 성공", review)
+			new RsData<>("201", "리뷰 작성 성공", review)
 		);
 	}
 
