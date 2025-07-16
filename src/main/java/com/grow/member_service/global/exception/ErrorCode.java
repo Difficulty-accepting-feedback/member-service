@@ -34,6 +34,12 @@ public enum ErrorCode {
 	POINT_PERIOD_INVALID_RANGE( HttpStatus.BAD_REQUEST, "400-15", "point.period.invalid.range"),
 	POINT_PERIOD_EMPTY(HttpStatus.NOT_FOUND, "404-2", "point.period.empty"),
 
+	// 업적 도메인
+	ACCOMPLISHED_PERIOD_INCOMPLETE(HttpStatus.BAD_REQUEST,  "400-16", "accomplished.period.incomplete"),
+	ACCOMPLISHED_PERIOD_INVALID_RANGE(HttpStatus.BAD_REQUEST,"400-17", "accomplished.period.invalid.range"),
+	ACCOMPLISHED_PERIOD_EMPTY(HttpStatus.NOT_FOUND, "404-3", "accomplished.period.empty"),
+
+
 	// OAuth 관련
 	OAUTH_UNSUPPORTED_PLATFORM(HttpStatus.BAD_REQUEST, "400-3", "oauth.unsupported.platform"),
 	OAUTH_MISSING_PLATFORM_ID(HttpStatus.BAD_REQUEST, "400-4", "oauth.missing.platform.id"),
