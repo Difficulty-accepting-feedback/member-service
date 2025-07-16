@@ -27,6 +27,8 @@ import com.grow.member_service.member.domain.model.MemberAdditionalInfo;
 import com.grow.member_service.member.domain.model.MemberProfile;
 import com.grow.member_service.member.domain.model.Platform;
 import com.grow.member_service.member.domain.repository.MemberRepository;
+import com.grow.member_service.quiz.result.domain.model.QuizResult;
+import com.grow.member_service.quiz.result.domain.repository.QuizResultRepository;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -44,6 +46,7 @@ public class DataInitializer {
 	private final PointHistoryRepository pointHistoryRepository;
 	private final AccomplishedRepository accomplishedRepository;
 	private final SubscriptionHistoryRepository subscriptionHistoryRepository;
+	private final QuizResultRepository quizResultRepository;
 	private final JwtProperties props;
 
 	@PostConstruct
@@ -144,6 +147,20 @@ public class DataInitializer {
 			subs.forEach(subscriptionHistoryRepository::save);
 			log.info("테스트용 구독 이력 {}건 생성 완료", subs.size());
 		}
+
+		if (quizResultRepository.findByMemberId(memberId).isEmpty()) {
+			List<QuizResult> quizResults = IntStream.rangeClosed(1, 20)
+				.mapToObj(i -> {
+					long quizId = (i % 5) + 1;
+					boolean isCorrect = (i % 3 != 0);             // 3의 배수만 틀리게
+					return new QuizResult(memberId, quizId, isCorrect);
+				})
+				.collect(Collectors.toList());
+
+			quizResults.forEach(quizResultRepository::save);
+			log.info("테스트용 퀴즈 결과 {}건 생성 완료", quizResults.size());
+		}
+
 
 		// 토큰 생성
 		SecretKey key = Keys.hmacShaKeyFor(

@@ -19,8 +19,7 @@ public class QuizResultJpaEntity {
 
     @Column(name = "memberId",
             nullable = false,
-            updatable = false,
-            unique = true
+            updatable = false
     )
     private Long memberId; // 멤버 ID
 
