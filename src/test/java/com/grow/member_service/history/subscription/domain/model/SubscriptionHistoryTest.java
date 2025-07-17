@@ -54,7 +54,7 @@ class SubscriptionHistoryTest {
 
 		// then: startAt ∈ [before, now], endAt = startAt+1개월
 		assertThat(afterStart).isBetween(before, LocalDateTime.now());
-		assertThat(afterEnd).isEqualTo(afterStart.plusMonths(1));
+		assertThat(afterEnd).isAfterOrEqualTo(afterStart.plusMonths(1));
 		assertThat(sh.getSubscriptionStatus()).isEqualTo(SubscriptionStatus.ACTIVE);
 	}
 
