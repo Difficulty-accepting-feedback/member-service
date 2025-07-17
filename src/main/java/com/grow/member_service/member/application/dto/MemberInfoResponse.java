@@ -18,6 +18,7 @@ public class MemberInfoResponse {
 	private double score;
 	private boolean phoneVerified;
 	private String phoneNumber;
+	private boolean matchingEnabled;
 
 	// Member → DTO 변환 팩토리 메서드
 	public static MemberInfoResponse from(Member m) {
@@ -34,6 +35,7 @@ public class MemberInfoResponse {
 		dto.phoneNumber   = m.getAdditionalInfo() != null
 			? m.getAdditionalInfo().getPhoneNumber()
 			: null;
+		dto.matchingEnabled = m.isMatchingEnabled();
 		return dto;
 	}
 }

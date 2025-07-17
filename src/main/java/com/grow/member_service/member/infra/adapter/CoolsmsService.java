@@ -14,11 +14,11 @@ import com.grow.member_service.member.infra.config.SmsProperties;
 import jakarta.annotation.PostConstruct;
 
 @Component
-public class CoolsmsSmsService implements SmsService {
+public class CoolsmsService implements SmsService {
 	private DefaultMessageService messageService;
 	private final SmsProperties props;
 
-	public CoolsmsSmsService(SmsProperties props) {
+	public CoolsmsService(SmsProperties props) {
 		this.props = props;
 	}
 

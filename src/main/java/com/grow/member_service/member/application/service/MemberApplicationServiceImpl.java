@@ -6,7 +6,6 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.grow.member_service.common.exception.DomainException;
 import com.grow.member_service.common.exception.MemberException;
 import com.grow.member_service.global.exception.ErrorCode;
 import com.grow.member_service.member.application.dto.MemberInfoResponse;
@@ -76,5 +75,24 @@ public class MemberApplicationServiceImpl implements MemberApplicationService {
 			.orElseThrow(() -> new MemberException(
 				ErrorCode.MEMBER_NOT_FOUND)
 			);
+	}
+
+	@Transactional
+	@Override
+	public void toggleMatching(Long memberId, boolean enabled) {
+		Member member = memberRepository.findById(memberId)
+			.orElseThrow(() -> new MemberException(ErrorCode.MEMBER_NOT_FOUND));
+
+		if (member.isMatchingEnabled() == enabled) {
+			return;
+		}
+
+		if (enabled) {
+			member.enableMatching();
+		} else {
+			member.disableMatching();
+		}
+
+		memberRepository.save(member);
 	}
 }

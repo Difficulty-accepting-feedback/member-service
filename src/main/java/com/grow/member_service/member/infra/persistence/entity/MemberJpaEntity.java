@@ -71,7 +71,9 @@ public class MemberJpaEntity {
     @Column(name = "address")
     private String address;
 
-    @Builder
+    @Column(name = "matchingEnabled", nullable = false)
+    private boolean matchingEnabled;
+
     public MemberJpaEntity(String email,
                            String nickname,
                            String profileImage,
@@ -79,7 +81,8 @@ public class MemberJpaEntity {
                            String platformId,
                            LocalDateTime createAt,
                            String phoneNumber,
-                           String address
+                           String address,
+                           boolean matchingEnabled
     ) {
         this.email = email;
         this.nickname = nickname;
@@ -92,5 +95,6 @@ public class MemberJpaEntity {
         this.totalPoint = 0;
         this.score = 36.5;
         this.phoneVerified = false;
+        this.matchingEnabled = matchingEnabled;
     }
 }
