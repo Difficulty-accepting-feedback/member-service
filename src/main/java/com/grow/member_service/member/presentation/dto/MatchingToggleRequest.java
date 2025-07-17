@@ -15,5 +15,5 @@ import lombok.Setter;
 public class MatchingToggleRequest {
 
 	@NotNull
-	private Boolean enabled;
+	private Boolean isEnabled;
 }

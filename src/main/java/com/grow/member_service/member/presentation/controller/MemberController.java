@@ -68,7 +68,7 @@ public class MemberController {
 		@AuthenticationPrincipal Long memberId,
 		@RequestBody @Valid MatchingToggleRequest req
 	) {
-		memberApplicationService.toggleMatching(memberId, req.getEnabled());
+		memberApplicationService.toggleMatching(memberId, req.getIsEnabled());
 		return ResponseEntity.ok(new RsData<>("200", "매칭 설정 변경 성공", null));
 	}
 }
