@@ -127,11 +127,11 @@ class ReviewApplicationServiceImplTest {
 		// 모든 회원 조회 (예: IDs 1,2,3,4,5)
 		MemberProfile p = new MemberProfile("u@e", "nick", "img", Platform.GOOGLE, "ext");
 		MemberAdditionalInfo a = new MemberAdditionalInfo("010","addr");
-		Member m1 = new Member(1L, p, a, LocalDateTime.now(), 0, 36.5);
-		Member m2 = new Member(2L, p, a, LocalDateTime.now(), 0, 36.5);
-		Member m3 = new Member(3L, p, a, LocalDateTime.now(), 0, 36.5);
-		Member m4 = new Member(4L, p, a, LocalDateTime.now(), 0, 36.5);
-		Member m5 = new Member(5L, p, a, LocalDateTime.now(), 0, 36.5);
+		Member m1 = new Member(1L, p, a, LocalDateTime.now(), 0, 36.5, true);
+		Member m2 = new Member(2L, p, a, LocalDateTime.now(), 0, 36.5, true);
+		Member m3 = new Member(3L, p, a, LocalDateTime.now(), 0, 36.5, true);
+		Member m4 = new Member(4L, p, a, LocalDateTime.now(), 0, 36.5, true);
+		Member m5 = new Member(5L, p, a, LocalDateTime.now(), 0, 36.5, true);
 		given(memberRepository.findAllExcept(REVIEWER_ID))
 			.willReturn(List.of(m1, m2, m3, m4, m5));
 

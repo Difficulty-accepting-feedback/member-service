@@ -208,4 +208,50 @@ class MemberApplicationServiceImplTest {
 		assertEquals("Seoul", sampleMember.getAdditionalInfo().getAddress());
 		verify(memberRepository).save(sampleMember);
 	}
+
+	@Test
+	@DisplayName("toggleMatching(): 회원이 존재하고 enabled=true 요청 시 매칭 기능 활성화 및 저장 호출")
+	void toggleMatching_Enable_Success() {
+		Long memberId = 7L;
+		// 초기 상태를 비활성화로 만들어둔 뒤 활성화 요청을 테스트합니다.
+		sampleMember.disableMatching();
+		when(memberRepository.findById(memberId))
+			.thenReturn(Optional.of(sampleMember));
+
+		service.toggleMatching(memberId, true);
+
+		// 매칭 기능이 활성화되어야 하고, 저장이 호출되어야 합니다.
+		assertTrue(sampleMember.isMatchingEnabled(), "enabled=true 요청 시 매칭 기능이 활성화되어야 한다");
+		verify(memberRepository).save(sampleMember);
+	}
+
+	@Test
+	@DisplayName("toggleMatching(): 회원이 존재하고 enabled=false 요청 시 매칭 기능 비활성화 및 저장 호출")
+	void toggleMatching_Disable_Success() {
+		Long memberId = 8L;
+		// 초기 상태는 활성화(true)이므로 바로 비활성화 요청을 테스트합니다.
+		when(memberRepository.findById(memberId))
+			.thenReturn(Optional.of(sampleMember));
+
+		service.toggleMatching(memberId, false);
+
+		// 매칭 기능이 비활성화되어야 하고, 저장이 호출되어야 합니다.
+		assertFalse(sampleMember.isMatchingEnabled(), "enabled=false 요청 시 매칭 기능이 비활성화되어야 한다");
+		verify(memberRepository).save(sampleMember);
+	}
+
+	@Test
+	@DisplayName("toggleMatching(): 회원이 존재하지 않으면 MemberException 발생")
+	void toggleMatching_NotFound_ThrowsMemberException() {
+		Long memberId = 9L;
+		when(memberRepository.findById(anyLong()))
+			.thenReturn(Optional.empty());
+
+		assertThrows(MemberException.class,
+			() -> service.toggleMatching(memberId, true),
+			"회원이 존재하지 않으면 MemberException을 던져야 한다");
+
+		// 저장 호출이 없어야 합니다.
+		verify(memberRepository, never()).save(any());
+	}
 }

@@ -40,6 +40,7 @@ class MemberMapperTest {
 		LocalDateTime withdrawalAt = LocalDateTime.of(2025, 7, 18, 13, 30);
 		int totalPoint = 100;
 		double score = 37.5;
+		boolean matchingEnabled = true;
 
 		MemberJpaEntity entity = MemberJpaEntity.builder()
 			.memberId(id)
@@ -55,6 +56,7 @@ class MemberMapperTest {
 			.withdrawalAt(withdrawalAt)
 			.totalPoint(totalPoint)
 			.score(score)
+			.matchingEnabled(matchingEnabled)
 			.build();
 
 		// when
@@ -75,6 +77,7 @@ class MemberMapperTest {
 		assertThat(domain.getWithdrawalAt()).isNull();
 		assertThat(domain.getTotalPoint()).isEqualTo(totalPoint);
 		assertThat(domain.getScore()).isEqualTo(score);
+		assertThat(domain.isMatchingEnabled()).isTrue();
 	}
 
 	@Test
@@ -92,10 +95,11 @@ class MemberMapperTest {
 		LocalDateTime createAt = LocalDateTime.of(2025, 7, 10, 10, 0);
 		int totalPoint = 50;
 		double score = 39.5;
+		boolean matchingEnabled = true;
 
 		MemberProfile profile = new MemberProfile(email, nickname, profileImage, platform, platformId);
 		MemberAdditionalInfo info = new MemberAdditionalInfo(phoneNumber, address);
-		Member domain = new Member(id, profile, info, createAt, totalPoint, score);
+		Member domain = new Member(id, profile, info, createAt, totalPoint, score, true);
 
 		// when
 		MemberJpaEntity entity = mapper.toEntity(domain);
@@ -114,5 +118,6 @@ class MemberMapperTest {
 		assertThat(entity.getWithdrawalAt()).isNull();
 		assertThat(entity.getTotalPoint()).isEqualTo(totalPoint);
 		assertThat(entity.getScore()).isEqualTo(score);
+		assertThat(entity.isMatchingEnabled()).isTrue();
 	}
 }

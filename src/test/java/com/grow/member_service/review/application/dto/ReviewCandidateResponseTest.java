@@ -35,7 +35,8 @@ class ReviewCandidateResponseTest {
 			additionalInfo,
 			createAt,
 			0,
-			36.5
+			36.5,
+			true
 		);
 
 		// when
