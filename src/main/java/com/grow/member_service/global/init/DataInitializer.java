@@ -25,7 +25,7 @@ import com.grow.member_service.history.subscription.infra.persistence.entity.Sub
 import com.grow.member_service.member.domain.model.Member;
 import com.grow.member_service.member.domain.model.MemberAdditionalInfo;
 import com.grow.member_service.member.domain.model.MemberProfile;
-import com.grow.member_service.member.domain.model.Platform;
+import com.grow.member_service.member.domain.model.enums.Platform;
 import com.grow.member_service.member.domain.repository.MemberRepository;
 import com.grow.member_service.quiz.result.domain.model.QuizResult;
 import com.grow.member_service.quiz.result.domain.repository.QuizResultRepository;

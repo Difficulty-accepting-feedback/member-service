@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.grow.member_service.member.domain.model.Member;
-import com.grow.member_service.member.domain.model.Platform;
+import com.grow.member_service.member.domain.model.enums.Platform;
 
 /**
  * 도메인 리포지토리 인터페이스

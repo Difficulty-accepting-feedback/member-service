@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 import com.grow.member_service.common.exception.OAuthException;
 import com.grow.member_service.global.exception.ErrorCode;
-import com.grow.member_service.member.domain.model.Platform;
+import com.grow.member_service.member.domain.model.enums.Platform;
 
 @Component
 public class NaverUserProcessor implements OAuth2UserProcessor {

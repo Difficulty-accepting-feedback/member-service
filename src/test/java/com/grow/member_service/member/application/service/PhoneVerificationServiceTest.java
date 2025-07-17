@@ -23,7 +23,7 @@ import com.grow.member_service.member.domain.model.Member;
 import com.grow.member_service.member.domain.model.MemberAdditionalInfo;
 import com.grow.member_service.member.domain.model.MemberProfile;
 import com.grow.member_service.member.domain.model.PhoneVerification;
-import com.grow.member_service.member.domain.model.Platform;
+import com.grow.member_service.member.domain.model.enums.Platform;
 import com.grow.member_service.member.domain.repository.MemberRepository;
 import com.grow.member_service.member.domain.repository.PhoneVerificationRepository;
 import com.grow.member_service.member.domain.service.SmsService;

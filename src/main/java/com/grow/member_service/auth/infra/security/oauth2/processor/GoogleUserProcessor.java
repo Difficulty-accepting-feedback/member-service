@@ -9,7 +9,7 @@ import java.util.Map;
 import org.springframework.stereotype.Component;
 
 import com.grow.member_service.common.exception.OAuthException;
-import com.grow.member_service.member.domain.model.Platform;
+import com.grow.member_service.member.domain.model.enums.Platform;
 
 @Component
 public class GoogleUserProcessor implements OAuth2UserProcessor {

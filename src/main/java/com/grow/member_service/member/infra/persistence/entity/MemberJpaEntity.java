@@ -2,7 +2,7 @@ package com.grow.member_service.member.infra.persistence.entity;
 
 import java.time.LocalDateTime;
 
-import com.grow.member_service.member.domain.model.Platform;
+import com.grow.member_service.member.domain.model.enums.Platform;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

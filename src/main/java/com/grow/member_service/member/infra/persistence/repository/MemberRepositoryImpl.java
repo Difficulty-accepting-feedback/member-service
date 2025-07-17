@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Repository;
 
 import com.grow.member_service.member.domain.model.Member;
-import com.grow.member_service.member.domain.model.Platform;
+import com.grow.member_service.member.domain.model.enums.Platform;
 import com.grow.member_service.member.domain.repository.MemberRepository;
 import com.grow.member_service.member.infra.persistence.entity.MemberJpaEntity;
 import com.grow.member_service.member.infra.persistence.mapper.MemberMapper;

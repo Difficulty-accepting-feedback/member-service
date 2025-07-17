@@ -1,4 +1,4 @@
-package com.grow.member_service.member.domain.model;
+package com.grow.member_service.member.domain.model.enums;
 
 /**
  * 추후 고려해 볼 사항 -> 있어도 좋을 듯...

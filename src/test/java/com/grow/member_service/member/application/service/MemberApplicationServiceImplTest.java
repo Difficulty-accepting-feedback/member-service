@@ -21,6 +21,7 @@ import com.grow.member_service.common.exception.MemberException;
 import com.grow.member_service.member.application.dto.MemberInfoResponse;
 import com.grow.member_service.member.domain.exception.MemberDomainException;
 import com.grow.member_service.member.domain.model.Member;
+import com.grow.member_service.member.domain.model.enums.Platform;
 import com.grow.member_service.member.domain.repository.MemberRepository;
 import com.grow.member_service.member.domain.repository.MemberWithdrawalLogRepository;
 import com.grow.member_service.member.domain.service.MemberService;
@@ -56,7 +57,7 @@ class MemberApplicationServiceImplTest {
 				"user@example.com",
 				"origNick",
 				"http://example.com/orig.png",
-				com.grow.member_service.member.domain.model.Platform.KAKAO,
+				Platform.KAKAO,
 				"ext-id"
 			),
 			new com.grow.member_service.member.domain.model.MemberAdditionalInfo(

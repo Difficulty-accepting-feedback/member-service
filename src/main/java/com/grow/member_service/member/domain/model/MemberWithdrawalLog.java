@@ -2,6 +2,8 @@ package com.grow.member_service.member.domain.model;
 
 import java.time.LocalDateTime;
 
+import com.grow.member_service.member.domain.model.enums.Platform;
+
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 

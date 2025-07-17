@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 import com.grow.member_service.common.exception.OAuthException;
 import com.grow.member_service.global.exception.ErrorCode;
-import com.grow.member_service.member.domain.model.Platform;
+import com.grow.member_service.member.domain.model.enums.Platform;
 
 /**
  * 카카오 소셜 로그인 사용자 정보를 처리하는 클래스

@@ -2,6 +2,8 @@ package com.grow.member_service.member.domain.model;
 
 import java.util.Objects;
 
+import com.grow.member_service.member.domain.model.enums.Platform;
+
 import lombok.Getter;
 
 /**

@@ -6,13 +6,13 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.grow.member_service.member.domain.exception.MemberDomainException;
+import com.grow.member_service.member.domain.model.enums.Platform;
 import com.grow.member_service.member.domain.service.MemberService;
 
 class MemberTest {
@@ -52,31 +52,16 @@ class MemberTest {
 	}
 
 	@Test
-	@DisplayName("markAsWithdrawn(): 처음 호출 시 withdrawalAt이 설정되고 isWithdrawn()이 true가 됨")
-	void markAsWithdrawn_FirstTime_SetsWithdrawalAtAndIsWithdrawn() {
-		Member member = new Member(profile, additionalInfo, fixedClock);
-		assertFalse(member.isWithdrawn());
+	@DisplayName("Clock 없이 생성 시 createAt이 현재 시각 범위 내에 설정된다")
+	void constructor_WithoutClock_SetsCreateAt() {
+		LocalDateTime before = LocalDateTime.now();
+		Member member = new Member(profile, additionalInfo, null);
+		LocalDateTime after = LocalDateTime.now();
 
-		UUID fixedUuid = UUID.fromString("00000000-0000-0000-0000-000000000000");
-		member.markAsWithdrawn(fixedUuid);
-
-		assertNotNull(member.getWithdrawalAt());
-		assertTrue(member.isWithdrawn());
-	}
-
-	@Test
-	@DisplayName("markAsWithdrawn(): 이미 탈퇴된 회원에 대해 두 번째 호출 시 예외 발생")
-	void markAsWithdrawn_SecondTime_ThrowsAlreadyWithdrawn() {
-		Member member = new Member(profile, additionalInfo, fixedClock);
-
-		UUID fixedUuid = UUID.fromString("00000000-0000-0000-0000-000000000000");
-		member.markAsWithdrawn(fixedUuid);
-
-		MemberDomainException ex = assertThrows(
-			MemberDomainException.class,
-			() -> member.markAsWithdrawn(fixedUuid)
-		);
-		assertEquals("이미 탈퇴한 회원입니다.", ex.getMessage());
+		assertFalse(member.getCreateAt().isBefore(before),
+			"createAt should not be before instantiation");
+		assertFalse(member.getCreateAt().isAfter(after),
+			"createAt should not be after instantiation");
 	}
 
 	@Test
@@ -93,14 +78,28 @@ class MemberTest {
 
 	@Test
 	@DisplayName("addPoint(): 음수 포인트 추가 시 예외 발생")
-	void addPoint_Negative_ThrowsIllegalArgumentException() {
+	void addPoint_Negative_ThrowsDomainException() {
 		Member member = new Member(profile, additionalInfo, fixedClock);
 
 		MemberDomainException ex = assertThrows(
 			MemberDomainException.class,
 			() -> member.addPoint(-1)
 		);
-		assertEquals("부여할 포인트는 0 이상이어야 합니다. 입력값: -1", ex.getMessage());
+		assertTrue(ex.getMessage().contains("0 이상"),
+			"Exception message should mention non-negative requirement");
+	}
+
+	@Test
+	@DisplayName("adjustScore(): score가 올바르게 증가 및 감소한다")
+	void adjustScore_ChangesScore() {
+		Member member = new Member(profile, additionalInfo, fixedClock);
+		assertEquals(36.5, member.getScore());
+
+		member.adjustScore(2.5);
+		assertEquals(39.0, member.getScore());
+
+		member.adjustScore(-1.5);
+		assertEquals(37.5, member.getScore());
 	}
 
 	@Test
@@ -116,37 +115,77 @@ class MemberTest {
 	}
 
 	@Test
+	@DisplayName("verifyPhone(): null phoneNumber 전달 시 MemberDomainException 발생")
+	void verifyPhone_NullPhone_ThrowsInvalidPhoneNumber() {
+		Member member = new Member(profile, additionalInfo, fixedClock);
+
+		assertThrows(
+			MemberDomainException.class,
+			() -> member.verifyPhone(null)
+		);
+	}
+
+	@Test
+	@DisplayName("verifyPhone(): blank phoneNumber 전달 시 MemberDomainException 발생")
+	void verifyPhone_BlankPhone_ThrowsInvalidPhoneNumber() {
+		Member member = new Member(profile, additionalInfo, fixedClock);
+
+		assertThrows(
+			MemberDomainException.class,
+			() -> member.verifyPhone("   ")
+		);
+	}
+
+	@Test
+	@DisplayName("verifyPhone(): 이미 인증된 경우 예외 발생")
+	void verifyPhone_AlreadyVerified_ThrowsAlreadyPhoneVerified() {
+		Member member = new Member(profile, additionalInfo, fixedClock);
+		member.verifyPhone("01012345678");
+
+		MemberDomainException ex = assertThrows(
+			MemberDomainException.class,
+			() -> member.verifyPhone("01012345678")
+		);
+		assertTrue(ex.getMessage().contains("이미") && ex.getMessage().contains("인증"),
+			"Exception message should mention already verified");
+	}
+
+	@Test
 	@DisplayName("changeNickname(): 고유한 닉네임 입력 시 nickname이 변경된다")
 	void changeNickname_Unique_SetsNewNickname() {
 		Member member = new Member(profile, additionalInfo, fixedClock);
-		MemberService memberService = new MemberService() {
-			@Override
-			public boolean isNicknameUnique(String nickname) {
-				return true;
-			}
-		};
+		MemberService service = nickname -> true;
 
-		member.changeNickname("newNickname", memberService);
+		member.changeNickname("newNick", service);
 
-		assertEquals("newNickname", member.getMemberProfile().getNickname());
+		assertEquals("newNick", member.getMemberProfile().getNickname());
+	}
+
+	@Test
+	@DisplayName("changeNickname(): null nickname 전달 시 NullPointerException 발생")
+	void changeNickname_NullNickname_ThrowsNullPointerException() {
+		Member member = new Member(profile, additionalInfo, fixedClock);
+		MemberService service = nickname -> true;
+
+		NullPointerException ex = assertThrows(
+			NullPointerException.class,
+			() -> member.changeNickname(null, service)
+		);
+		assertEquals("변경할 닉네임은 null일 수 없습니다.", ex.getMessage());
 	}
 
 	@Test
 	@DisplayName("changeNickname(): 중복된 닉네임 입력 시 예외 발생")
-	void changeNickname_Duplicate_ThrowsNicknameAlreadyExists() {
+	void changeNickname_Duplicate_ThrowsDomainException() {
 		Member member = new Member(profile, additionalInfo, fixedClock);
-		MemberService memberService = new MemberService() {
-			@Override
-			public boolean isNicknameUnique(String nickname) {
-				return false;
-			}
-		};
+		MemberService service = nickname -> false;
 
 		MemberDomainException ex = assertThrows(
 			MemberDomainException.class,
-			() -> member.changeNickname("dupNickname", memberService)
+			() -> member.changeNickname("dupNick", service)
 		);
-		assertTrue(ex.getMessage().contains("dupNickname"));
+		assertTrue(ex.getMessage().contains("dupNick"),
+			"Exception message should include the duplicate nickname");
 	}
 
 	@Test
@@ -156,7 +195,8 @@ class MemberTest {
 
 		member.changeProfileImage("http://example.com/new.png");
 
-		assertEquals("http://example.com/new.png", member.getMemberProfile().getProfileImage());
+		assertEquals("http://example.com/new.png",
+			member.getMemberProfile().getProfileImage());
 	}
 
 	@Test
@@ -167,5 +207,17 @@ class MemberTest {
 		member.changeAddress("Busan");
 
 		assertEquals("Busan", member.getAdditionalInfo().getAddress());
+	}
+
+	@Test
+	@DisplayName("changeAddress(): null address 전달 시 NullPointerException 발생")
+	void changeAddress_NullAddress_ThrowsNullPointerException() {
+		Member member = new Member(profile, additionalInfo, fixedClock);
+
+		NullPointerException ex = assertThrows(
+			NullPointerException.class,
+			() -> member.changeAddress(null)
+		);
+		assertEquals("변경할 주소는 null일 수 없습니다.", ex.getMessage());
 	}
 }

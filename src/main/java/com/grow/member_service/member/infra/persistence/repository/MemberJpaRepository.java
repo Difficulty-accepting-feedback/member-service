@@ -6,7 +6,7 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.grow.member_service.member.domain.model.Platform;
+import com.grow.member_service.member.domain.model.enums.Platform;
 import com.grow.member_service.member.infra.persistence.entity.MemberJpaEntity;
 
 public interface MemberJpaRepository extends JpaRepository<MemberJpaEntity, Long> {
