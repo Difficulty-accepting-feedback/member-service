@@ -12,11 +12,13 @@ import org.springframework.web.bind.annotation.RestController;
 import com.grow.member_service.global.dto.RsData;
 import com.grow.member_service.member.application.dto.MemberInfoResponse;
 import com.grow.member_service.member.application.service.MemberApplicationService;
+import com.grow.member_service.member.presentation.dto.MatchingToggleRequest;
 import com.grow.member_service.member.presentation.dto.MemberUpdateRequest;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -58,5 +60,15 @@ public class MemberController {
 	) {
 		memberApplicationService.updateMember(memberId, req);
 		return ResponseEntity.ok(new RsData<>("200", "회원 정보 수정 성공", null));
+	}
+
+	@PatchMapping("/me/matching")
+	@Operation(summary = "매칭 기능 활성화/비활성화")
+	public ResponseEntity<RsData<Void>> toggleMatching(
+		@AuthenticationPrincipal Long memberId,
+		@RequestBody @Valid MatchingToggleRequest req
+	) {
+		memberApplicationService.toggleMatching(memberId, req.getIsEnabled());
+		return ResponseEntity.ok(new RsData<>("200", "매칭 설정 변경 성공", null));
 	}
 }

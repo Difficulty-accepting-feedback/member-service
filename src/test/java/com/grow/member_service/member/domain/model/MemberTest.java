@@ -220,4 +220,28 @@ class MemberTest {
 		);
 		assertEquals("변경할 주소는 null일 수 없습니다.", ex.getMessage());
 	}
+
+	@Test
+	@DisplayName("매칭 기능은 기본적으로 활성화되어 있어야 한다")
+	void defaultMatchingEnabled_isTrue() {
+		Member member = new Member(profile, additionalInfo, fixedClock);
+		assertTrue(member.isMatchingEnabled(), "기본 생성 시 matchingEnabled는 true여야 한다");
+	}
+
+	@Test
+	@DisplayName("disableMatching(): 매칭 기능을 비활성화하면 isMatchingEnabled()가 false가 된다")
+	void disableMatching_setsMatchingEnabledFalse() {
+		Member member = new Member(profile, additionalInfo, fixedClock);
+		member.disableMatching();
+		assertFalse(member.isMatchingEnabled(), "disableMatching 호출 후 matchingEnabled는 false여야 한다");
+	}
+
+	@Test
+	@DisplayName("enableMatching(): 매칭 기능을 재활성화하면 isMatchingEnabled()가 true가 된다")
+	void enableMatching_setsMatchingEnabledTrue() {
+		Member member = new Member(profile, additionalInfo, fixedClock);
+		member.disableMatching();  // 먼저 비활성화
+		member.enableMatching();   // 다시 활성화
+		assertTrue(member.isMatchingEnabled(), "enableMatching 호출 후 matchingEnabled는 true여야 한다");
+	}
 }

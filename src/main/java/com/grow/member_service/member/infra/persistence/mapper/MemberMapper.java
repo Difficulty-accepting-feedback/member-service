@@ -35,7 +35,8 @@ public class MemberMapper {
                 additionalInfo,
                 entity.getCreateAt(),
                 entity.getTotalPoint(),
-                entity.getScore()
+                entity.getScore(),
+                entity.isMatchingEnabled()
         );
     }
 
@@ -58,6 +59,7 @@ public class MemberMapper {
             .withdrawalAt(domain.getWithdrawalAt())       // 탈퇴 일시(없으면 null)
             .totalPoint(domain.getTotalPoint())
             .score(domain.getScore())
+            .matchingEnabled(domain.isMatchingEnabled())
             .build();
     }
 }

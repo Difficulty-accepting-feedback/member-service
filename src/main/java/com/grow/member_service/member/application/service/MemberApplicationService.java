@@ -7,4 +7,5 @@ public interface MemberApplicationService {
 	MemberInfoResponse getMyInfo(Long memberId);
 	void withdraw(Long memberId);
 	void updateMember(Long memberId, MemberUpdateRequest req);
+	void toggleMatching(Long memberId, boolean enabled);
 }

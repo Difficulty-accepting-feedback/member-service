@@ -21,30 +21,33 @@ public class Member {
     private LocalDateTime withdrawalAt;
     private int totalPoint;
     private double score;
+	private boolean matchingEnabled; // 매칭 기능 활성화 여부
 
     public Member(MemberProfile memberProfile,
-                  MemberAdditionalInfo additionalInfo,
-                  Clock createAt
+        MemberAdditionalInfo additionalInfo,
+        Clock createAt
     ) {
         this.memberId = null; // 생성 시 null, DB 저장 후 자동으로 생성
         this.memberProfile = memberProfile;
         this.additionalInfo = additionalInfo;
         this.totalPoint = 0;
         this.score = 36.5;
+        this.matchingEnabled = true;
 
         if (createAt != null) {
             this.createAt = LocalDateTime.now(createAt);
-        } else  {
+        } else {
             this.createAt = LocalDateTime.now();
         }
     }
 
     public Member(Long memberId,
-                  MemberProfile memberProfile,
-                  MemberAdditionalInfo additionalInfo,
-                  LocalDateTime createAt,
-                  int totalPoint,
-                  double score
+        MemberProfile memberProfile,
+        MemberAdditionalInfo additionalInfo,
+        LocalDateTime createAt,
+        int totalPoint,
+        double score,
+        boolean matchingEnabled
     ) {
         this.memberId = memberId;
         this.memberProfile = memberProfile;
@@ -52,9 +55,11 @@ public class Member {
         this.createAt = createAt;
         this.totalPoint = totalPoint;
         this.score = score;
+        this.matchingEnabled = matchingEnabled;
     }
 
     // 비즈니스 로직 메서드
+
     /** 회원 탈퇴 여부 조회 */
     public boolean isWithdrawn() {
         return this.withdrawalAt != null;
@@ -99,7 +104,7 @@ public class Member {
         this.withdrawalAt = LocalDateTime.now();
         String suffix = uuid + "_" + this.withdrawalAt;
         // 개인정보 마스킹
-        this.memberProfile  = this.memberProfile.maskSensitiveInfo(this.memberId, suffix);
+        this.memberProfile = this.memberProfile.maskSensitiveInfo(this.memberId, suffix);
         this.additionalInfo = this.additionalInfo.eraseSensitiveInfo();
     }
 
@@ -138,4 +143,13 @@ public class Member {
         this.additionalInfo = this.additionalInfo.withAddress(addr);
     }
 
+    /** 매칭 기능 활성화 */
+    public void enableMatching() {
+        this.matchingEnabled = true;
+    }
+
+    /** 매칭 기능 비활성화 */
+    public void disableMatching() {
+        this.matchingEnabled = false;
+    }
 }
