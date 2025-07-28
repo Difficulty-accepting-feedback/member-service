@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.grow.member_service.member.application.dto.MemberScoreDto;
+import com.grow.member_service.member.infra.dto.MemberScoreProjection;
 import org.springframework.stereotype.Repository;
 
 import com.grow.member_service.member.domain.model.Member;
@@ -35,22 +37,9 @@ public class MemberRepositoryImpl implements MemberRepository {
     }
 
     @Override
-    public Optional<Member> findByEmail(String email) {
-        return memberJpaRepository.findByEmail(email)
-            .map(memberMapper::toDomain);
-    }
-
-    @Override
     public Optional<Member> findByPlatformId(String platformId, Platform platform) {
         return memberJpaRepository.findByPlatformIdAndPlatform(platformId, platform)
             .map(memberMapper::toDomain);
-    }
-
-    @Override
-    public List<Member> findAll() {
-        return memberJpaRepository.findAll().stream()
-            .map(memberMapper::toDomain)
-            .collect(Collectors.toList());
     }
 
     @Override
@@ -65,5 +54,24 @@ public class MemberRepositoryImpl implements MemberRepository {
             .stream()
             .map(memberMapper::toDomain)
             .toList();
+    }
+
+    /**
+     * 모든 멤버의 점수를 조회하여 MemberScoreDto 리스트로 반환합니다.
+     *
+     * <p>이 메서드는 데이터베이스에서 MemberScoreProjection을 조회한 후,
+     * 이를 MemberScoreDto로 변환하여 반환합니다. Projection을 사용해 필요한 필드만 효율적으로 가져옵니다.</p>
+     *
+     * @return MemberScoreDto 리스트 (각 DTO는 memberId와 score를 포함)
+     */
+    @Override
+    public List<MemberScoreDto> findAllScore() {
+        List<MemberScoreProjection> projections = memberJpaRepository.findAllBy();  // Projection 조회
+        return projections.stream()
+                .map(p -> new MemberScoreDto(
+                        p.getMemberId(),
+                        p.getScore()
+                ))// // Projection -> DTO 변환
+                .toList();
     }
 }
