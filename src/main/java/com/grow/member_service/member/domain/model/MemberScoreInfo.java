@@ -1,4 +1,4 @@
-package com.grow.member_service.member.application.dto;
+package com.grow.member_service.member.domain.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -7,8 +7,8 @@ import lombok.ToString;
 /**
  * <h2>멤버 점수 DTO</h2>
  *
- * <p>이 클래스는 멤버의 ID와 신뢰 점수를 전달하기 위한 데이터 전송 객체(DTO)입니다.
- * 데이터베이스 조회 결과를 캡슐화하여 서비스 계층 ScoreUpdateService에서 Redis 업데이트 시 활용됩니다.</p>
+ * <p>이 클래스는 멤버의 ID와 신뢰 점수를 전달하기 위한 Value Object 입니다.
+ * 데이터베이스 조회 결과를 캡슐화하여 서비스 계층 ScoreUpdateService 에서 Redis 업데이트 시 활용됩니다.</p>
  *
  * <ol>
  *   <li>필드:
@@ -23,7 +23,7 @@ import lombok.ToString;
 @Getter
 @ToString
 @AllArgsConstructor
-public class MemberScoreDto {
+public class MemberScoreInfo {
 
     private Long memberId;
     private Double score;

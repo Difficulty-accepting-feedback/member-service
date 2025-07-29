@@ -2,9 +2,8 @@ package com.grow.member_service.member.infra.persistence.repository;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
-import com.grow.member_service.member.application.dto.MemberScoreDto;
+import com.grow.member_service.member.domain.model.MemberScoreInfo;
 import com.grow.member_service.member.infra.dto.MemberScoreProjection;
 import org.springframework.stereotype.Repository;
 
@@ -65,10 +64,10 @@ public class MemberRepositoryImpl implements MemberRepository {
      * @return MemberScoreDto 리스트 (각 DTO는 memberId와 score를 포함)
      */
     @Override
-    public List<MemberScoreDto> findAllScore() {
+    public List<MemberScoreInfo> findAllScore() {
         List<MemberScoreProjection> projections = memberJpaRepository.findAllBy();  // Projection 조회
         return projections.stream()
-                .map(p -> new MemberScoreDto(
+                .map(p -> new MemberScoreInfo(
                         p.getMemberId(),
                         p.getScore()
                 ))// // Projection -> DTO 변환

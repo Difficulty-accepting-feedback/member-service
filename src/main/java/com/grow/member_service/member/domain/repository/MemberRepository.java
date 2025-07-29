@@ -3,7 +3,7 @@ package com.grow.member_service.member.domain.repository;
 import java.util.List;
 import java.util.Optional;
 
-import com.grow.member_service.member.application.dto.MemberScoreDto;
+import com.grow.member_service.member.domain.model.MemberScoreInfo;
 import com.grow.member_service.member.domain.model.Member;
 import com.grow.member_service.member.domain.model.enums.Platform;
 
@@ -16,5 +16,5 @@ public interface MemberRepository {
     Optional<Member> findByPlatformId(String platformId, Platform platform);
     Optional<Object> findByNickname(String nickname);
     List<Member> findAllExcept(Long exceptMemberId);
-    List<MemberScoreDto> findAllScore();
+    List<MemberScoreInfo> findAllScore();
 }

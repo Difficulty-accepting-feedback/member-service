@@ -1,6 +1,6 @@
 package com.grow.member_service.member.application.service;
 
-import com.grow.member_service.member.application.dto.MemberScoreDto;
+import com.grow.member_service.member.domain.model.MemberScoreInfo;
 import com.grow.member_service.member.domain.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -78,8 +78,8 @@ public class ScoreUpdateService {
     // 매일 자정에 모든 멤버의 score를 조건부 업데이트하는 스케줄러
     @Scheduled(cron = "0 0 0 * * ?") // 매일 0시 0분 0초 실행
     public void updateAllMemberScores() {
-        List<MemberScoreDto> allScores = memberRepository.findAllScore();// 한 번에 DTO 리스트 받음
-        for (MemberScoreDto dto : allScores) {
+        List<MemberScoreInfo> allScores = memberRepository.findAllScore();// 한 번에 DTO 리스트 받음
+        for (MemberScoreInfo dto : allScores) {
             saveMemberScoreToRedis(dto.getMemberId(), dto.getScore()); // Redis에 score 업데이트
         }
         log.info("[REDIS SCHEDULED] 모든 멤버의 점수를 체크하고 Redis에 업데이트했습니다.");
