@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -31,5 +32,14 @@ public class SubscriptionHistoryController {
 	) {
 		List<SubscriptionHistoryResponse> list = subscriptionHistoryApplicationService.getMySubscriptionHistories(memberId);
 		return ResponseEntity.ok(new RsData<>("200", "내 구독 이력 조회 성공", list));
+	}
+
+	@Operation(summary = "구독 갱신", description = "인증된 멤버의 구독을 1개월 연장하고 이력에 저장합니다.")
+	@PostMapping("/renew")
+	public ResponseEntity<RsData<Void>> renewSubscription(
+		@AuthenticationPrincipal Long memberId
+	) {
+		subscriptionHistoryApplicationService.recordSubscriptionRenewal(memberId);
+		return ResponseEntity.ok(new RsData<>("200", "구독 갱신 성공", null));
 	}
 }

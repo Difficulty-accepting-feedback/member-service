@@ -1,5 +1,6 @@
 package com.grow.member_service.history.subscription.application.service;
 
+import java.time.Clock;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -9,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.grow.member_service.common.exception.SubscriptionHistoryException;
 import com.grow.member_service.global.exception.ErrorCode;
 import com.grow.member_service.history.subscription.application.dto.SubscriptionHistoryResponse;
+import com.grow.member_service.history.subscription.domain.model.SubscriptionHistory;
 import com.grow.member_service.history.subscription.domain.repository.SubscriptionHistoryRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -33,5 +35,15 @@ public class SubscriptionHistoryApplicationService {
 		}
 
 		return list;
+	}
+
+	/**
+	 * 구독 갱신: ACTIVE 상태로 오늘부터 1개월 연장된 이력을 하나 추가 저장
+	 */
+	@Transactional
+	public void recordSubscriptionRenewal(Long memberId) {
+		// Clock.systemDefaultZone()을 넘겨서 startAt=now, endAt=now+1month
+		SubscriptionHistory history = new SubscriptionHistory(memberId, Clock.systemDefaultZone());
+		repository.save(history);
 	}
 }
