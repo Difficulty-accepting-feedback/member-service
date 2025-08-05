@@ -36,6 +36,7 @@ class SubscriptionExpiryJobListenerTest {
 
 		context = mock(JobExecutionContext.class);
 		when(context.getJobDetail()).thenReturn(jobDetail);
+		when(context.getScheduler()).thenReturn(scheduler);
 	}
 
 	@Test
