@@ -21,33 +21,31 @@ public class QuartzConfig {
 		this.expiryListener = expiryListener;
 	}
 
-	/** 구독 만료 JobDetail Bean 등록 */
+	/** 구독 만료 JobDetail Bean */
 	@Bean
 	public JobDetail subscriptionExpiryJobDetail() {
 		return JobBuilder.newJob(SubscriptionExpiryJob.class)
 			.withIdentity("subscriptionExpiryJob")
 			.storeDurably()
-			// 재시도 카운트: 최대 3회
 			.usingJobData("retryCount", 0)
 			.usingJobData("maxRetry", 3)
 			.build();
 	}
 
-	/** 매일 0시 SubscriptionExpiryJob Trigger (놓친 스케줄 즉시 실행) */
+	/** 매일 0시 구독만료 실행 Trigger */
 	@Bean
 	public Trigger subscriptionExpiryTrigger(JobDetail subscriptionExpiryJobDetail) {
-		CronScheduleBuilder schedule = CronScheduleBuilder
-			.cronSchedule("0 0 0 * * ?")
-			.withMisfireHandlingInstructionFireAndProceed(); // 미스파이어 발생 시 즉시 실행
-
 		return TriggerBuilder.newTrigger()
 			.forJob(subscriptionExpiryJobDetail)
 			.withIdentity("subscriptionExpiryTrigger")
-			.withSchedule(schedule)
+			.withSchedule(
+				CronScheduleBuilder.cronSchedule("0 0 0 * * ?")
+					.withMisfireHandlingInstructionFireAndProceed()
+			)
 			.build();
 	}
 
-	/** Quartz Scheduler 설정 (JobDetail, Trigger, Global Listener) */
+	/** SchedulerFactoryBean 설정: JobDetail, Trigger, Global Listener 등록 */
 	@Bean
 	public SchedulerFactoryBean schedulerFactoryBean(
 		JobDetail subscriptionExpiryJobDetail,

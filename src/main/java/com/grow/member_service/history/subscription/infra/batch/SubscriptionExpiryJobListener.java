@@ -7,7 +7,6 @@ import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.JobKey;
-import org.quartz.Scheduler;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.quartz.listeners.JobListenerSupport;
@@ -28,8 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 public class SubscriptionExpiryJobListener extends JobListenerSupport {
 
 	public static final String LISTENER_NAME = "SubscriptionExpiryListener";
-
-	private final Scheduler scheduler;
 
 	@Override
 	public String getName() {
@@ -73,7 +70,7 @@ public class SubscriptionExpiryJobListener extends JobListenerSupport {
 				.build();
 
 			try {
-				scheduler.scheduleJob(retryTrigger);
+				context.getScheduler().scheduleJob(retryTrigger);
 				log.info("[SubscriptionExpiry] 재시도 예약: delay={}초, retryCount={}/{}",
 					delaySec, newCount, maxRetry);
 			} catch (Exception e) {
