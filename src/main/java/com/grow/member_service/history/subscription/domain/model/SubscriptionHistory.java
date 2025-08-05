@@ -1,10 +1,11 @@
 package com.grow.member_service.history.subscription.domain.model;
 
-import com.grow.member_service.history.subscription.infra.persistence.entity.SubscriptionStatus;
-import lombok.Getter;
-
 import java.time.Clock;
 import java.time.LocalDateTime;
+
+import com.grow.member_service.history.subscription.infra.persistence.entity.SubscriptionStatus;
+
+import lombok.Getter;
 
 @Getter
 public class SubscriptionHistory {
@@ -22,13 +23,12 @@ public class SubscriptionHistory {
         this.memberId = memberId;
         this.subscriptionStatus = SubscriptionStatus.ACTIVE;
 
-        if (startAt != null) {
-            this.startAt = LocalDateTime.now(startAt);
-            this.endAt = LocalDateTime.now(startAt).plusMonths(1); // 한 달 뒤로 자동 만료일 설정
-        } else  {
-            this.startAt = LocalDateTime.now();
-            this.endAt = LocalDateTime.now().plusMonths(1);
-        }
+        // 단일 시점의 now를 재사용해 정확히 한 달 차이로 계산
+        LocalDateTime now = (startAt != null)
+            ? LocalDateTime.now(startAt)
+            : LocalDateTime.now();
+        this.startAt = now;
+        this.endAt   = now.plusMonths(1);
     }
 
     public SubscriptionHistory(Long subscriptionHistoryId,
