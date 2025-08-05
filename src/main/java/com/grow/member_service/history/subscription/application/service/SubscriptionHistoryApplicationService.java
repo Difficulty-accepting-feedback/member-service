@@ -12,6 +12,7 @@ import com.grow.member_service.global.exception.ErrorCode;
 import com.grow.member_service.history.subscription.application.dto.SubscriptionHistoryResponse;
 import com.grow.member_service.history.subscription.domain.model.SubscriptionHistory;
 import com.grow.member_service.history.subscription.domain.repository.SubscriptionHistoryRepository;
+import com.grow.member_service.history.subscription.infra.persistence.entity.SubscriptionStatus;
 
 import lombok.RequiredArgsConstructor;
 
@@ -45,5 +46,26 @@ public class SubscriptionHistoryApplicationService {
 		// Clock.systemDefaultZone()을 넘겨서 startAt=now, endAt=now+1month
 		SubscriptionHistory history = new SubscriptionHistory(memberId, Clock.systemDefaultZone());
 		repository.save(history);
+	}
+
+	/**
+	 * Quartz 에서 호출할 만료 처리 메서드
+	 */
+	@Transactional
+	public void recordExpiry(
+		Long memberId,
+		java.time.LocalDateTime startAt,
+		java.time.LocalDateTime endAt,
+		java.time.LocalDateTime changeAt
+	) {
+		SubscriptionHistory expired = new SubscriptionHistory(
+			null,
+			memberId,
+			SubscriptionStatus.EXPIRED,
+			startAt,
+			endAt,
+			changeAt
+		);
+		repository.save(expired);
 	}
 }
