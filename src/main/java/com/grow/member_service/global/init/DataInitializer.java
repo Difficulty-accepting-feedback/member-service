@@ -19,9 +19,6 @@ import com.grow.member_service.accomplished.domain.repository.AccomplishedReposi
 import com.grow.member_service.auth.infra.security.jwt.JwtProperties;
 import com.grow.member_service.history.point.domain.model.PointHistory;
 import com.grow.member_service.history.point.domain.repository.PointHistoryRepository;
-import com.grow.member_service.history.subscription.domain.model.SubscriptionHistory;
-import com.grow.member_service.history.subscription.domain.repository.SubscriptionHistoryRepository;
-import com.grow.member_service.history.subscription.infra.persistence.entity.SubscriptionStatus;
 import com.grow.member_service.member.domain.model.Member;
 import com.grow.member_service.member.domain.model.MemberAdditionalInfo;
 import com.grow.member_service.member.domain.model.MemberProfile;
@@ -45,7 +42,6 @@ public class DataInitializer {
 	private final MemberRepository memberRepository;
 	private final PointHistoryRepository pointHistoryRepository;
 	private final AccomplishedRepository accomplishedRepository;
-	private final SubscriptionHistoryRepository subscriptionHistoryRepository;
 	private final QuizResultRepository quizResultRepository;
 	private final JwtProperties props;
 
@@ -106,46 +102,6 @@ public class DataInitializer {
 
 			accomplishments.forEach(accomplishedRepository::save);
 			log.info("테스트용 업적 {}건 생성 완료", accomplishments.size());
-		}
-
-		if (subscriptionHistoryRepository.findByMemberId(memberId).isEmpty()) {
-			List<SubscriptionHistory> subs = IntStream.rangeClosed(1, 10)
-				.mapToObj(i -> {
-					LocalDateTime now = LocalDateTime.now(clock);
-					// 5의 배수는 만료
-					if (i % 5 == 0) {
-						LocalDateTime start = now.minusMonths(2);
-						LocalDateTime end   = now.minusMonths(1);
-						return new SubscriptionHistory(
-							null,
-							memberId,
-							SubscriptionStatus.EXPIRED,
-							start,
-							end,
-							null
-						);
-					}
-					// 3의 배수는 액티브 -> 캔슬
-					SubscriptionHistory sh = new SubscriptionHistory(memberId, clock);
-					if (i % 3 == 0) {
-						LocalDateTime start = now.minusMonths(1);
-						LocalDateTime end   = start.plusMonths(1);
-						return new SubscriptionHistory(
-							null,
-							memberId,
-							SubscriptionStatus.CANCELED,
-							start,
-							end,
-							now
-						);
-					}
-					// 나머지는 액티브
-					return sh;
-				})
-				.collect(Collectors.toList());
-
-			subs.forEach(subscriptionHistoryRepository::save);
-			log.info("테스트용 구독 이력 {}건 생성 완료", subs.size());
 		}
 
 		if (quizResultRepository.findByMemberId(memberId).isEmpty()) {
