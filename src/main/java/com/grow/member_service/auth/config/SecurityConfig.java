@@ -40,6 +40,7 @@ public class SecurityConfig {
 			.sessionManagement(sm ->
 				sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			.authorizeHttpRequests(auth -> auth
+				.requestMatchers("/api/members/me").permitAll()
 				.anyRequest().authenticated()
 			)
 			.oauth2Login(o -> o.disable())
