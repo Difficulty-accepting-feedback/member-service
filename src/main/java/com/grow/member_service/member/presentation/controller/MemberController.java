@@ -1,12 +1,14 @@
 package com.grow.member_service.member.presentation.controller;
 
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -33,7 +35,7 @@ public class MemberController {
 	@GetMapping("/me")
 	public ResponseEntity<RsData<MemberInfoResponse>> getMyInfo(
 		@Parameter(hidden = true)
-		@RequestHeader("X-Authorization-Id") Long memberId
+		@AuthenticationPrincipal Long memberId
 	) {
 		MemberInfoResponse info = memberApplicationService.getMyInfo(memberId);
 		return ResponseEntity.ok(
@@ -71,5 +73,19 @@ public class MemberController {
 	) {
 		memberApplicationService.toggleMatching(memberId, req.getIsEnabled());
 		return ResponseEntity.ok(new RsData<>("200", "매칭 설정 변경 성공", null));
+	}
+
+	@Operation(summary = "로그아웃", description = "로그아웃 처리 및 쿠키 삭제")
+	@PostMapping("/logout")
+	public ResponseEntity<RsData<Void>> logout() {
+		ResponseCookie a = ResponseCookie.from("access_token", "")
+			.httpOnly(true).secure(true).path("/").maxAge(0).sameSite("None").build();
+		ResponseCookie r = ResponseCookie.from("refresh_token", "")
+			.httpOnly(true).secure(true).path("/").maxAge(0).sameSite("None").build();
+
+		return ResponseEntity.ok()
+			.header(HttpHeaders.SET_COOKIE, a.toString())
+			.header(HttpHeaders.SET_COOKIE, r.toString())
+			.body(new RsData<>("200", "로그아웃 되었습니다.", null));
 	}
 }

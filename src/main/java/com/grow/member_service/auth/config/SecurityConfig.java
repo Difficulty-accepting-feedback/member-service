@@ -1,5 +1,9 @@
 package com.grow.member_service.auth.config;
 
+import static org.springframework.security.config.Customizer.*;
+
+import java.util.List;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -10,6 +14,9 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.header.writers.frameoptions.XFrameOptionsHeaderWriter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.grow.member_service.auth.infra.security.jwt.JwtAuthenticationFilter;
 import com.grow.member_service.auth.infra.security.oauth2.adapter.CustomOAuth2Service;
@@ -36,11 +43,11 @@ public class SecurityConfig {
 	public SecurityFilterChain apiSecurity(HttpSecurity http) throws Exception {
 		http
 			.securityMatcher("/api/**")
+			.cors(withDefaults())
 			.csrf(csrf -> csrf.disable())
 			.sessionManagement(sm ->
 				sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			.authorizeHttpRequests(auth -> auth
-				.requestMatchers("/api/members/me").permitAll()
 				.anyRequest().authenticated()
 			)
 			.oauth2Login(o -> o.disable())
@@ -57,6 +64,7 @@ public class SecurityConfig {
 	@Order(2)
 	public SecurityFilterChain webSecurity(HttpSecurity http) throws Exception {
 		http
+			.cors(withDefaults())
 			.csrf(csrf -> csrf.disable())
 			.headers((headers) -> headers
 				.addHeaderWriter(new XFrameOptionsHeaderWriter(
@@ -84,5 +92,20 @@ public class SecurityConfig {
 			);
 
 		return http.build();
+	}
+
+	//게이트웨이 미구현 상태에서 cors 허용하기 위해 추가
+	@Bean
+	public CorsConfigurationSource corsConfigurationSource() {
+		CorsConfiguration config = new CorsConfiguration();
+		config.setAllowedOrigins(List.of("http://localhost:3000")); // 프론트 도메인
+		config.setAllowedMethods(List.of("GET","POST","PATCH","DELETE","OPTIONS"));
+		config.setAllowedHeaders(List.of("Content-Type","Accept","Authorization","X-Requested-With"));
+		config.setAllowCredentials(true);
+		config.setMaxAge(3600L);
+
+		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+		source.registerCorsConfiguration("/**", config);
+		return source;
 	}
 }
