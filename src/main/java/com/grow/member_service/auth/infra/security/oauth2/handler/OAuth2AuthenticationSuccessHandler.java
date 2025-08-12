@@ -8,6 +8,7 @@ import java.time.Duration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -66,10 +67,17 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 		boolean verified = phoneVerificationService.isPhoneVerified(memberId);
 		String step = verified ? "complete" : "enter-phone"; // 추후에 주소 변경
 
+		// provider 정보 추출
+		String provider = (auth instanceof OAuth2AuthenticationToken oat)
+			? oat.getAuthorizedClientRegistrationId()
+			: "unknown";
+
+
 		// frontUrl 로 분기 리다이렉트
 		String target = UriComponentsBuilder
 			.fromUriString(oauthProperties.getRedirectUri())
 			.queryParam("step", step)
+			.queryParam("provider", provider)
 			.build()
 			.toUriString();
 
@@ -103,7 +111,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 			.secure(true)
 			.path("/")
 			.maxAge(maxAge)
-			.sameSite("Strict")
+			.sameSite("None")
 			.build();
 		res.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 	}

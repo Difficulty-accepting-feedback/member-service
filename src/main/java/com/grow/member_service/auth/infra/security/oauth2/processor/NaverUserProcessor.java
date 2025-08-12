@@ -22,26 +22,35 @@ public class NaverUserProcessor implements OAuth2UserProcessor {
 	@Override
 	@SuppressWarnings("unchecked")
 	public Map<String, Object> parseAttributes(Map<String, Object> attributes) {
-		Map<String, Object> response = (Map<String, Object>) attributes.get("response");
-		if (response == null) {
+		Object resObj = attributes.get("response");
+		if (!(resObj instanceof Map)) {
+			throw new OAuthException(ErrorCode.OAUTH_INVALID_ATTRIBUTE);
+		}
+		Map<String, Object> response = (Map<String, Object>) resObj;
+
+		// 네이버는 id가 문자열로 내려옴
+		String id = toStr(response.get("id"));
+		if (id == null || id.isBlank()) {
 			throw new OAuthException(ErrorCode.OAUTH_INVALID_ATTRIBUTE);
 		}
 
-		String email        = (String) response.get(EMAIL);
-		String id           = (String) response.get(PLATFORM_ID);
-		String nickname     = (String) response.get(NICKNAME);
-		String profileImage = (String) response.get(PROFILE_IMAGE);
+		// 선택 동의 항목은 null 허용
+		String email        = toStr(response.get("email"));
+		String nickname     = firstNonBlank(toStr(response.get("nickname")), toStr(response.get("name")));
+		String profileImage = toStr(response.get("profile_image"));
 
-		if (email == null || id == null) {
-			throw new OAuthException(ErrorCode.OAUTH_INVALID_ATTRIBUTE);
-		}
-
-		Map<String,Object> result = new HashMap<>();
-		result.put(EMAIL,        email);
-		result.put(NICKNAME,     nickname);
-		result.put(PROFILE_IMAGE, profileImage);
-		result.put(PLATFORM_ID,  id);
-
+		Map<String, Object> result = new HashMap<>();
+		result.put(PLATFORM_ID,   id);          // 필수
+		result.put(EMAIL,         email);       // 선택
+		result.put(NICKNAME,      nickname);    // 선택
+		result.put(PROFILE_IMAGE, profileImage);// 선택
 		return result;
+	}
+
+	private String toStr(Object v) { return v == null ? null : String.valueOf(v); }
+	private String firstNonBlank(String a, String b) {
+		if (a != null && !a.isBlank()) return a;
+		if (b != null && !b.isBlank()) return b;
+		return null;
 	}
 }
