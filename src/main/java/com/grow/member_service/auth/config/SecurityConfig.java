@@ -99,7 +99,7 @@ public class SecurityConfig {
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration config = new CorsConfiguration();
 		config.setAllowedOrigins(List.of("http://localhost:3000")); // 프론트 도메인
-		config.setAllowedMethods(List.of("GET","POST","PATCH","DELETE","OPTIONS"));
+		config.setAllowedMethods(List.of("GET","POST","PATCH","DELETE","OPTIONS","PUT"));
 		config.setAllowedHeaders(List.of("Content-Type","Accept","Authorization","X-Requested-With"));
 		config.setAllowCredentials(true);
 		config.setMaxAge(3600L);
