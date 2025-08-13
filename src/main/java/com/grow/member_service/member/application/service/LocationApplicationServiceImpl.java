@@ -256,7 +256,7 @@ public class LocationApplicationServiceImpl implements LocationApplicationServic
 		Map<Long, Double> distMap = hits.stream()
 			.collect(Collectors.toMap(GeoIndexPort.GeoHit::memberId, GeoIndexPort.GeoHit::distanceKm, (a, b) -> a));
 
-		List<Member> members = memberRepository.findAllByIdIn(ids);
+		List<Member> members = new ArrayList<>(memberRepository.findAllByIdIn(ids));
 
 		// 조회된 멤버만 필터링 후 거리순으로 정렬
 		Map<Long, Integer> order = new HashMap<>();
