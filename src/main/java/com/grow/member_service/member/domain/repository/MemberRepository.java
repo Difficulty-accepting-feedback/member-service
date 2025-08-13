@@ -17,4 +17,5 @@ public interface MemberRepository {
     Optional<Object> findByNickname(String nickname);
     List<Member> findAllExcept(Long exceptMemberId);
     List<MemberScoreInfo> findAllScore();
+    List<Member> findAllByIdIn(List<Long> ids);
 }
