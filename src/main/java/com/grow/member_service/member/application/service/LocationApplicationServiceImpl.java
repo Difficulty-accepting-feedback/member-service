@@ -9,12 +9,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.grow.member_service.common.exception.LocationException;
+import com.grow.member_service.common.exception.MemberException;
+import com.grow.member_service.global.exception.ErrorCode;
 import com.grow.member_service.member.application.dto.NearbyMemberResponse;
 import com.grow.member_service.member.application.port.GeoIndexPort;
 import com.grow.member_service.member.application.port.GeocodingPort;
@@ -23,17 +24,18 @@ import com.grow.member_service.member.domain.repository.MemberRepository;
 import com.grow.member_service.member.infra.region.RegionCenterResolver;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * GROW - 위치/매칭 유스케이스
  * - 주소 변경: 정적 SGG 중심좌표 → Redis GEO 업서트
  * - 인근 조회: 최소 후보 수 확보까지 반경 점진 확대(base → +5 → +10 → +15), 거리 포함 반환
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class LocationApplicationServiceImpl implements LocationApplicationService {
 
-	private static final Logger log = LoggerFactory.getLogger(LocationApplicationServiceImpl.class);
 	private final MemberRepository memberRepository;
 	private final ObjectProvider<GeocodingPort> geocodingProvider;
 	private final ObjectProvider<GeoIndexPort> geoIndexProvider;
@@ -65,13 +67,13 @@ public class LocationApplicationServiceImpl implements LocationApplicationServic
 
 		if (regionText == null || regionText.isBlank()) {
 			log.warn("[지역 업데이트 거부] memberId={}, 사유=빈 문자열/NULL", memberId);
-			throw new IllegalArgumentException("region must not be blank");
+			throw new LocationException(ErrorCode.REGION_BLANK);
 		}
 
 		Member member = memberRepository.findById(memberId)
 			.orElseThrow(() -> {
 				log.warn("[지역 업데이트 실패] memberId={}, 사유=멤버 미존재", memberId);
-				return new IllegalArgumentException("MEMBER_NOT_FOUND");
+				return new MemberException(ErrorCode.MEMBER_NOT_FOUND);
 			});
 
 		boolean changed = member.changeAddressIfDifferent(regionText);
@@ -95,7 +97,7 @@ public class LocationApplicationServiceImpl implements LocationApplicationServic
 			var byCode = regionResolver.resolveBySggCode(sggCode);
 			if (byCode == null) {
 				log.warn("[좌표 변환 실패] memberId={}, sggCode='{}' 매핑 없음", memberId, sggCode);
-				throw new IllegalArgumentException("UNKNOWN_SGG_CODE");
+				throw new LocationException(ErrorCode.UNKNOWN_SGG_CODE);
 			}
 			lat = byCode.lat();
 			lng = byCode.lon();
@@ -191,7 +193,7 @@ public class LocationApplicationServiceImpl implements LocationApplicationServic
 		GeoIndexPort geoIndex, double lat, double lng, int baseKm, int limit, int minCandidates
 	) {
 		final int base = Math.min(baseKm + CENTROID_BONUS_KM, MAX_RADIUS_CAP_KM);
-		final int fetch = Math.max(limit * 3, minCandidates * 3); // 품질 확보용 넉넉한 조회
+		final int fetch = Math.max(limit * 3, minCandidates * 3);
 		final Map<Long, GeoIndexPort.GeoHit> merged = new LinkedHashMap<>();
 
 		log.debug("[확장 검색-좌표] baseKm={} (+보정 {}), cap={}, step={}",

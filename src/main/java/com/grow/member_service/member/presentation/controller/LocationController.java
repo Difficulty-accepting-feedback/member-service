@@ -4,7 +4,13 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.grow.member_service.global.dto.RsData;
 import com.grow.member_service.member.application.dto.NearbyMemberResponse;
@@ -12,8 +18,9 @@ import com.grow.member_service.member.application.service.LocationApplicationSer
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 
@@ -36,7 +43,7 @@ public class LocationController {
 	@PutMapping("/me/region")
 	public ResponseEntity<RsData<Void>> updateRegion(
 		@Parameter(hidden = true) @AuthenticationPrincipal Long memberId,
-		@RequestBody RegionReq req
+		@RequestBody @Valid RegionReq req
 	) {
 		locationSvc.updateMyRegion(memberId, req.region(), req.sggCode());
 		return ResponseEntity.ok(new RsData<>("200", "지역 업데이트 성공", null));
