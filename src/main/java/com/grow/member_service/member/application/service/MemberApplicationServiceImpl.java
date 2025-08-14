@@ -4,8 +4,6 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,12 +17,12 @@ import com.grow.member_service.member.domain.service.MemberService;
 import com.grow.member_service.member.presentation.dto.MemberUpdateRequest;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MemberApplicationServiceImpl implements MemberApplicationService {
-
-	private static final Logger log = LoggerFactory.getLogger(MemberApplicationServiceImpl.class);
 
 	private final MemberRepository memberRepository;
 	private final MemberService memberService;
