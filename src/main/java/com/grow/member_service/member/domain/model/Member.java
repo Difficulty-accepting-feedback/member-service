@@ -152,4 +152,24 @@ public class Member {
     public void disableMatching() {
         this.matchingEnabled = false;
     }
+
+    /** 주소 정규화 메서드 */
+    public boolean changeAddressIfDifferent(String nextRegionLabel) {
+        if (this.isWithdrawn()) {
+            throw MemberDomainException.alreadyWithdrawn();
+        }
+        String normalized = normalizeRegion(nextRegionLabel);
+        String current = java.util.Optional.ofNullable(this.additionalInfo.getAddress()).orElse("");
+        if (normalized.isEmpty() || normalized.equals(current)) {
+            return false; // 변경 없음
+        }
+        this.additionalInfo = this.additionalInfo.withAddress(normalized);
+        return true;
+    }
+
+    /** 주소 정규화 헬퍼 메서드 */
+    private static String normalizeRegion(String raw) {
+        if (raw == null) return "";
+        return raw.replaceAll("\\s+", " ").trim();
+    }
 }

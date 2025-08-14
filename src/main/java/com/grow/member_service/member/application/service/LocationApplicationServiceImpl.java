@@ -2,12 +2,11 @@ package com.grow.member_service.member.application.service;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.LinkedHashMap;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -75,19 +74,16 @@ public class LocationApplicationServiceImpl implements LocationApplicationServic
 				return new IllegalArgumentException("MEMBER_NOT_FOUND");
 			});
 
-		String normalized = regionText.replaceAll("\\s+", " ").trim();
-		String current = Optional.ofNullable(member.getAdditionalInfo().getAddress()).orElse("");
-
-		// 표시용 주소 저장
-		if (!normalized.equals(current)) {
-			member.changeAddress(normalized);
+		boolean changed = member.changeAddressIfDifferent(regionText);
+		if (changed) {
 			memberRepository.save(member);
-			log.info("[지역 저장 완료] memberId={}, address='{}'", memberId, normalized);
+			log.info("[지역 저장 완료] memberId={}, address='{}'",
+				memberId, member.getAdditionalInfo().getAddress());
 		} else {
-			log.debug("[지역 저장 스킵] memberId={}, 동일 주소='{}'", memberId, normalized);
+			log.debug("[지역 저장 스킵] memberId={}, 동일 주소/빈값", memberId);
 		}
 
-		// 좌표 변환 + GEO 업서트
+		// 좌표 변환 + Redis GEO 업서트
 		GeoIndexPort geoIndex = geoIndexProvider.getIfAvailable();
 		if (geoIndex == null) {
 			log.debug("[GEO 업서트 스킵] memberId={}, 사유=GeoIndex 포트 미주입", memberId);
@@ -95,8 +91,6 @@ public class LocationApplicationServiceImpl implements LocationApplicationServic
 		}
 
 		Double lat; Double lng;
-
-		// sggCode가 있으면 정적 맵에서 바로 좌표
 		if (sggCode != null && !sggCode.isBlank()) {
 			var byCode = regionResolver.resolveBySggCode(sggCode);
 			if (byCode == null) {
@@ -107,22 +101,19 @@ public class LocationApplicationServiceImpl implements LocationApplicationServic
 			lng = byCode.lon();
 			log.info("[좌표 변환-코드] memberId={}, sggCode={}, lat={}, lng={}", memberId, sggCode, lat, lng);
 		} else {
-			// 텍스트 매핑: @Primary GeocodingPort(정적 리졸버) 사용
 			GeocodingPort geocoder = geocodingProvider.getIfAvailable();
 			if (geocoder == null) {
 				log.debug("[지오코딩 스킵] memberId={}, 사유=Geocoding 포트 미주입", memberId);
 				return;
 			}
-			GeocodingPort.LatLng ll = geocoder.geocodeRegion(normalized);
+			GeocodingPort.LatLng ll = geocoder.geocodeRegion(member.getAdditionalInfo().getAddress());
 			lat = ll.lat(); lng = ll.lng();
 			log.info("[좌표 변환-텍스트] memberId={}, lat={}, lng={}", memberId, lat, lng);
 		}
 
-		// GEO 업서트
 		geoIndex.upsert(memberId, lat, lng);
 		log.info("[GEO 업서트 완료] memberId={}, key=geo:home", memberId);
 	}
-
 	/**
 	 * 좌표(lat,lng)를 중심으로 인근 멤버를 조회한다.
 	 * <p>요청 반경을 기준으로 오차 보정(+2km) 후, 단계적으로 반경을 확장하여
