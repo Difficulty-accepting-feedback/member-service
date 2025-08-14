@@ -2,14 +2,15 @@ package com.grow.member_service.member.infra.persistence.repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
-import com.grow.member_service.member.domain.model.MemberScoreInfo;
-import com.grow.member_service.member.infra.dto.MemberScoreProjection;
 import org.springframework.stereotype.Repository;
 
 import com.grow.member_service.member.domain.model.Member;
+import com.grow.member_service.member.domain.model.MemberScoreInfo;
 import com.grow.member_service.member.domain.model.enums.Platform;
 import com.grow.member_service.member.domain.repository.MemberRepository;
+import com.grow.member_service.member.infra.dto.MemberScoreProjection;
 import com.grow.member_service.member.infra.persistence.entity.MemberJpaEntity;
 import com.grow.member_service.member.infra.persistence.mapper.MemberMapper;
 
@@ -72,5 +73,12 @@ public class MemberRepositoryImpl implements MemberRepository {
                         p.getScore()
                 ))// // Projection -> DTO 변환
                 .toList();
+    }
+
+    @Override
+    public List<Member> findAllByIdIn(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) return List.of();
+        List<MemberJpaEntity> list = memberJpaRepository.findAllByMemberIdIn(ids);
+        return list.stream().map(memberMapper::toDomain).collect(Collectors.toList());
     }
 }

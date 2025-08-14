@@ -13,12 +13,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.ObjectProvider;
 
 import com.grow.member_service.common.exception.MemberException;
 import com.grow.member_service.member.application.dto.MemberInfoResponse;
+import com.grow.member_service.member.application.port.GeoIndexPort;
 import com.grow.member_service.member.domain.exception.MemberDomainException;
 import com.grow.member_service.member.domain.model.Member;
 import com.grow.member_service.member.domain.model.enums.Platform;
@@ -38,6 +41,10 @@ class MemberApplicationServiceImplTest {
 
 	@Mock
 	private MemberWithdrawalLogRepository withdrawalLogRepository;
+
+	@Mock ObjectProvider<GeoIndexPort> geoIndexProvider;
+
+	@Mock GeoIndexPort geoIndexPort;
 
 	@InjectMocks
 	private MemberApplicationServiceImpl service;
@@ -93,20 +100,31 @@ class MemberApplicationServiceImplTest {
 	}
 
 	@Test
-	@DisplayName("withdraw(): 회원이 존재하면 로그 저장 후 탈퇴 처리 및 저장 호출")
-	void withdraw_Found_LogsAndWithdraws() {
+	@DisplayName("withdraw(): 회원이 존재하면 로그 저장 → 도메인 탈퇴 → 저장 + Redis GEO에서 제거")
+	void withdraw_Found_LogsAndWithdraws_AndRemoveFromGeo() {
+		// given
 		Long memberId = 2L;
-		when(memberRepository.findById(memberId))
-			.thenReturn(Optional.of(sampleMember));
+		when(memberRepository.findById(memberId)).thenReturn(Optional.of(sampleMember));
+		// Redis GEO 제거까지 검증하려면 provider가 mock 포트를 반환하도록
+		when(geoIndexProvider.getIfAvailable()).thenReturn(geoIndexPort);
 
+		// when
 		service.withdraw(memberId);
 
-		// 로그 저장
-		verify(withdrawalLogRepository).saveFromMember(sampleMember);
-		// 도메인 탈퇴 처리
-		assertTrue(sampleMember.isWithdrawn(), "withdraw 호출 후 isWithdrawn가 true여야 한다");
-		// 영속화 호출
-		verify(memberRepository).save(sampleMember);
+		// then
+		// 1) 로그 저장이 먼저 호출
+		InOrder inOrder = inOrder(withdrawalLogRepository, memberRepository);
+		inOrder.verify(withdrawalLogRepository).saveFromMember(sampleMember);
+
+		// 2) 도메인 객체가 소프트 탈퇴 처리되었는지
+		assertTrue(sampleMember.isWithdrawn(), "withdraw 호출 후 isWithdrawn이 true 여야 합니다.");
+
+		// 3) 변경사항 영속화
+		inOrder.verify(memberRepository).save(sampleMember);
+
+		// 4) Redis GEO에서 해당 멤버 제거 (있으면)
+		verify(geoIndexPort).remove(memberId);
+		verifyNoMoreInteractions(geoIndexPort);
 	}
 
 	@Test

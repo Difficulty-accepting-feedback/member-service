@@ -37,6 +37,8 @@ def jacocoExcludes = [
 		'**/adapter/**',
 		'**/enums/**',
 		'**/init/**',
+		'**/region/**',
+		'**/port/**',
 		'**/MemberServiceApplication.class'
 ]
 
@@ -127,7 +129,7 @@ dependencies {
 	implementation 'net.datafaker:datafaker:2.4.4' // 무작위 이름 생성기
 
 	// redis cache
-	implementation 'org.springframework.boot:spring-boot-starter-data-redis:3.5.3'
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
 	// Quartz
 	implementation 'org.springframework.boot:spring-boot-starter-quartz'

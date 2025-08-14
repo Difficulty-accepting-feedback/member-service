@@ -40,6 +40,12 @@ public enum ErrorCode {
 	ACCOMPLISHED_PERIOD_INVALID_RANGE(HttpStatus.BAD_REQUEST,"400-17", "accomplished.period.invalid.range"),
 	ACCOMPLISHED_PERIOD_EMPTY(HttpStatus.NOT_FOUND, "404-3", "accomplished.period.empty"),
 
+	// 위치 도메인
+	REGION_BLANK(HttpStatus.BAD_REQUEST, "400-18", "region.blank"),
+	UNKNOWN_SGG_CODE(HttpStatus.BAD_REQUEST, "400-19", "unknown.sgg.code"),
+	GEO_INDEX_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "503-0", "geo.index.unavailable"),
+	GEOCODING_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "503-1", "geocoding.unavailable"),
+
 	// OAuth 관련
 	OAUTH_UNSUPPORTED_PLATFORM(HttpStatus.BAD_REQUEST, "400-3", "oauth.unsupported.platform"),
 	OAUTH_MISSING_PLATFORM_ID(HttpStatus.BAD_REQUEST, "400-4", "oauth.missing.platform.id"),
