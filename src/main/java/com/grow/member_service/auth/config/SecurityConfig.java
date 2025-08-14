@@ -35,6 +35,19 @@ public class SecurityConfig {
 	private final OAuth2AuthenticationFailureHandler    failureHandler;
 	private final JwtAuthenticationFilter               jwtFilter;
 
+	// 게이트웨이 미구현으로 인한 임시 설정 (추후 제거)
+	@Bean
+	@Order(0)
+	public SecurityFilterChain internalOpenSecurity(HttpSecurity http) throws Exception {
+		http
+			.securityMatcher("/internal/**")
+			.csrf(csrf -> csrf.disable())
+			.sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+			.authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+
+		return http.build();
+	}
+
 	/**
 	 * API 요청: JWT 검증만 수행, OAuth2·폼 로그인은 비활성화
 	 */
