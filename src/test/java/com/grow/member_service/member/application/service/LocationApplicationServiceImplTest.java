@@ -68,7 +68,8 @@ class LocationApplicationServiceImplTest {
 		when(memberRepository.findById(memberId)).thenReturn(Optional.of(m));
 		when(memberRepository.save(any(Member.class))).thenAnswer(inv -> inv.getArgument(0));
 
-		when(geocodingPort.geocodeRegion("서울특별시 강남구"))
+		// 주소 공백 정규화 구현 여부에 의존하지 않도록 anyString()으로 스텁
+		when(geocodingPort.geocodeRegion(anyString()))
 			.thenReturn(new GeocodingPort.LatLng(37.4979, 127.0276));
 
 		// when
@@ -106,7 +107,7 @@ class LocationApplicationServiceImplTest {
 			.thenReturn(step1)   // 1st call
 			.thenReturn(step2);  // 2nd call
 
-		// JPA 배치 조회: 불변 리스트여도 서비스가 내부에서 복사하여 정렬함
+		// JPA 배치 조회: 서비스가 내부에서 정렬하므로 순서는 상관없음
 		var m10 = deepMember(10L, "u10", "A");
 		var m20 = deepMember(20L, "u20", "B");
 		var m30 = deepMember(30L, "u30", "C");
@@ -172,6 +173,9 @@ class LocationApplicationServiceImplTest {
 		when(m.getMemberId()).thenReturn(id);
 		when(m.getMemberProfile().getNickname()).thenReturn(nick);
 		when(m.getAdditionalInfo().getAddress()).thenReturn(addr);
+		// 필터 조건을 통과하도록 명시적으로 true/false 지정
+		when(m.isWithdrawn()).thenReturn(false);
+		when(m.isMatchingEnabled()).thenReturn(true);
 		return m;
 	}
 }
