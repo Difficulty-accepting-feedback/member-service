@@ -46,6 +46,17 @@ public class RedisGeoIndexAdapter implements GeoIndexPort {
 	}
 
 	/**
+	 * 멤버의 홈 좌표를 GEO 인덱스에서 삭제
+	 *
+	 * @param memberId 멤버 ID
+	 */
+	@Override
+	public void remove(long memberId) {
+		// Redis GEO에서 멤버 ID로 삭제
+		rt.opsForGeo().remove(KEY, String.valueOf(memberId));
+	}
+
+	/**
 	 * 주어진 좌표(lat,lng)를 중심으로 반경 내 멤버를 거리 오름차순으로 조회
 	 * Redis WITHDIST로 거리(km)를 함께 반환
 	 *

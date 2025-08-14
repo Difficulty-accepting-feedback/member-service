@@ -7,6 +7,9 @@ public interface GeoIndexPort {
 	/** 좌표 인덱스 갱신(업서트) */
 	void upsert(long memberId, double lat, double lng);
 
+	/** 좌표 인덱스 삭제 */
+	void remove(long memberId);
+
 	/** WITHDIST 결과 */
 	record GeoHit(Long memberId, double distanceKm) {}
 

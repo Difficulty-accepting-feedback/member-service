@@ -240,10 +240,11 @@ public class LocationApplicationServiceImpl implements LocationApplicationServic
 		return list;
 	}
 
-	// 내부 유틸: 배치 조회 + 거리 반올림 + DTO 변환(거리순 유지)
+	// 내부 유틸: 배치 조회 + 거리 반올림 + DTO 변환
 	private List<NearbyMemberResponse> buildNearbyDtos(List<GeoIndexPort.GeoHit> hits, int limit) {
-		// memberId -> distance(km)
 		List<Long> ids = hits.stream().map(GeoIndexPort.GeoHit::memberId).toList();
+
+		// memberId -> distance(km)
 		Map<Long, Double> distMap = hits.stream()
 			.collect(Collectors.toMap(
 				GeoIndexPort.GeoHit::memberId,
@@ -251,22 +252,22 @@ public class LocationApplicationServiceImpl implements LocationApplicationServic
 				(a, b) -> a
 			));
 
-		// 배치 조회
-		List<Member> members = new ArrayList<>(memberRepository.findAllByIdIn(ids));
+		// 한 번에 배치 조회
+		List<Member> fetched = memberRepository.findAllByIdIn(ids);
 
-		// 탈퇴/매칭 OFF 제외
-		members.removeIf(m -> m.isWithdrawn() || !m.isMatchingEnabled());
+		// 빠른 접근 위해 map 구성
+		Map<Long, Member> byId = fetched.stream()
+			.collect(Collectors.toMap(Member::getMemberId, m -> m));
 
-		// 거리 기준 한 번만 정렬
-		members.sort(
-			Comparator.comparingDouble((Member m) -> distMap.getOrDefault(m.getMemberId(), Double.MAX_VALUE))
-				.thenComparingLong(Member::getMemberId)
-		);
-
-		// DTO 변환 (+ limit)
+		// ids(=거리순) 그대로 돌면서 필터링 + DTO 변환
 		List<NearbyMemberResponse> out = new ArrayList<>();
-		for (Member m : members) {
-			Double d = distMap.get(m.getMemberId());
+		for (Long id : ids) {
+			Member m = byId.get(id);
+			if (m == null) continue;                       // DB에 없으면 스킵(삭제 등)
+			if (m.isWithdrawn() || !m.isMatchingEnabled()) // 소프트 탈퇴/매칭 OFF 제외
+				continue;
+
+			Double d = distMap.get(id);
 			out.add(new NearbyMemberResponse(
 				m.getMemberId(),
 				m.getMemberProfile().getNickname(),

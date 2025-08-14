@@ -4,12 +4,14 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.grow.member_service.common.exception.MemberException;
 import com.grow.member_service.global.exception.ErrorCode;
 import com.grow.member_service.member.application.dto.MemberInfoResponse;
+import com.grow.member_service.member.application.port.GeoIndexPort;
 import com.grow.member_service.member.domain.model.Member;
 import com.grow.member_service.member.domain.repository.MemberRepository;
 import com.grow.member_service.member.domain.repository.MemberWithdrawalLogRepository;
@@ -27,6 +29,7 @@ public class MemberApplicationServiceImpl implements MemberApplicationService {
 	private final MemberRepository memberRepository;
 	private final MemberService memberService;
 	private final MemberWithdrawalLogRepository withdrawalLogRepository;
+	private final ObjectProvider<GeoIndexPort> geoIndexProvider;
 
 	@Override
 	public MemberInfoResponse getMyInfo(Long memberId) {
@@ -51,7 +54,12 @@ public class MemberApplicationServiceImpl implements MemberApplicationService {
 		member.markAsWithdrawn(uuid);
 		memberRepository.save(member);
 
-		log.info("회원 탈퇴 처리 완료 - memberId={}, withdrawnAt={}", memberId, now);
+		GeoIndexPort geoIndexPort = geoIndexProvider.getIfAvailable();
+		if (geoIndexPort != null) {
+			geoIndexPort.remove(memberId);
+		}
+
+		log.info("회원 탈퇴 처리 완료, GEO 삭제 - memberId={}, withdrawnAt={}", memberId, now);
 	}
 
 	@Transactional
