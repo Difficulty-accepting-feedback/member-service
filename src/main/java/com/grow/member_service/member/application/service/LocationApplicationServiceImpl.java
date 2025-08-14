@@ -2,7 +2,6 @@ package com.grow.member_service.member.application.service;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -243,20 +242,28 @@ public class LocationApplicationServiceImpl implements LocationApplicationServic
 
 	// 내부 유틸: 배치 조회 + 거리 반올림 + DTO 변환(거리순 유지)
 	private List<NearbyMemberResponse> buildNearbyDtos(List<GeoIndexPort.GeoHit> hits, int limit) {
-		hits.sort(Comparator.comparingDouble(GeoIndexPort.GeoHit::distanceKm));
-
+		// memberId -> distance(km)
 		List<Long> ids = hits.stream().map(GeoIndexPort.GeoHit::memberId).toList();
 		Map<Long, Double> distMap = hits.stream()
-			.collect(Collectors.toMap(GeoIndexPort.GeoHit::memberId, GeoIndexPort.GeoHit::distanceKm, (a, b) -> a));
+			.collect(Collectors.toMap(
+				GeoIndexPort.GeoHit::memberId,
+				GeoIndexPort.GeoHit::distanceKm,
+				(a, b) -> a
+			));
 
+		// 배치 조회
 		List<Member> members = new ArrayList<>(memberRepository.findAllByIdIn(ids));
 
-		// 조회된 멤버만 필터링 후 거리순으로 정렬
-		Map<Long, Integer> order = new HashMap<>();
-		for (int i = 0; i < ids.size(); i++) order.put(ids.get(i), i);
+		// 탈퇴/매칭 OFF 제외
+		members.removeIf(m -> m.isWithdrawn() || !m.isMatchingEnabled());
 
-		members.sort(Comparator.comparingInt(m -> order.getOrDefault(m.getMemberId(), Integer.MAX_VALUE)));
+		// 거리 기준 한 번만 정렬
+		members.sort(
+			Comparator.comparingDouble((Member m) -> distMap.getOrDefault(m.getMemberId(), Double.MAX_VALUE))
+				.thenComparingLong(Member::getMemberId)
+		);
 
+		// DTO 변환 (+ limit)
 		List<NearbyMemberResponse> out = new ArrayList<>();
 		for (Member m : members) {
 			Double d = distMap.get(m.getMemberId());
@@ -264,7 +271,7 @@ public class LocationApplicationServiceImpl implements LocationApplicationServic
 				m.getMemberId(),
 				m.getMemberProfile().getNickname(),
 				m.getAdditionalInfo().getAddress(),
-				round2(d) // 소수점 2자리 반올림
+				round2(d)
 			));
 			if (out.size() >= limit) break;
 		}
