@@ -30,12 +30,18 @@ public class MemberApplicationServiceImpl implements MemberApplicationService {
 	private final MemberService memberService;
 	private final MemberWithdrawalLogRepository withdrawalLogRepository;
 	private final ObjectProvider<GeoIndexPort> geoIndexProvider;
+	private final OnboardingNotifier onboardingNotifier;
+
 
 	@Override
 	public MemberInfoResponse getMyInfo(Long memberId) {
-		return memberRepository.findById(memberId)
-			.map(MemberInfoResponse::from)
+		Member member = memberRepository.findById(memberId)
 			.orElseThrow(() -> new MemberException(ErrorCode.MEMBER_NOT_FOUND));
+
+		// 알림(주소/휴대폰) – 12시간마다 푸시
+		onboardingNotifier.pushRemindersIfNeeded(member);
+
+		return MemberInfoResponse.from(member);
 	}
 
 	@Override

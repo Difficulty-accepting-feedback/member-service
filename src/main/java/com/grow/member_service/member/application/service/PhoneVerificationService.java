@@ -21,6 +21,7 @@ public class PhoneVerificationService {
 	private final PhoneVerificationRepository repository;
 	private final SmsService smsService;
 	private final MemberRepository memberRepository;
+	private final OnboardingNotifier onboardingNotifier;
 
 	/**
 	 * 소셜 가입 직후 호출되어,
@@ -54,6 +55,9 @@ public class PhoneVerificationService {
 			.orElseThrow(() -> new MemberException(ErrorCode.MEMBER_NOT_FOUND));
 		member.verifyPhone(verified.getPhoneNumber());
 		memberRepository.save(member);
+
+		// 3) 인증 성공 알림
+		onboardingNotifier.sendPhoneVerifiedSuccess(memberId);
 	}
 
 	/**
