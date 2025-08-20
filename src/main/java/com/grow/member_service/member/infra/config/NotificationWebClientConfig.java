@@ -8,6 +8,12 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Configuration
 public class NotificationWebClientConfig {
 
+	/**
+	 * Notification 서비스와 통신하기 위한 WebClient를 설정합니다.
+	 * @param builder
+	 * @param baseUrl
+	 * @return
+	 */
 	@Bean
 	public WebClient notificationWebClient(
 		WebClient.Builder builder,

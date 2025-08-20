@@ -49,6 +49,13 @@ public class OnboardingNotifier {
 		notificationPort.sendServiceNotice(memberId, "휴대폰 번호 인증이 완료되었습니다.");
 	}
 
+	/**
+	 * 중복 방지용 Redis 키를 획득하여
+	 * 12시간 동안 중복 알림을 방지한다.
+	 * @param key
+	 * @param ttl
+	 * @return
+	 */
 	private boolean acquireOnce(String key, Duration ttl) {
 		StringRedisTemplate r = redisProvider.getIfAvailable();
 		if (r == null) return true;                // 로컬/테스트 환경: 그냥 발송

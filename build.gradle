@@ -39,6 +39,7 @@ def jacocoExcludes = [
 		'**/init/**',
 		'**/region/**',
 		'**/port/**',
+		'**/client/**',
 		'**/MemberServiceApplication.class'
 ]
 
