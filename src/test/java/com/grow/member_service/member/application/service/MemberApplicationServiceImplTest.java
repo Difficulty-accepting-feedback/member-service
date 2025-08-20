@@ -46,6 +46,8 @@ class MemberApplicationServiceImplTest {
 
 	@Mock GeoIndexPort geoIndexPort;
 
+	@Mock private OnboardingNotifier onboardingNotifier;
+
 	@InjectMocks
 	private MemberApplicationServiceImpl service;
 

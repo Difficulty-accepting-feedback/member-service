@@ -33,12 +33,13 @@ import com.grow.member_service.member.domain.service.SmsService;
 @DisplayName("PhoneVerificationService 테스트")
 class PhoneVerificationServiceTest {
 
-	@Mock
-	private PhoneVerificationRepository verificationRepo;
-	@Mock
-	private SmsService smsService;
-	@Mock
-	private MemberRepository memberRepo;
+	@Mock private PhoneVerificationRepository verificationRepo;
+
+	@Mock private SmsService smsService;
+
+	@Mock private MemberRepository memberRepo;
+
+	@Mock private OnboardingNotifier onboardingNotifier;
 
 	@InjectMocks
 	private PhoneVerificationService service;
