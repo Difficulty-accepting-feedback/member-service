@@ -1,4 +1,4 @@
-package com.grow.member_service.member.application.service;
+package com.grow.member_service.member.application.service.impl;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -12,6 +12,8 @@ import com.grow.member_service.common.exception.MemberException;
 import com.grow.member_service.global.exception.ErrorCode;
 import com.grow.member_service.member.application.dto.MemberInfoResponse;
 import com.grow.member_service.member.application.port.GeoIndexPort;
+import com.grow.member_service.member.application.service.MemberApplicationService;
+import com.grow.member_service.member.application.service.OnboardingNotifier;
 import com.grow.member_service.member.domain.model.Member;
 import com.grow.member_service.member.domain.repository.MemberRepository;
 import com.grow.member_service.member.domain.repository.MemberWithdrawalLogRepository;

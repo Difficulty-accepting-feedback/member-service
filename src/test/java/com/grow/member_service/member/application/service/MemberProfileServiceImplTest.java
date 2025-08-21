@@ -19,6 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.grow.member_service.common.exception.MemberException;
 import com.grow.member_service.global.exception.ErrorCode;
+import com.grow.member_service.member.application.service.impl.MemberProfileServiceImpl;
 import com.grow.member_service.member.domain.model.Member;
 import com.grow.member_service.member.domain.model.MemberAdditionalInfo;
 import com.grow.member_service.member.domain.model.MemberProfile;
@@ -26,13 +27,13 @@ import com.grow.member_service.member.domain.model.enums.Platform;
 import com.grow.member_service.member.domain.repository.MemberRepository;
 
 @ExtendWith(MockitoExtension.class)
-class MemberProfileServiceTest {
+class MemberProfileServiceImplTest {
 
 	@Mock
 	private MemberRepository memberRepository;
 
 	@InjectMocks
-	private MemberProfileService service;
+	private MemberProfileServiceImpl service;
 
 	private Member member;
 

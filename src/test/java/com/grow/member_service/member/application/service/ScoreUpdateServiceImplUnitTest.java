@@ -15,11 +15,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 
+import com.grow.member_service.member.application.service.impl.ScoreUpdateServiceImpl;
 import com.grow.member_service.member.domain.model.MemberScoreInfo;
 import com.grow.member_service.member.domain.repository.MemberRepository;
 
 @ExtendWith(MockitoExtension.class)
-class ScoreUpdateServiceUnitTest {
+class ScoreUpdateServiceImplUnitTest {
 
 	@Mock
 	MemberRepository memberRepository;
@@ -30,15 +31,15 @@ class ScoreUpdateServiceUnitTest {
 	@Mock
 	ValueOperations<String, Double> valueOps;
 
-	ScoreUpdateService service;
+	ScoreUpdateServiceImpl service;
 
-	private static final String TRUST_KEY = ScoreUpdateService.TRUST_KEY;
+	private static final String TRUST_KEY = ScoreUpdateServiceImpl.TRUST_KEY;
 	private final Long MEMBER_ID = 999L;
 
 	@BeforeEach
 	void init() {
 		// 직접 생성자를 통해 주입
-		service = new ScoreUpdateService(memberRepository, redisTemplate);
+		service = new ScoreUpdateServiceImpl(memberRepository, redisTemplate);
 		// opsForValue() 가 valueOps 를 반환하도록 설정
 		given(redisTemplate.opsForValue()).willReturn(valueOps);
 	}
@@ -80,7 +81,7 @@ class ScoreUpdateServiceUnitTest {
 		ConcurrentLinkedQueue<MemberScoreInfo> q = new ConcurrentLinkedQueue<>(List.of(info));
 
 		// 전체 호출이 곧 valueOps.set() 을 실행 → 첫 시도 성공
-		var m = ScoreUpdateService.class
+		var m = ScoreUpdateServiceImpl.class
 			.getDeclaredMethod("retryFailedUpdates", ConcurrentLinkedQueue.class);
 		m.setAccessible(true);
 		m.invoke(service, q);
@@ -98,7 +99,7 @@ class ScoreUpdateServiceUnitTest {
 		willThrow(new RuntimeException("boom"))
 			.given(valueOps).set(TRUST_KEY + MEMBER_ID, 2.71);
 
-		var m = ScoreUpdateService.class
+		var m = ScoreUpdateServiceImpl.class
 			.getDeclaredMethod("retryFailedUpdates", ConcurrentLinkedQueue.class);
 		m.setAccessible(true);
 		m.invoke(service, q);

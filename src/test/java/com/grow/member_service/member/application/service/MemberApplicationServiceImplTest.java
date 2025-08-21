@@ -22,6 +22,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import com.grow.member_service.common.exception.MemberException;
 import com.grow.member_service.member.application.dto.MemberInfoResponse;
 import com.grow.member_service.member.application.port.GeoIndexPort;
+import com.grow.member_service.member.application.service.impl.MemberApplicationServiceImpl;
 import com.grow.member_service.member.domain.exception.MemberDomainException;
 import com.grow.member_service.member.domain.model.Member;
 import com.grow.member_service.member.domain.model.enums.Platform;

@@ -1,5 +1,6 @@
 package com.grow.member_service.member.application.service;
 
+import com.grow.member_service.member.application.service.impl.ScoreUpdateServiceImpl;
 import com.grow.member_service.member.domain.model.enums.Platform;
 import com.grow.member_service.member.infra.persistence.entity.MemberJpaEntity;
 import com.grow.member_service.member.infra.persistence.repository.MemberJpaRepository;
@@ -10,20 +11,18 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Transactional
 @SpringBootTest
-class ScoreUpdateServiceTest {
+class ScoreUpdateServiceImplTest {
 
     @Autowired
-    private ScoreUpdateService scoreUpdateService;
+    private ScoreUpdateServiceImpl scoreUpdateServiceImpl;
 
     @Autowired
     private EntityManager entityManager;
@@ -77,7 +76,7 @@ class ScoreUpdateServiceTest {
         // Given: 존재하는 멤버들의 score가 DB에 저장되어 있음
 
         // When: 서비스 메서드 호출
-        scoreUpdateService.updateAllMemberScores();
+        scoreUpdateServiceImpl.updateAllMemberScores();
 
         // Then: Redis에 score가 제대로 저장되었는지 확인
         Double score1 = customDoubleRedisTemplate.opsForValue().get(TRUST_KEY + member1.getMemberId());

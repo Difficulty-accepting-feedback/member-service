@@ -17,7 +17,7 @@ import org.mockito.MockitoAnnotations;
 
 import com.grow.member_service.common.exception.ReviewException;
 import com.grow.member_service.global.exception.ErrorCode;
-import com.grow.member_service.member.application.service.MemberProfileService;
+import com.grow.member_service.member.application.service.impl.MemberProfileServiceImpl;
 import com.grow.member_service.member.domain.model.Member;
 import com.grow.member_service.member.domain.model.MemberAdditionalInfo;
 import com.grow.member_service.member.domain.model.MemberProfile;
@@ -33,7 +33,7 @@ class ReviewApplicationServiceImplTest {
 	private ReviewRepository reviewRepository;
 
 	@Mock
-	private MemberProfileService memberProfileService;
+	private MemberProfileServiceImpl memberProfileServiceImpl;
 
 	@Mock
 	private MemberRepository memberRepository;
@@ -88,7 +88,7 @@ class ReviewApplicationServiceImplTest {
 
 		assertThat(result).isSameAs(saved);
 		// average = (5+4+5)/3 = 4.666... => >=4.5 -> delta 0.2
-		then(memberProfileService).should()
+		then(memberProfileServiceImpl).should()
 			.adjustScore(eq(REVIEWEE_ID), eq(0.2));
 	}
 

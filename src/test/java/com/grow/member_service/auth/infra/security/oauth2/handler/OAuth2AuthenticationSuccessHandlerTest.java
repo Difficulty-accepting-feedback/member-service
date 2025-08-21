@@ -22,7 +22,7 @@ import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import com.grow.member_service.auth.infra.config.OAuthProperties;
 import com.grow.member_service.auth.infra.security.jwt.JwtProperties;
 import com.grow.member_service.auth.infra.security.jwt.JwtTokenProvider;
-import com.grow.member_service.member.application.service.PhoneVerificationService;
+import com.grow.member_service.member.application.service.impl.PhoneVerificationServiceImpl;
 
 @ExtendWith(MockitoExtension.class)
 class OAuth2AuthenticationSuccessHandlerTest {
@@ -30,7 +30,7 @@ class OAuth2AuthenticationSuccessHandlerTest {
 	private OAuth2AuthenticationSuccessHandler handler;
 
 	@Mock
-	private PhoneVerificationService phoneVerificationService;
+	private PhoneVerificationServiceImpl phoneVerificationServiceImpl;
 
 	@Mock
 	private OAuthProperties oauthProperties;
@@ -53,13 +53,13 @@ class OAuth2AuthenticationSuccessHandlerTest {
 			.willReturn("http://localhost:3000/oauth/redirect");
 
 		// 기본: 폰 미인증
-		given(phoneVerificationService.isPhoneVerified(42L))
+		given(phoneVerificationServiceImpl.isPhoneVerified(42L))
 			.willReturn(false);
 
 		handler = new OAuth2AuthenticationSuccessHandler(
 			jwtProvider,
 			jwtProps,
-			phoneVerificationService,
+			phoneVerificationServiceImpl,
 			oauthProperties
 		);
 	}
@@ -109,7 +109,7 @@ class OAuth2AuthenticationSuccessHandlerTest {
 	@Test
 	@DisplayName("성공시 이미 인증된 회원은 complete + provider 포함 리다이렉트")
 	void onAuthenticationSuccess_redirectsToComplete_whenVerified() throws Exception {
-		given(phoneVerificationService.isPhoneVerified(42L)).willReturn(true);
+		given(phoneVerificationServiceImpl.isPhoneVerified(42L)).willReturn(true);
 
 		MockHttpServletRequest req = new MockHttpServletRequest();
 		MockHttpServletResponse res = new MockHttpServletResponse();

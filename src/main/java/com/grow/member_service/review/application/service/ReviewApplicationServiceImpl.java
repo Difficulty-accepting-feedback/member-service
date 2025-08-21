@@ -7,7 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.grow.member_service.common.exception.ReviewException;
 import com.grow.member_service.global.exception.ErrorCode;
-import com.grow.member_service.member.application.service.MemberProfileService;
+import com.grow.member_service.member.application.service.impl.MemberProfileServiceImpl;
 import com.grow.member_service.member.domain.model.Member;
 import com.grow.member_service.member.domain.repository.MemberRepository;
 import com.grow.member_service.review.application.dto.ReviewCandidateResponse;
@@ -21,7 +21,7 @@ import lombok.RequiredArgsConstructor;
 public class ReviewApplicationServiceImpl implements ReviewApplicationService {
 
 	private final ReviewRepository reviewRepository;
-	private final MemberProfileService memberProfileService;
+	private final MemberProfileServiceImpl memberProfileServiceImpl;
 	private final MemberRepository memberRepository;
 
 	/**
@@ -55,7 +55,7 @@ public class ReviewApplicationServiceImpl implements ReviewApplicationService {
 
 		double avg = review.getTotalScore();
 		double delta = calculateScoreDelta(avg);
-		memberProfileService.adjustScore(revieweeId, delta);  // 온도 조정
+		memberProfileServiceImpl.adjustScore(revieweeId, delta);  // 온도 조정
 
 		return saved;
 	}
