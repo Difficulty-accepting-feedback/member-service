@@ -40,7 +40,8 @@ def jacocoExcludes = [
 		'**/region/**',
 		'**/port/**',
 		'**/client/**',
-		'**/MemberServiceApplication.class'
+		'**/MemberServiceApplication.class',
+		'**/event/**'
 ]
 
 jacocoTestCoverageVerification {

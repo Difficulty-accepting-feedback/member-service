@@ -20,6 +20,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import com.grow.member_service.member.application.dto.NearbyMemberResponse;
 import com.grow.member_service.member.application.port.GeoIndexPort;
 import com.grow.member_service.member.application.port.GeocodingPort;
+import com.grow.member_service.member.application.service.impl.LocationApplicationServiceImpl;
 import com.grow.member_service.member.domain.model.Member;
 import com.grow.member_service.member.domain.model.MemberAdditionalInfo;
 import com.grow.member_service.member.domain.model.MemberProfile;

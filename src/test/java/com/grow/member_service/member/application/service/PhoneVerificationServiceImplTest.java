@@ -18,6 +18,8 @@ import org.mockito.MockitoAnnotations;
 
 import com.grow.member_service.common.exception.MemberException;
 import com.grow.member_service.global.exception.ErrorCode;
+import com.grow.member_service.member.application.event.MemberNotificationPublisher;
+import com.grow.member_service.member.application.service.impl.PhoneVerificationServiceImpl;
 import com.grow.member_service.member.domain.exception.MemberDomainException;
 import com.grow.member_service.member.domain.model.Member;
 import com.grow.member_service.member.domain.model.MemberAdditionalInfo;
@@ -31,7 +33,7 @@ import com.grow.member_service.member.domain.service.SmsService;
 ;
 
 @DisplayName("PhoneVerificationService 테스트")
-class PhoneVerificationServiceTest {
+class PhoneVerificationServiceImplTest {
 
 	@Mock private PhoneVerificationRepository verificationRepo;
 
@@ -39,10 +41,10 @@ class PhoneVerificationServiceTest {
 
 	@Mock private MemberRepository memberRepo;
 
-	@Mock private OnboardingNotifier onboardingNotifier;
+	@Mock private MemberNotificationPublisher notificationPublisher;
 
 	@InjectMocks
-	private PhoneVerificationService service;
+	private PhoneVerificationServiceImpl service;
 
 	private final Long MEMBER_ID = 42L;
 	private final String PHONE   = "01012345678";

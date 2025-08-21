@@ -1,4 +1,4 @@
-package com.grow.member_service.member.application.service;
+package com.grow.member_service.member.application.service.impl;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -18,6 +18,7 @@ import com.grow.member_service.global.exception.ErrorCode;
 import com.grow.member_service.member.application.dto.NearbyMemberResponse;
 import com.grow.member_service.member.application.port.GeoIndexPort;
 import com.grow.member_service.member.application.port.GeocodingPort;
+import com.grow.member_service.member.application.service.LocationApplicationService;
 import com.grow.member_service.member.domain.model.Member;
 import com.grow.member_service.member.domain.repository.MemberRepository;
 import com.grow.member_service.member.infra.region.RegionCenterResolver;

@@ -18,7 +18,7 @@ import com.grow.member_service.auth.infra.config.OAuthProperties;
 import com.grow.member_service.auth.infra.security.jwt.JwtProperties;
 import com.grow.member_service.auth.infra.security.jwt.JwtTokenProvider;
 import com.grow.member_service.common.exception.OAuthException;
-import com.grow.member_service.member.application.service.PhoneVerificationService;
+import com.grow.member_service.member.application.service.impl.PhoneVerificationServiceImpl;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -34,7 +34,7 @@ import lombok.RequiredArgsConstructor;
 public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 	private final JwtTokenProvider jwtProvider;
 	private final JwtProperties jwtProperties;
-	private final PhoneVerificationService phoneVerificationService;
+	private final PhoneVerificationServiceImpl phoneVerificationServiceImpl;
 	private final OAuthProperties oauthProperties;
 
 	/**
@@ -64,7 +64,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 		addAuthCookie(res, "refresh_token", refreshToken, refreshDuration);
 
 		// 핸드폰 인증 여부 확인
-		boolean verified = phoneVerificationService.isPhoneVerified(memberId);
+		boolean verified = phoneVerificationServiceImpl.isPhoneVerified(memberId);
 		String step = verified ? "complete" : "enter-phone"; // 추후에 주소 변경
 
 		// provider 정보 추출
