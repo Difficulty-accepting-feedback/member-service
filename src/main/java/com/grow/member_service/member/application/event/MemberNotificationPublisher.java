@@ -22,7 +22,7 @@ public class MemberNotificationPublisher {
 			|| m.getAdditionalInfo().getAddress().isBlank()) {
 			publisher.publishEvent(new MemberNotificationEvent(
 				m.getMemberId(),
-				"STUDY_NOTICE",
+				"SERVICE_NOTICE",
 				"ADDR_REMINDER",
 				"주소 정보 미입력",
 				"더 정확한 매칭을 위해 주소 정보를 등록해 주세요.",
@@ -33,7 +33,7 @@ public class MemberNotificationPublisher {
 		if (!m.isPhoneVerified()) {
 			publisher.publishEvent(new MemberNotificationEvent(
 				m.getMemberId(),
-				"STUDY_NOTICE",
+				"SERVICE_NOTICE",
 				"PHONE_REMINDER",
 				"휴대폰 인증 미완료",
 				"보안 강화를 위해 휴대폰 번호 인증을 완료해 주세요.",
@@ -46,7 +46,7 @@ public class MemberNotificationPublisher {
 	public void publishPhoneVerifiedSuccess(Long memberId) {
 		publisher.publishEvent(new MemberNotificationEvent(
 			memberId,
-			"STUDY_NOTICE",
+			"SERVICE_NOTICE",
 			"PHONE_VERIFIED",
 			"인증 완료",
 			"휴대폰 번호 인증이 완료되었습니다.",
