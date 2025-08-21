@@ -5,7 +5,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.grow.member_service.common.exception.MemberException;
 import com.grow.member_service.global.exception.ErrorCode;
-import com.grow.member_service.member.application.service.OnboardingNotifier;
+import com.grow.member_service.member.application.event.MemberNotificationPublisher;
 import com.grow.member_service.member.application.service.PhoneVerificationService;
 import com.grow.member_service.member.domain.model.Member;
 import com.grow.member_service.member.domain.model.PhoneVerification;
@@ -23,7 +23,7 @@ public class PhoneVerificationServiceImpl implements PhoneVerificationService {
 	private final PhoneVerificationRepository repository;
 	private final SmsService smsService;
 	private final MemberRepository memberRepository;
-	private final OnboardingNotifier onboardingNotifier;
+	private final MemberNotificationPublisher notificationPublisher;
 
 	/**
 	 * 소셜 가입 직후 호출되어,
@@ -61,7 +61,7 @@ public class PhoneVerificationServiceImpl implements PhoneVerificationService {
 		memberRepository.save(member);
 
 		// 3) 인증 성공 알림
-		onboardingNotifier.sendPhoneVerifiedSuccess(memberId);
+		notificationPublisher.publishPhoneVerifiedSuccess(memberId);
 	}
 
 	/**

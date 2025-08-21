@@ -11,9 +11,9 @@ import org.springframework.transaction.annotation.Transactional;
 import com.grow.member_service.common.exception.MemberException;
 import com.grow.member_service.global.exception.ErrorCode;
 import com.grow.member_service.member.application.dto.MemberInfoResponse;
+import com.grow.member_service.member.application.event.MemberNotificationPublisher;
 import com.grow.member_service.member.application.port.GeoIndexPort;
 import com.grow.member_service.member.application.service.MemberApplicationService;
-import com.grow.member_service.member.application.service.OnboardingNotifier;
 import com.grow.member_service.member.domain.model.Member;
 import com.grow.member_service.member.domain.repository.MemberRepository;
 import com.grow.member_service.member.domain.repository.MemberWithdrawalLogRepository;
@@ -32,16 +32,17 @@ public class MemberApplicationServiceImpl implements MemberApplicationService {
 	private final MemberService memberService;
 	private final MemberWithdrawalLogRepository withdrawalLogRepository;
 	private final ObjectProvider<GeoIndexPort> geoIndexProvider;
-	private final OnboardingNotifier onboardingNotifier;
+	private final MemberNotificationPublisher notificationPublisher;
 
 
+	@Transactional(readOnly = true)
 	@Override
 	public MemberInfoResponse getMyInfo(Long memberId) {
 		Member member = memberRepository.findById(memberId)
 			.orElseThrow(() -> new MemberException(ErrorCode.MEMBER_NOT_FOUND));
 
 		// 알림(주소/휴대폰) – 12시간마다 푸시
-		onboardingNotifier.pushRemindersIfNeeded(member);
+		notificationPublisher.publishOnboardingReminders(member);
 
 		return MemberInfoResponse.from(member);
 	}
