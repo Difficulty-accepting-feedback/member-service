@@ -31,18 +31,26 @@ public class MemberNotificationEventHandler {
 	/** 12시간 중복 방지 TTL */
 	private static final Duration DEDUPE_TTL = Duration.ofHours(12);
 
+	/**
+	 * 온보딩 리마인더 및 기타 알림 이벤트 처리
+	 * @param e
+	 */
 	@TransactionalEventListener(phase = AFTER_COMMIT)
 	public void on(MemberNotificationEvent e) {
 		// 1) 온보딩 리마인더 중복 방지 (SETNX + TTL 12h)
 		if (isReminder(e.code())) {
+
+			// 중복 방지 키 생성
 			String dedupeKey = "notify:onboard:" + e.code() + ":" + e.memberId();
+
+			// 키가 이미 존재하면 스킵
 			if (!acquireOnce(dedupeKey, DEDUPE_TTL)) {
 				log.debug("[알림 스킵] 중복 방지 키(hit) - key={}, memberId={}, code={}", dedupeKey, e.memberId(), e.code());
 				return;
 			}
 		}
 
-		// 2) 이벤트 값을 그대로 사용 (한글 템플릿 없음)
+		// 2) 요청 객체 생성
 		MemberNotificationRequest req = MemberNotificationRequest.builder()
 			.notificationType(e.type())
 			.memberId(e.memberId())
@@ -61,6 +69,11 @@ public class MemberNotificationEventHandler {
 		}
 	}
 
+	/**
+	 * 온보딩 리마인더 코드인지 확인
+	 * @param code
+	 * @return
+	 */
 	private boolean isReminder(String code) {
 		return "ADDR_REMINDER".equals(code) || "PHONE_REMINDER".equals(code);
 	}
