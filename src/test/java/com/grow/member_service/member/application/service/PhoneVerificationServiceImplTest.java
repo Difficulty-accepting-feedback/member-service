@@ -18,6 +18,7 @@ import org.mockito.MockitoAnnotations;
 
 import com.grow.member_service.common.exception.MemberException;
 import com.grow.member_service.global.exception.ErrorCode;
+import com.grow.member_service.member.application.event.MemberNotificationPublisher;
 import com.grow.member_service.member.application.service.impl.PhoneVerificationServiceImpl;
 import com.grow.member_service.member.domain.exception.MemberDomainException;
 import com.grow.member_service.member.domain.model.Member;
@@ -40,7 +41,7 @@ class PhoneVerificationServiceImplTest {
 
 	@Mock private MemberRepository memberRepo;
 
-	@Mock private OnboardingNotifier onboardingNotifier;
+	@Mock private MemberNotificationPublisher notificationPublisher;
 
 	@InjectMocks
 	private PhoneVerificationServiceImpl service;
