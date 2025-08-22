@@ -7,8 +7,8 @@ import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
 import javax.crypto.SecretKey;
 
 import org.springframework.beans.factory.ObjectProvider;
@@ -17,7 +17,10 @@ import org.springframework.stereotype.Component;
 import com.grow.member_service.accomplished.domain.model.Accomplished;
 import com.grow.member_service.accomplished.domain.repository.AccomplishedRepository;
 import com.grow.member_service.auth.infra.security.jwt.JwtProperties;
-import com.grow.member_service.history.point.domain.model.PointHistory;
+import com.grow.member_service.history.point.application.service.PointCommandService;
+import com.grow.member_service.history.point.domain.model.PointHistory; // ★ 추가
+import com.grow.member_service.history.point.domain.model.enums.PointActionType;
+import com.grow.member_service.history.point.domain.model.enums.SourceType;
 import com.grow.member_service.history.point.domain.repository.PointHistoryRepository;
 import com.grow.member_service.member.application.service.LocationApplicationService;
 import com.grow.member_service.member.domain.model.Member;
@@ -45,6 +48,9 @@ public class DataInitializer {
 	private final AccomplishedRepository accomplishedRepository;
 	private final QuizResultRepository quizResultRepository;
 	private final JwtProperties props;
+
+	// ✅ 포인트 정책: 반드시 커맨드 서비스로 적립/차감(원장/스냅샷/멱등/낙관락 처리)
+	private final PointCommandService pointCommandService;
 
 	// 지역 업데이트(정적 리졸버 기반 좌표 변환 + Redis GEO 업서트) 선택 주입
 	private final ObjectProvider<LocationApplicationService> locationServiceProvider;
@@ -81,7 +87,6 @@ public class DataInitializer {
 		if (locationSvc != null) {
 			try {
 				String testRegion = "경기도 구리시";
-				// ✅ sggCode는 없이(=null) 전달 → 정적 리졸버(@Primary GeocodingPort)가 region 텍스트로 좌표 매핑
 				locationSvc.updateMyRegion(testUser.getMemberId(), testRegion, null);
 				log.info("[INIT] 테스트 계정 지역 인덱싱 완료 - memberId={}, region='{}'",
 					testUser.getMemberId(), testRegion);
@@ -96,42 +101,68 @@ public class DataInitializer {
 		long memberId = testUser.getMemberId();
 		Clock clock = Clock.systemUTC();
 
-		// 포인트 더미
+		// 2) 포인트 더미
 		if (pointHistoryRepository.findByMemberId(memberId).isEmpty()) {
-			List<PointHistory> mocks = IntStream.rangeClosed(1, 60)
-				.mapToObj(i -> {
-					int amount = (i % 5 == 0) ? -200 : ((i % 2 == 0) ? +100 : +50);
-					String content = "모의 포인트 내역 #" + i + (amount > 0 ? " 적립" : " 사용");
-					return new PointHistory(memberId, amount, content, clock);
-				})
-				.collect(Collectors.toList());
-			mocks.forEach(pointHistoryRepository::save);
-			log.info("[INIT] 테스트용 포인트 내역 {}건 생성 완료", mocks.size());
+			IntStream.rangeClosed(1, 60).forEach(i -> {
+				int amount = (i % 5 == 0) ? -200 : ((i % 2 == 0) ? +100 : +50);
+				String content = "모의 포인트 내역 #" + i + (amount > 0 ? " 적립" : " 사용");
+				String dedupKey = "INIT_SEED:" + memberId + ":" + i;
+
+				try {
+					PointHistory ph;
+					if (amount >= 0) {
+						ph = pointCommandService.grant(
+							memberId, amount,
+							PointActionType.ADMIN_ADJUST, SourceType.SYSTEM,
+							"seed-" + i, content, dedupKey, LocalDateTime.now(clock)
+						);
+						log.info("[INIT] 포인트 시드 적립 완료 - memberId={}, i={}, amount=+{}, balanceAfter={}, historyId={}, dedupKey={}",
+							memberId, i, amount,
+							ph.getBalanceAfter(), ph.getPointHistoryId(), ph.getDedupKey());
+					} else {
+						int use = Math.abs(amount);
+						ph = pointCommandService.spend(
+							memberId, use,
+							PointActionType.ADMIN_ADJUST, SourceType.SYSTEM,
+							"seed-" + i, content, dedupKey, LocalDateTime.now(clock)
+						);
+						log.info("[INIT] 포인트 시드 차감 완료 - memberId={}, i={}, amount=-{}, balanceAfter={}, historyId={}, dedupKey={}",
+							memberId, i, use,
+							ph.getBalanceAfter(), ph.getPointHistoryId(), ph.getDedupKey());
+					}
+				} catch (Exception ex) {
+					log.warn("[INIT] 포인트 시드 실패 - memberId={}, i={}, amount={}, err={}",
+						memberId, i, amount, ex.toString());
+				}
+			});
+
+			long seeded = pointHistoryRepository.findByMemberId(memberId).size();
+			log.info("[INIT] 테스트용 포인트 내역 시드 완료 - {}건", seeded);
+
+			// ★ 시드 적립 후 일부 차감(샘플)
+			seedInitialDebits(memberId, clock);
 		}
 
-		// 업적 더미
+		// 3) 업적 더미
 		if (accomplishedRepository.findAllByMemberId(memberId).isEmpty()) {
-			List<Accomplished> accomplishments = IntStream.rangeClosed(1, 60)
-				.mapToObj(i -> new Accomplished(memberId, (long) i, LocalDateTime.now(clock)))
-				.collect(Collectors.toList());
-			accomplishments.forEach(accomplishedRepository::save);
-			log.info("[INIT] 테스트용 업적 {}건 생성 완료", accomplishments.size());
+			IntStream.rangeClosed(1, 60).forEach(i -> {
+				Accomplished acc = new Accomplished(memberId, (long) i, LocalDateTime.now(clock));
+				accomplishedRepository.save(acc);
+			});
+			log.info("[INIT] 테스트용 업적 60건 생성 완료");
 		}
 
-		// 퀴즈 결과 더미
+		// 4) 퀴즈 결과 더미
 		if (quizResultRepository.findByMemberId(memberId).isEmpty()) {
-			List<QuizResult> quizResults = IntStream.rangeClosed(1, 20)
-				.mapToObj(i -> {
-					long quizId = (i % 5) + 1;
-					boolean isCorrect = (i % 3 != 0); // 3의 배수만 틀리게
-					return new QuizResult(memberId, quizId, isCorrect);
-				})
-				.collect(Collectors.toList());
-			quizResults.forEach(quizResultRepository::save);
-			log.info("[INIT] 테스트용 퀴즈 결과 {}건 생성 완료", quizResults.size());
+			IntStream.rangeClosed(1, 20).forEach(i -> {
+				long quizId = (i % 5) + 1;
+				boolean isCorrect = (i % 3 != 0); // 3의 배수만 틀리게
+				quizResultRepository.save(new QuizResult(memberId, quizId, isCorrect));
+			});
+			log.info("[INIT] 테스트용 퀴즈 결과 20건 생성 완료");
 		}
 
-		// 2) 더미 멤버 10명 (서울 8개 구 + 경기 2개 시)
+		// 5) 더미 멤버 10명 (서울 8개 구 + 경기 2개 시)
 		List<String> regions = List.of(
 			"서울특별시 강남구",
 			"서울특별시 서초구",
@@ -168,10 +199,8 @@ public class DataInitializer {
 					existing.getAdditionalInfo().getAddress());
 			}
 
-			// 정적 리졸버 기반 지오코딩 + Redis GEO 업서트
 			if (locationSvc != null) {
 				try {
-					// ✅ sggCode 없이(null) 전달 → 텍스트 기반 정적 매핑 사용
 					locationSvc.updateMyRegion(existing.getMemberId(), region, null);
 					log.info("[INIT] 더미 멤버 지역 인덱싱 완료 - memberId={}, region='{}'",
 						existing.getMemberId(), region);
@@ -186,7 +215,7 @@ public class DataInitializer {
 		}
 		log.info("[INIT] 더미 멤버 생성 완료 - 신규 {}명 / 총 시도 {}건", created, regions.size());
 
-		// 3) 토큰 생성 (테스트 계정용)
+		// 6) 토큰 생성 (테스트 계정용)
 		SecretKey key = Keys.hmacShaKeyFor(props.getSecret().getBytes(StandardCharsets.UTF_8));
 		Date issuedAt = Date.from(Instant.parse("2025-01-01T00:00:00Z"));
 		Date expiration = Date.from(Instant.parse("2030-01-01T00:00:00Z"));
@@ -201,5 +230,30 @@ public class DataInitializer {
 
 		log.info("테스트용 멤버 ID    : {}", memberId);
 		log.info("테스트용 액세스 토큰 : {}", token);
+	}
+
+	/** ★ 시드 적립 후 일부 차감(샘플) */
+	private void seedInitialDebits(long memberId, Clock clock) {
+		int[] debits = {150, 75};
+		for (int idx = 0; idx < debits.length; idx++) {
+			int amt = debits[idx];
+			String dedupKey = "INIT_DEBIT:" + memberId + ":" + (idx + 1);
+			try {
+				PointHistory ph = pointCommandService.spend(
+					memberId, amt,
+					PointActionType.ADMIN_ADJUST, SourceType.SYSTEM,
+					"debit-seed-" + (idx + 1),
+					"초기 차감 시드 #" + (idx + 1),
+					dedupKey,
+					LocalDateTime.now(clock)
+				);
+				log.info("[INIT] 포인트 초기 차감 완료 - memberId={}, idx={}, amount=-{}, balanceAfter={}, historyId={}, dedupKey={}",
+					memberId, (idx + 1), amt,
+					ph.getBalanceAfter(), ph.getPointHistoryId(), ph.getDedupKey());
+			} catch (Exception ex) {
+				log.warn("[INIT] 포인트 초기 차감 실패 - memberId={}, idx={}, amount=-{}, err={}",
+					memberId, (idx + 1), amt, ex.toString());
+			}
+		}
 	}
 }
