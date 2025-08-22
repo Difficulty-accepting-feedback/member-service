@@ -30,4 +30,8 @@ public class MemberDomainException extends DomainException {
 	public static MemberDomainException nicknameAlreadyExists(String nickname) {
 		return new MemberDomainException("이미 사용 중인 닉네임입니다: " + nickname);
 	}
+
+	public static MemberDomainException notEnoughPoints() {
+		return new MemberDomainException("포인트가 부족합니다.");
+	}
 }

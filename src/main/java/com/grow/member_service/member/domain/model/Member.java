@@ -172,4 +172,11 @@ public class Member {
         if (raw == null) return "";
         return raw.replaceAll("\\s+", " ").trim();
     }
+
+    /** 포인트 사용 메서드 */
+    public void usePoint(int points) {
+        if (points <= 0) throw MemberDomainException.negativePoints(points);
+        if (this.totalPoint - points < 0) throw MemberDomainException.notEnoughPoints();
+        this.totalPoint -= points;
+    }
 }
