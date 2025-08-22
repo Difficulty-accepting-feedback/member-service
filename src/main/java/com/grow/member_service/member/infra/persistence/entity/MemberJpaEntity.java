@@ -1,5 +1,6 @@
 package com.grow.member_service.member.infra.persistence.entity;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import com.grow.member_service.member.domain.model.enums.Platform;
@@ -12,6 +13,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -74,6 +76,20 @@ public class MemberJpaEntity {
     @Column(name = "matchingEnabled", nullable = false)
     private boolean matchingEnabled;
 
+    // 낙관적 락을 위한 버전 필드
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version;
+
+    @Column(name = "last_attendance_day")
+    private LocalDate lastAttendanceDay;
+
+    @Column(name = "attendance_streak", nullable = false)
+    private int attendanceStreak;
+
+    @Column(name = "attendance_best_streak", nullable = false)
+    private int attendanceBestStreak;
+
     public MemberJpaEntity(String email,
                            String nickname,
                            String profileImage,
@@ -82,7 +98,10 @@ public class MemberJpaEntity {
                            LocalDateTime createAt,
                            String phoneNumber,
                            String address,
-                           boolean matchingEnabled
+                           boolean matchingEnabled,
+                            LocalDate lastAttendanceDay,
+                            int attendanceStreak,
+                            int attendanceBestStreak
     ) {
         this.email = email;
         this.nickname = nickname;
@@ -96,5 +115,8 @@ public class MemberJpaEntity {
         this.score = 36.5;
         this.phoneVerified = false;
         this.matchingEnabled = matchingEnabled;
+        this.lastAttendanceDay = lastAttendanceDay;
+        this.attendanceStreak = attendanceStreak;
+        this.attendanceBestStreak = attendanceBestStreak;
     }
 }
