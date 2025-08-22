@@ -5,7 +5,10 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
+import com.grow.member_service.common.exception.MemberException;
+import com.grow.member_service.global.exception.ErrorCode;
 import com.grow.member_service.member.domain.model.Member;
 import com.grow.member_service.member.domain.model.MemberScoreInfo;
 import com.grow.member_service.member.domain.model.enums.Platform;
@@ -24,15 +27,28 @@ public class MemberRepositoryImpl implements MemberRepository {
     private final MemberJpaRepository memberJpaRepository;
 
     @Override
-    public Member save(Member member) {
-        MemberJpaEntity entity = memberMapper.toEntity(member);
-        MemberJpaEntity saved = memberJpaRepository.save(entity);
-        return memberMapper.toDomain(saved);
+    @Transactional
+    public Member save(final Member domain) {
+        // 신규: id == null -> persist
+        if (domain.getMemberId() == null) {
+            MemberJpaEntity e = memberMapper.toNewEntity(domain);
+            MemberJpaEntity saved = memberJpaRepository.save(e); // persist
+            return memberMapper.toDomain(saved);
+        }
+
+        // 업데이트: id != null → 현재 버전 로딩 후, 버전 이식한 detached를 merge
+        MemberJpaEntity current = memberJpaRepository.findById(domain.getMemberId())
+            .orElseThrow(() -> new MemberException(ErrorCode.MEMBER_NOT_FOUND));
+
+        // 현재 버전과 비교하여 낙관적 락 충돌 여부 확인
+        MemberJpaEntity toMerge = memberMapper.toEntityForUpdate(domain, current);
+        MemberJpaEntity merged = memberJpaRepository.save(toMerge); // merge
+        return memberMapper.toDomain(merged);
     }
 
     @Override
-    public Optional<Member> findById(Long id) {
-        return memberJpaRepository.findById(id)
+    public Optional<Member> findById(Long memberId) {
+        return memberJpaRepository.findById(memberId)
             .map(memberMapper::toDomain);
     }
 
@@ -43,7 +59,7 @@ public class MemberRepositoryImpl implements MemberRepository {
     }
 
     @Override
-    public Optional<Object> findByNickname(String nickname) {
+    public Optional<Member> findByNickname(String nickname) {
         return memberJpaRepository.findByNickname(nickname)
             .map(memberMapper::toDomain);
     }
