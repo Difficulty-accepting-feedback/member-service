@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 import com.grow.member_service.history.point.application.event.PointGrantRequest;
-import com.grow.member_service.history.point.application.service.MemberPointCommandService;
+import com.grow.member_service.history.point.application.service.PointCommandService;
 import com.grow.member_service.history.point.domain.model.enums.PointActionType;
 import com.grow.member_service.history.point.domain.model.enums.SourceType;
 
@@ -18,7 +18,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class PointGrantEventHandler {
 
-	private final MemberPointCommandService commandService;
+	private final PointCommandService commandService;
 
 	/**
 	 * 포인트 지급 이벤트를 처리합니다.
