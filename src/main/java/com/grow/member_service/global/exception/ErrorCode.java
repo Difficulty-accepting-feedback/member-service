@@ -35,6 +35,7 @@ public enum ErrorCode {
 	POINT_PERIOD_INVALID_RANGE( HttpStatus.BAD_REQUEST, "400-15", "point.period.invalid.range"),
 	POINT_PERIOD_EMPTY(HttpStatus.NOT_FOUND, "404-2", "point.period.empty"),
 	POINT_NOT_ENOUGH(HttpStatus.BAD_REQUEST, "400-16", "point.not.enough"),
+	POINT_AMOUNT_MUST_BE_POSITIVE(HttpStatus.BAD_REQUEST, "400-17", "point.amount.must.be.positive"),
 
 	// 업적 도메인
 	ACCOMPLISHED_PERIOD_INCOMPLETE(HttpStatus.BAD_REQUEST,  "400-16", "accomplished.period.incomplete"),
