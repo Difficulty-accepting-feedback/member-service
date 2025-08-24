@@ -10,15 +10,18 @@ public class PointHistoryResponse {
 	private final Integer amount;
 	private final String content;
 	private final LocalDateTime addAt;
+	private final Long balanceAfter;
 
 	public PointHistoryResponse(Long pointHistoryId,
 		Integer amount,
 		String content,
-		LocalDateTime addAt) {
+		LocalDateTime addAt,
+		Long balanceAfter) {
 		this.pointHistoryId = pointHistoryId;
 		this.amount = amount;
 		this.content = content;
 		this.addAt = addAt;
+		this.balanceAfter = balanceAfter;
 	}
 
 	public static PointHistoryResponse fromDomain(com.grow.member_service.history.point.domain.model.PointHistory ph) {
@@ -26,7 +29,8 @@ public class PointHistoryResponse {
 			ph.getPointHistoryId(),
 			ph.getAmount(),
 			ph.getContent(),
-			ph.getAddAt()
+			ph.getAddAt(),
+			ph.getBalanceAfter()
 		);
 	}
 }
