@@ -1,6 +1,7 @@
 package com.grow.member_service.member.domain.model;
 
 import java.time.Clock;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -23,22 +24,24 @@ public class Member {
     private double score;
 	private boolean matchingEnabled; // 매칭 기능 활성화 여부
 
+    // 출석 체크 관련 필드
+    private LocalDate lastAttendanceDay;
+    private int attendanceStreak;
+    private int attendanceBestStreak;
+
     public Member(MemberProfile memberProfile,
         MemberAdditionalInfo additionalInfo,
-        Clock createAt
-    ) {
-        this.memberId = null; // 생성 시 null, DB 저장 후 자동으로 생성
+        Clock createAt) {
+        this.memberId = null;
         this.memberProfile = memberProfile;
         this.additionalInfo = additionalInfo;
         this.totalPoint = 0;
         this.score = 36.5;
         this.matchingEnabled = true;
-
-        if (createAt != null) {
-            this.createAt = LocalDateTime.now(createAt);
-        } else {
-            this.createAt = LocalDateTime.now();
-        }
+        this.createAt = (createAt != null) ? LocalDateTime.now(createAt) : LocalDateTime.now();
+        this.lastAttendanceDay = null;
+        this.attendanceStreak = 0;
+        this.attendanceBestStreak = 0;
     }
 
     public Member(Long memberId,
@@ -47,8 +50,7 @@ public class Member {
         LocalDateTime createAt,
         int totalPoint,
         double score,
-        boolean matchingEnabled
-    ) {
+        boolean matchingEnabled) {
         this.memberId = memberId;
         this.memberProfile = memberProfile;
         this.additionalInfo = additionalInfo;
@@ -56,6 +58,32 @@ public class Member {
         this.totalPoint = totalPoint;
         this.score = score;
         this.matchingEnabled = matchingEnabled;
+        this.lastAttendanceDay = null;
+        this.attendanceStreak = 0;
+        this.attendanceBestStreak = 0;
+    }
+
+    // [선호] 출석 스냅샷이 포함된 풀 생성자(매퍼에서 사용)
+    public Member(Long memberId,
+        MemberProfile memberProfile,
+        MemberAdditionalInfo additionalInfo,
+        LocalDateTime createAt,
+        int totalPoint,
+        double score,
+        boolean matchingEnabled,
+        LocalDate lastAttendanceDay,
+        int attendanceStreak,
+        int attendanceBestStreak) {
+        this.memberId = memberId;
+        this.memberProfile = memberProfile;
+        this.additionalInfo = additionalInfo;
+        this.createAt = createAt;
+        this.totalPoint = totalPoint;
+        this.score = score;
+        this.matchingEnabled = matchingEnabled;
+        this.lastAttendanceDay = lastAttendanceDay;
+        this.attendanceStreak = attendanceStreak;
+        this.attendanceBestStreak = attendanceBestStreak;
     }
 
     // 비즈니스 로직 메서드
@@ -171,5 +199,40 @@ public class Member {
     private static String normalizeRegion(String raw) {
         if (raw == null) return "";
         return raw.replaceAll("\\s+", " ").trim();
+    }
+
+    /** 포인트 사용 메서드 */
+    public void usePoint(int points) {
+        if (points <= 0) throw MemberDomainException.negativePoints(points);
+        if (this.totalPoint - points < 0) throw MemberDomainException.notEnoughPoints(points, this.totalPoint);
+        this.totalPoint -= points;
+    }
+
+    // 포인트 차감 메서드
+    public void deductPoint(int points) {
+        if (points < 0) {
+            throw MemberDomainException.negativePoints(points);
+        }
+        if (this.totalPoint < points) {
+            throw MemberDomainException.notEnoughPoints(points, this.totalPoint);
+        }
+        this.totalPoint -= points;
+    }
+
+    /** 출석 체크 메서드 */
+    public boolean markAttendance(LocalDate today) {
+        if (this.lastAttendanceDay != null && this.lastAttendanceDay.isEqual(today)) {
+            return false; // 오늘 이미 처리됨 -> 출석 체크 중복 방지
+        }
+        if (this.lastAttendanceDay != null && this.lastAttendanceDay.plusDays(1).isEqual(today)) {
+            this.attendanceStreak = this.attendanceStreak + 1;
+        } else {
+            this.attendanceStreak = 1;
+        }
+        if (this.attendanceStreak > this.attendanceBestStreak) {
+            this.attendanceBestStreak = this.attendanceStreak;
+        }
+        this.lastAttendanceDay = today;
+        return true;
     }
 }

@@ -18,6 +18,7 @@ import com.grow.member_service.auth.infra.config.OAuthProperties;
 import com.grow.member_service.auth.infra.security.jwt.JwtProperties;
 import com.grow.member_service.auth.infra.security.jwt.JwtTokenProvider;
 import com.grow.member_service.common.exception.OAuthException;
+import com.grow.member_service.member.application.event.LoginEventPublisher;
 import com.grow.member_service.member.application.service.impl.PhoneVerificationServiceImpl;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,6 +37,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 	private final JwtProperties jwtProperties;
 	private final PhoneVerificationServiceImpl phoneVerificationServiceImpl;
 	private final OAuthProperties oauthProperties;
+	private final LoginEventPublisher loginEventPublisher;
 
 	/**
 	 * 인증 성공 후 호출되는 메서드
@@ -62,6 +64,8 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 		// HttpOnly 쿠키에 담기
 		addAuthCookie(res, "access_token", accessToken, accessDuration);
 		addAuthCookie(res, "refresh_token", refreshToken, refreshDuration);
+
+		loginEventPublisher.publishLoginSucceeded(memberId);
 
 		// 핸드폰 인증 여부 확인
 		boolean verified = phoneVerificationServiceImpl.isPhoneVerified(memberId);

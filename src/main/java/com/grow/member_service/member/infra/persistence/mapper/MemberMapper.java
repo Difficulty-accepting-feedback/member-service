@@ -1,65 +1,82 @@
 package com.grow.member_service.member.infra.persistence.mapper;
 
 import org.springframework.stereotype.Component;
-
-import com.grow.member_service.member.domain.model.Member;
-import com.grow.member_service.member.domain.model.MemberAdditionalInfo;
-import com.grow.member_service.member.domain.model.MemberProfile;
+import com.grow.member_service.member.domain.model.*;
 import com.grow.member_service.member.infra.persistence.entity.MemberJpaEntity;
 
-/**
- * 도메인 - 엔티티 변환 클래스
- */
 @Component
 public class MemberMapper {
 
-    // 엔티티를 도메인으로 변환 (조회 용도)
+    // 엔티티 -> 도메인 (그대로 유지)
     public Member toDomain(MemberJpaEntity entity) {
-        MemberProfile memberProfile = new MemberProfile(
-                entity.getEmail(),
-                entity.getNickname(),
-                entity.getProfileImage(),
-                entity.getPlatform(),
-                entity.getPlatformId()
+        MemberProfile profile = new MemberProfile(
+            entity.getEmail(), entity.getNickname(), entity.getProfileImage(),
+            entity.getPlatform(), entity.getPlatformId()
         );
-
-        MemberAdditionalInfo additionalInfo = new MemberAdditionalInfo(
-                entity.getPhoneNumber(),
-                entity.getAddress(),
-                entity.isPhoneVerified()
+        MemberAdditionalInfo info = new MemberAdditionalInfo(
+            entity.getPhoneNumber(), entity.getAddress(), entity.isPhoneVerified()
         );
-
         return new Member(
-                entity.getMemberId(),
-                memberProfile,
-                additionalInfo,
-                entity.getCreateAt(),
-                entity.getTotalPoint(),
-                entity.getScore(),
-                entity.isMatchingEnabled()
+            entity.getMemberId(), profile, info, entity.getCreateAt(),
+            entity.getTotalPoint(), entity.getScore(), entity.isMatchingEnabled(),
+            entity.getLastAttendanceDay(), entity.getAttendanceStreak(), entity.getAttendanceBestStreak()
         );
     }
 
-    // 도메인을 엔티티로 변환
-    public MemberJpaEntity toEntity(Member domain) {
-        MemberProfile profile     = domain.getMemberProfile();
-        MemberAdditionalInfo info = domain.getAdditionalInfo();
-
+    /**
+     * 도메인 -> 신규 엔티티 변환
+     * - 신규 회원 가입 시 사용
+     * - id/version은 null로 설정하여 새 엔티티로 처리
+     */
+    public MemberJpaEntity toNewEntity(Member d) {
+        MemberProfile p = d.getMemberProfile();
+        MemberAdditionalInfo a = d.getAdditionalInfo();
         return MemberJpaEntity.builder()
-            .memberId(domain.getMemberId())              // 기존 ID 또는 null
-            .email(profile.getEmail())
-            .nickname(profile.getNickname())
-            .profileImage(profile.getProfileImage())
-            .platform(profile.getPlatform())
-            .platformId(profile.getPlatformId())
-            .phoneNumber(info.getPhoneNumber())
-            .phoneVerified(info.isPhoneVerified())
-            .address(info.getAddress())
-            .createAt(domain.getCreateAt())
-            .withdrawalAt(domain.getWithdrawalAt())       // 탈퇴 일시(없으면 null)
-            .totalPoint(domain.getTotalPoint())
-            .score(domain.getScore())
-            .matchingEnabled(domain.isMatchingEnabled())
+            .email(p.getEmail())
+            .nickname(p.getNickname())
+            .profileImage(p.getProfileImage())
+            .platform(p.getPlatform())
+            .platformId(p.getPlatformId())
+            .phoneNumber(a.getPhoneNumber())
+            .phoneVerified(a.isPhoneVerified())
+            .address(a.getAddress())
+            .createAt(d.getCreateAt())
+            .withdrawalAt(d.getWithdrawalAt())
+            .totalPoint(d.getTotalPoint())
+            .score(d.getScore())
+            .matchingEnabled(d.isMatchingEnabled())
+            .lastAttendanceDay(d.getLastAttendanceDay())
+            .attendanceStreak(d.getAttendanceStreak())
+            .attendanceBestStreak(d.getAttendanceBestStreak())
+            .build();
+    }
+
+    /**
+     * 업데이트용: 기존 엔티티의 id/version을 그대로 이식하여
+     * 새 detached 엔티티를 빌더로 조립 → merge(save) 경로로 처리.
+     */
+    public MemberJpaEntity toEntityForUpdate(Member d, MemberJpaEntity current) {
+        MemberProfile p = d.getMemberProfile();
+        MemberAdditionalInfo a = d.getAdditionalInfo();
+        return MemberJpaEntity.builder()
+            .memberId(current.getMemberId())      // ★ 기존 id 유지
+            .version(current.getVersion())        // ★ 기존 version 유지 (NULL 금지)
+            .email(p.getEmail())
+            .nickname(p.getNickname())
+            .profileImage(p.getProfileImage())
+            .platform(p.getPlatform())
+            .platformId(p.getPlatformId())
+            .phoneNumber(a.getPhoneNumber())
+            .phoneVerified(a.isPhoneVerified())
+            .address(a.getAddress())
+            .createAt(d.getCreateAt())
+            .withdrawalAt(d.getWithdrawalAt())
+            .totalPoint(d.getTotalPoint())
+            .score(d.getScore())
+            .matchingEnabled(d.isMatchingEnabled())
+            .lastAttendanceDay(d.getLastAttendanceDay())
+            .attendanceStreak(d.getAttendanceStreak())
+            .attendanceBestStreak(d.getAttendanceBestStreak())
             .build();
     }
 }

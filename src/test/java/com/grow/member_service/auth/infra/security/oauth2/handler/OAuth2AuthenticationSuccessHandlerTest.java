@@ -22,6 +22,7 @@ import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import com.grow.member_service.auth.infra.config.OAuthProperties;
 import com.grow.member_service.auth.infra.security.jwt.JwtProperties;
 import com.grow.member_service.auth.infra.security.jwt.JwtTokenProvider;
+import com.grow.member_service.member.application.event.LoginEventPublisher;
 import com.grow.member_service.member.application.service.impl.PhoneVerificationServiceImpl;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,6 +35,9 @@ class OAuth2AuthenticationSuccessHandlerTest {
 
 	@Mock
 	private OAuthProperties oauthProperties;
+
+	@Mock
+	private LoginEventPublisher loginEventPublisher;
 
 	private JwtProperties jwtProps;
 
@@ -60,7 +64,8 @@ class OAuth2AuthenticationSuccessHandlerTest {
 			jwtProvider,
 			jwtProps,
 			phoneVerificationServiceImpl,
-			oauthProperties
+			oauthProperties,
+			loginEventPublisher
 		);
 	}
 

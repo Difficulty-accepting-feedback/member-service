@@ -14,7 +14,7 @@ public interface MemberRepository {
     Member save(Member member);
     Optional<Member> findById(Long memberId);
     Optional<Member> findByPlatformId(String platformId, Platform platform);
-    Optional<Object> findByNickname(String nickname);
+    Optional<Member> findByNickname(String nickname);
     List<Member> findAllExcept(Long exceptMemberId);
     List<MemberScoreInfo> findAllScore();
     List<Member> findAllByIdIn(List<Long> ids);
