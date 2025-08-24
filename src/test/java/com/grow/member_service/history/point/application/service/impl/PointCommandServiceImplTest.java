@@ -1,239 +1,281 @@
 package com.grow.member_service.history.point.application.service.impl;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 
-import com.grow.member_service.common.exception.MemberException;
 import com.grow.member_service.common.exception.PointHistoryException;
+import com.grow.member_service.history.point.application.event.PointNotificationEvent;
 import com.grow.member_service.history.point.domain.model.PointHistory;
 import com.grow.member_service.history.point.domain.model.enums.PointActionType;
 import com.grow.member_service.history.point.domain.model.enums.SourceType;
 import com.grow.member_service.history.point.domain.repository.PointHistoryRepository;
 import com.grow.member_service.member.domain.model.Member;
+import com.grow.member_service.member.domain.model.MemberAdditionalInfo;
+import com.grow.member_service.member.domain.model.MemberProfile;
+import com.grow.member_service.member.domain.model.enums.Platform;
 import com.grow.member_service.member.domain.repository.MemberRepository;
 
 @ExtendWith(MockitoExtension.class)
 class PointCommandServiceImplTest {
 
-	@Mock
-	MemberRepository memberRepository;
+	@Mock MemberRepository memberRepository;
+	@Mock PointHistoryRepository historyRepository;
+	@Mock ApplicationEventPublisher events;
 
-	@Mock
-	PointHistoryRepository historyRepository;
+	@InjectMocks PointCommandServiceImpl sut;
 
-	@InjectMocks
-	PointCommandServiceImpl service;
+	private Member newMember(Long id, int totalPoint) {
+		MemberProfile profile = new MemberProfile("u@test.com", "nick", null, Platform.KAKAO, "pid");
+		MemberAdditionalInfo info = new MemberAdditionalInfo(null, "Seoul", true);
+		// 생성자 시그니처는 현재 코드 기준. (출석 스냅샷 필드 버전이면 인자만 맞춰주세요)
+		return new Member(id, profile, info, LocalDateTime.now(), totalPoint, 36.5, true);
+	}
 
-	@Test
-	@DisplayName("grant: 정상 적립 → Member.addPoint 호출, 히스토리 저장 및 반환")
-	void grant_success() {
-		Long memberId = 1L;
-		int amount = 100;
-		String dedupKey = "DUP:1";
-		LocalDateTime when = LocalDateTime.of(2025, 8, 23, 10, 0);
-
-		Member member = mock(Member.class);
-		when(memberRepository.findById(memberId)).thenReturn(Optional.of(member));
-		// 적립 후 잔액 조회 값
-		when(member.getTotalPoint()).thenReturn(150);
-
-		// dedup 미존재
-		when(historyRepository.findByDedupKey(dedupKey)).thenReturn(Optional.empty());
-		// save 시 전달된 객체 그대로 반환
-		when(historyRepository.save(any(PointHistory.class))).thenAnswer(inv -> inv.getArgument(0));
-
-		PointHistory result = service.grant(
-			memberId, amount,
-			PointActionType.ADMIN_ADJUST, SourceType.SYSTEM,
-			"src-1", "관리자 적립", dedupKey, when
+	private PointHistory savedHistory(Long histId, Long memberId, int amount, long balanceAfter,
+		PointActionType action, SourceType src, String sourceId,
+		String content, String dedup, LocalDateTime when) {
+		return new PointHistory(
+			histId, memberId, amount, content, when, action, src, sourceId, dedup, balanceAfter
 		);
-
-		// 멤버 갱신/히스토리 저장 호출 확인
-		verify(memberRepository).save(member);
-		verify(historyRepository).save(any(PointHistory.class));
-		verify(member).addPoint(amount);
-
-		// 저장된 히스토리 값 캡처해 검증
-		ArgumentCaptor<PointHistory> cap = ArgumentCaptor.forClass(PointHistory.class);
-		verify(historyRepository).save(cap.capture());
-		PointHistory saved = cap.getValue();
-		assertThat(saved.getMemberId()).isEqualTo(memberId);
-		assertThat(saved.getAmount()).isEqualTo(Integer.valueOf(100));
-		assertThat(saved.getContent()).isEqualTo("관리자 적립");
-		assertThat(saved.getActionType()).isEqualTo(PointActionType.ADMIN_ADJUST);
-		assertThat(saved.getSourceType()).isEqualTo(SourceType.SYSTEM);
-		assertThat(saved.getSourceId()).isEqualTo("src-1");
-		assertThat(saved.getDedupKey()).isEqualTo(dedupKey);
-		assertThat(saved.getBalanceAfter()).isEqualTo(150L);
-
-		// 결과도 동일해야 함
-		assertThat(result.getBalanceAfter()).isEqualTo(150L);
 	}
 
-	@Test
-	@DisplayName("grant: dedupKey가 이미 존재하면 저장 없이 기존 히스토리 반환")
-	void grant_dedup_hit() {
-		Long memberId = 1L;
-		int amount = 100;
-		String dedupKey = "DUP:EXIST";
-		LocalDateTime when = LocalDateTime.of(2025, 8, 23, 10, 0);
+	@Nested
+	class Grant {
 
-		PointHistory existed = mock(PointHistory.class);
-		when(historyRepository.findByDedupKey(dedupKey)).thenReturn(Optional.of(existed));
+		@Test
+		@DisplayName("적립 성공 → 히스토리 저장 + 이벤트 1회 발행")
+		void grant_success_publishes_event() {
+			// given
+			Long memberId = 1L;
+			int amount = 100;
+			String dedup = "K-1";
+			LocalDateTime when = LocalDateTime.now();
 
-		PointHistory result = service.grant(
-			memberId, amount, PointActionType.ADMIN_ADJUST, SourceType.SYSTEM,
-			"src-1", "관리자 적립", dedupKey, when
-		);
+			Member m = newMember(memberId, 0);
+			when(memberRepository.findById(memberId)).thenReturn(Optional.of(m));
+			when(memberRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-		// 멤버 로드/저장, 히스토리 저장 모두 일어나지 않아야 함
-		verify(memberRepository, never()).findById(any());
-		verify(memberRepository, never()).save(any());
-		verify(historyRepository, never()).save(any());
-		assertThat(result).isSameAs(existed);
+			PointHistory saved = savedHistory(
+				10L, memberId, amount, 100L,
+				PointActionType.DAILY_CHECK_IN, SourceType.ATTENDANCE, "2025-08-24",
+				"출석 체크", dedup, when
+			);
+			when(historyRepository.findByDedupKey(dedup)).thenReturn(Optional.empty());
+			when(historyRepository.save(any(PointHistory.class))).thenReturn(saved);
+
+			// when
+			PointHistory result = sut.grant(
+				memberId, amount,
+				PointActionType.DAILY_CHECK_IN, SourceType.ATTENDANCE,
+				"2025-08-24", "출석 체크", dedup, when
+			);
+
+			// then
+			assertThat(result.getPointHistoryId()).isEqualTo(10L);
+			assertThat(result.getAmount()).isEqualTo(100);
+			assertThat(result.getBalanceAfter()).isEqualTo(100L);
+
+			ArgumentCaptor<PointNotificationEvent> evCap = ArgumentCaptor.forClass(PointNotificationEvent.class);
+			verify(events, times(1)).publishEvent(evCap.capture());
+			PointNotificationEvent ev = evCap.getValue();
+			assertThat(ev.memberId()).isEqualTo(memberId);
+			assertThat(ev.amount()).isEqualTo(100);
+			assertThat(ev.balanceAfter()).isEqualTo(100L);
+			assertThat(ev.actionType()).isEqualTo(PointActionType.DAILY_CHECK_IN);
+			verify(historyRepository, times(1)).save(any(PointHistory.class));
+		}
+
+		@Test
+		@DisplayName("멱등 선조회 hit → 기존 히스토리 반환, 저장/이벤트 없음")
+		void grant_idempotent_hit_returns_existing_without_event() {
+			// given
+			Long memberId = 1L;
+			String dedup = "K-dup";
+			PointHistory existed = savedHistory(
+				99L, memberId, 100, 200L,
+				PointActionType.ADMIN_ADJUST, SourceType.SYSTEM, "seed",
+				"seed", dedup, LocalDateTime.now()
+			);
+			when(historyRepository.findByDedupKey(dedup)).thenReturn(Optional.of(existed));
+
+			// when
+			PointHistory result = sut.grant(
+				memberId, 100,
+				PointActionType.ADMIN_ADJUST, SourceType.SYSTEM,
+				"seed", "seed", dedup, LocalDateTime.now()
+			);
+
+			// then
+			assertThat(result.getPointHistoryId()).isEqualTo(99L);
+			verify(historyRepository, never()).save(any());
+			verify(memberRepository, never()).save(any());
+			verify(events, never()).publishEvent(any());
+		}
+
+		@Test
+		@DisplayName("히스토리 저장 UNIQUE 충돌 → 기존 히스토리 반환, 이벤트 미발행")
+		void grant_unique_conflict_returns_existing() {
+			// given
+			Long memberId = 1L;
+			int amount = 100;
+			String dedup = "K-unique";
+
+			Member m = newMember(memberId, 0);
+			when(memberRepository.findById(memberId)).thenReturn(Optional.of(m));
+			when(memberRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+			when(historyRepository.findByDedupKey(dedup)).thenReturn(Optional.empty())
+				.thenReturn(Optional.of(savedHistory(
+					7L, memberId, amount, 100L,
+					PointActionType.ADMIN_ADJUST, SourceType.SYSTEM, "seed",
+					"seed", dedup, LocalDateTime.now()
+				)));
+			when(historyRepository.save(any())).thenThrow(new DataIntegrityViolationException("dupe"));
+
+			// when
+			PointHistory result = sut.grant(
+				memberId, amount,
+				PointActionType.ADMIN_ADJUST, SourceType.SYSTEM,
+				"seed", "seed", dedup, LocalDateTime.now()
+			);
+
+			// then
+			assertThat(result.getPointHistoryId()).isEqualTo(7L);
+			verify(events, never()).publishEvent(any()); // 저장 성공이 아니라 충돌 → 이벤트 없음
+		}
+
+		@Test
+		@DisplayName("낙관락 충돌 발생 시 재시도 후 성공")
+		void grant_retry_on_optimistic_lock() {
+			// given
+			Long memberId = 1L;
+			int amount = 50;
+			String dedup = "K-retry";
+
+			Member m = newMember(memberId, 0);
+			when(memberRepository.findById(memberId)).thenReturn(Optional.of(m));
+			when(memberRepository.save(any()))
+				.thenThrow(new ObjectOptimisticLockingFailureException("Member", memberId))
+				.thenThrow(new ObjectOptimisticLockingFailureException("Member", memberId))
+				.thenAnswer(inv -> inv.getArgument(0));
+
+			when(historyRepository.findByDedupKey(dedup)).thenReturn(Optional.empty());
+			PointHistory saved = savedHistory(
+				11L, memberId, amount, 50L,
+				PointActionType.DAILY_CHECK_IN, SourceType.ATTENDANCE, "2025-08-24",
+				"출석 체크", dedup, LocalDateTime.now()
+			);
+			when(historyRepository.save(any())).thenReturn(saved);
+
+			// when
+			PointHistory result = sut.grant(
+				memberId, amount,
+				PointActionType.DAILY_CHECK_IN, SourceType.ATTENDANCE,
+				"2025-08-24", "출석 체크", dedup, LocalDateTime.now()
+			);
+
+			// then
+			assertThat(result.getPointHistoryId()).isEqualTo(11L);
+			verify(events, times(1)).publishEvent(any(PointNotificationEvent.class));
+			verify(memberRepository, times(3)).save(any()); // 두 번 실패 + 한 번 성공
+		}
+
+		@Test
+		@DisplayName("amount ≤ 0 → 예외")
+		void grant_amount_must_be_positive() {
+			assertThatThrownBy(() -> sut.grant(
+				1L, 0, PointActionType.ADMIN_ADJUST, SourceType.SYSTEM,
+				"s", "c", "k", LocalDateTime.now()
+			)).isInstanceOf(PointHistoryException.class);
+			verifyNoInteractions(memberRepository, historyRepository, events);
+		}
 	}
 
-	@Test
-	@DisplayName("grant: 히스토리 저장 시 UNIQUE 충돌 → dedup 조회하여 기존 히스토리 반환")
-	void grant_unique_conflict_then_return_dedup() {
-		Long memberId = 1L;
-		int amount = 100;
-		String dedupKey = "DUP:CONFLICT";
-		LocalDateTime when = LocalDateTime.of(2025, 8, 23, 10, 0);
+	@Nested
+	class Spend {
 
-		Member member = mock(Member.class);
-		when(memberRepository.findById(memberId)).thenReturn(Optional.of(member));
-		when(member.getTotalPoint()).thenReturn(200);
+		@Test
+		@DisplayName("차감 성공 → 히스토리 저장 + 이벤트 1회 발행")
+		void spend_success_publishes_event() {
+			// given
+			Long memberId = 1L;
+			int start = 200;
+			int use = 50;
+			String dedup = "S-1";
 
-		when(historyRepository.findByDedupKey(dedupKey)).thenReturn(Optional.empty()) // 사전 조회는 비어있다가
-			.thenReturn(Optional.of(mock(PointHistory.class))); // 충돌 후 재조회 시 존재
+			Member m = newMember(memberId, start);
+			when(memberRepository.findById(memberId)).thenReturn(Optional.of(m));
+			when(memberRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-		when(historyRepository.save(any(PointHistory.class)))
-			.thenThrow(new DataIntegrityViolationException("dup-key"));
+			PointHistory saved = savedHistory(
+				20L, memberId, -use, start - use,
+				PointActionType.ADMIN_ADJUST, SourceType.SYSTEM, "seed",
+				"사용", dedup, LocalDateTime.now()
+			);
+			when(historyRepository.findByDedupKey(dedup)).thenReturn(Optional.empty());
+			when(historyRepository.save(any())).thenReturn(saved);
 
-		PointHistory result = service.grant(
-			memberId, amount, PointActionType.ADMIN_ADJUST, SourceType.SYSTEM,
-			"src-1", "관리자 적립", dedupKey, when
-		);
+			// when
+			PointHistory result = sut.spend(
+				memberId, use,
+				PointActionType.ADMIN_ADJUST, SourceType.SYSTEM,
+				"seed", "사용", dedup, LocalDateTime.now()
+			);
 
-		assertThat(result).isNotNull();
-		verify(memberRepository).save(member);
-		verify(historyRepository).save(any(PointHistory.class));
-		// 충돌 후 dedup 재조회가 2번째로 호출됨
-		verify(historyRepository, times(2)).findByDedupKey(dedupKey);
-	}
+			// then
+			assertThat(result.getAmount()).isEqualTo(-50);
+			assertThat(result.getBalanceAfter()).isEqualTo(150L);
+			verify(events, times(1)).publishEvent(any(PointNotificationEvent.class));
+		}
 
-	@Test
-	@DisplayName("grant: 멤버가 없으면 예외")
-	void grant_member_not_found() {
-		Long memberId = 99L;
-		when(memberRepository.findById(memberId)).thenReturn(Optional.empty());
+		@Test
+		@DisplayName("멱등 선조회 hit → 기존 히스토리 반환, 저장/이벤트 없음")
+		void spend_idempotent_hit_returns_existing_without_event() {
+			Long memberId = 1L;
+			String dedup = "S-dup";
+			PointHistory existed = savedHistory(
+				77L, memberId, -10, 90L,
+				PointActionType.ADMIN_ADJUST, SourceType.SYSTEM, "seed",
+				"사용", dedup, LocalDateTime.now()
+			);
+			when(historyRepository.findByDedupKey(dedup)).thenReturn(Optional.of(existed));
 
-		assertThatThrownBy(() -> service.grant(
-			memberId, 10, PointActionType.ADMIN_ADJUST, SourceType.SYSTEM,
-			"src", "관리자 적립", "K", LocalDateTime.now()
-		)).isInstanceOf(MemberException.class);
-	}
+			PointHistory result = sut.spend(
+				memberId, 10,
+				PointActionType.ADMIN_ADJUST, SourceType.SYSTEM,
+				"seed", "사용", dedup, LocalDateTime.now()
+			);
 
-	@Test
-	@DisplayName("grant: amount <= 0 이면 예외")
-	void grant_invalid_amount() {
-		assertThatThrownBy(() -> service.grant(
-			1L, 0, PointActionType.ADMIN_ADJUST, SourceType.SYSTEM,
-			"src", "관리자 적립", "K", LocalDateTime.now()
-		)).isInstanceOf(PointHistoryException.class);
-	}
+			assertThat(result.getPointHistoryId()).isEqualTo(77L);
+			verify(historyRepository, never()).save(any());
+			verify(memberRepository, never()).save(any());
+			verify(events, never()).publishEvent(any());
+		}
 
-	@Test
-	@DisplayName("spend: 정상 차감 → Member.deductPoint 호출, 히스토리에는 음수 금액으로 저장")
-	void spend_success() {
-		Long memberId = 2L;
-		int amount = 70;
-		String dedupKey = "SPEND:1";
-		LocalDateTime when = LocalDateTime.of(2025, 8, 23, 11, 0);
-
-		Member member = mock(Member.class);
-		when(memberRepository.findById(memberId)).thenReturn(Optional.of(member));
-		when(member.getTotalPoint()).thenReturn(30); // 차감 후 잔액
-
-		when(historyRepository.findByDedupKey(dedupKey)).thenReturn(Optional.empty());
-		when(historyRepository.save(any(PointHistory.class))).thenAnswer(inv -> inv.getArgument(0));
-
-		PointHistory result = service.spend(
-			memberId, amount, PointActionType.ADMIN_ADJUST, SourceType.SYSTEM,
-			"src-2", "관리자 차감", dedupKey, when
-		);
-
-		verify(member).deductPoint(amount);
-		ArgumentCaptor<PointHistory> cap = ArgumentCaptor.forClass(PointHistory.class);
-		verify(historyRepository).save(cap.capture());
-		PointHistory saved = cap.getValue();
-		assertThat(saved.getAmount()).isEqualTo(Integer.valueOf(-amount)); // 음수 기록
-		assertThat(saved.getBalanceAfter()).isEqualTo(30L);
-		assertThat(result.getBalanceAfter()).isEqualTo(30L);
-	}
-
-	@Test
-	@DisplayName("spend: 잔액 부족 등 도메인에서 예외 발생 시 그대로 전파")
-	void spend_not_enough_balance() {
-		Long memberId = 2L;
-		int amount = 999;
-
-		Member member = mock(Member.class);
-		when(memberRepository.findById(memberId)).thenReturn(Optional.of(member));
-		// 차감 시 도메인 예외 발생
-		doThrow(new PointHistoryException(com.grow.member_service.global.exception.ErrorCode.POINT_NOT_ENOUGH))
-			.when(member).deductPoint(amount);
-
-		assertThatThrownBy(() -> service.spend(
-			memberId, amount, PointActionType.ADMIN_ADJUST, SourceType.SYSTEM,
-			"src-2", "관리자 차감", "DK", LocalDateTime.now()
-		)).isInstanceOf(PointHistoryException.class);
-
-		verify(historyRepository, never()).save(any());
-	}
-
-	@Test
-	@DisplayName("grant: 낙관락 1회 충돌 후 재시도 성공")
-	void grant_retry_on_optimistic_lock() {
-		Long memberId = 5L;
-		int amount = 40;
-		String dedupKey = "RETRY:1";
-		LocalDateTime when = LocalDateTime.of(2025, 8, 23, 12, 0);
-
-		Member member = mock(Member.class);
-		when(memberRepository.findById(memberId)).thenReturn(Optional.of(member));
-		when(member.getTotalPoint()).thenReturn(140);
-
-		when(historyRepository.findByDedupKey(dedupKey)).thenReturn(Optional.empty());
-		when(historyRepository.save(any(PointHistory.class))).thenAnswer(inv -> inv.getArgument(0));
-
-		// ❌ doThrow().doNothing() 는 void 메서드 전용
-		// ✅ 반환값이 있는 save(...)에는 thenThrow → thenAnswer(or thenReturn)
-		when(memberRepository.save(any(Member.class)))
-			.thenThrow(new ObjectOptimisticLockingFailureException(Member.class, memberId))
-			.thenAnswer(inv -> inv.getArgument(0)); // 두 번째 호출부터는 정상 반환
-
-		PointHistory result = service.grant(
-			memberId, amount, PointActionType.ADMIN_ADJUST, SourceType.SYSTEM,
-			"src", "관리자 적립", dedupKey, when
-		);
-
-		assertThat(result).isNotNull();
-		verify(memberRepository, times(2)).save(any(Member.class)); // 1회 실패 + 1회 재시도
-		verify(historyRepository).save(any(PointHistory.class));
+		@Test
+		@DisplayName("amount ≤ 0 → 예외")
+		void spend_amount_must_be_positive() {
+			assertThatThrownBy(() -> sut.spend(
+				1L, 0, PointActionType.ADMIN_ADJUST, SourceType.SYSTEM,
+				"s", "c", "k", LocalDateTime.now()
+			)).isInstanceOf(PointHistoryException.class);
+			verifyNoInteractions(memberRepository, historyRepository, events);
+		}
 	}
 }
