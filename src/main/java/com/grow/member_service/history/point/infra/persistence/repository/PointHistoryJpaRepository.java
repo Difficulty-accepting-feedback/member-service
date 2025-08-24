@@ -29,9 +29,6 @@ public interface PointHistoryJpaRepository extends JpaRepository<PointHistoryJpa
         @Param("end") LocalDateTime end,
         Pageable pageable);
 
-    // 멱등 키로 포인트 기록이 존재하는지 확인합니다.
-    boolean existsByDedupKey(String dedupKey);
-
     // 멱등 키로 포인트 기록을 조회합니다.
     Optional<PointHistoryJpaEntity> findByDedupKey(String dedupKey);
 

@@ -88,16 +88,6 @@ public class PointHistoryRepositoryImpl implements PointHistoryRepository {
     }
 
     /**
-     * 멱등 키로 포인트 기록이 존재하는지 확인합니다.
-     * @param dedupKey 멱등 키
-     * @return 존재 여부
-     */
-    @Override
-    public boolean existsByDedupKey(String dedupKey) {
-        return jpaRepository.existsByDedupKey(dedupKey);
-    }
-
-    /**
      * 멱등 키로 포인트 기록을 조회합니다.
      * @param dedupKey 멱등 키
      * @return 포인트 기록 객체 (존재하지 않으면 Optional.empty())

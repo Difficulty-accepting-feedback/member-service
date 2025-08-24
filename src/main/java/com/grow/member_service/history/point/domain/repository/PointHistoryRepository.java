@@ -26,9 +26,6 @@ public interface PointHistoryRepository {
         Pageable pageable
     );
 
-    // 멱등성 키로 중복 체크
-    boolean existsByDedupKey(String dedupKey);
-
     // 멱등성 키로 조회
     Optional<PointHistory> findByDedupKey(String dedupKey);
 
