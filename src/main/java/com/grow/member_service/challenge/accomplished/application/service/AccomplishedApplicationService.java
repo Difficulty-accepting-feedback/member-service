@@ -41,7 +41,7 @@ public class AccomplishedApplicationService {
 	public AccomplishedResponse createAccomplishment(Long memberId, CreateAccomplishedRequest req) {
 		// 1) 챌린지 검증
 		Challenge challenge = challengeRepo.findById(req.getChallengeId())
-			.orElseThrow(() -> new AccomplishedException(ErrorCode.NOT_FOUND));
+			.orElseThrow(() -> new AccomplishedException(ErrorCode.CHALLENGE_NOT_FOUND));
 
 		// 2) 중복 가드(읽기)
 		Optional<Accomplished> existing = repo.findByMemberIdAndChallengeId(memberId, req.getChallengeId());
