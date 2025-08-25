@@ -21,11 +21,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
-import com.grow.member_service.accomplished.application.dto.AccomplishedResponse;
-import com.grow.member_service.accomplished.application.dto.CreateAccomplishedRequest;
-import com.grow.member_service.accomplished.application.model.AccomplishedPeriod;
-import com.grow.member_service.accomplished.domain.model.Accomplished;
-import com.grow.member_service.accomplished.domain.repository.AccomplishedRepository;
+import com.grow.member_service.challenge.accomplished.application.dto.AccomplishedResponse;
+import com.grow.member_service.challenge.accomplished.application.dto.CreateAccomplishedRequest;
+import com.grow.member_service.challenge.accomplished.application.model.AccomplishedPeriod;
+import com.grow.member_service.challenge.accomplished.application.service.AccomplishedApplicationService;
+import com.grow.member_service.challenge.accomplished.domain.model.Accomplished;
+import com.grow.member_service.challenge.accomplished.domain.repository.AccomplishedRepository;
 import com.grow.member_service.common.exception.AccomplishedException;
 import com.grow.member_service.global.exception.ErrorCode;
 

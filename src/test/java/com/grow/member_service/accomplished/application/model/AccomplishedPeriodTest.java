@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.grow.member_service.challenge.accomplished.application.model.AccomplishedPeriod;
 import com.grow.member_service.common.exception.AccomplishedException;
 import com.grow.member_service.global.exception.ErrorCode;
 
