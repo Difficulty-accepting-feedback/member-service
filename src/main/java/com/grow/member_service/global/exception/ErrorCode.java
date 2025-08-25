@@ -41,6 +41,8 @@ public enum ErrorCode {
 	ACCOMPLISHED_PERIOD_INCOMPLETE(HttpStatus.BAD_REQUEST,  "400-16", "accomplished.period.incomplete"),
 	ACCOMPLISHED_PERIOD_INVALID_RANGE(HttpStatus.BAD_REQUEST,"400-17", "accomplished.period.invalid.range"),
 	ACCOMPLISHED_PERIOD_EMPTY(HttpStatus.NOT_FOUND, "404-3", "accomplished.period.empty"),
+	ACCOMPLISHED_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "400-18", "accomplished.already.exists"),
+	CHALLENGE_NOT_FOUND(HttpStatus.NOT_FOUND, "404-4", "challenge.not.found"),
 
 	// 위치 도메인
 	REGION_BLANK(HttpStatus.BAD_REQUEST, "400-18", "region.blank"),
