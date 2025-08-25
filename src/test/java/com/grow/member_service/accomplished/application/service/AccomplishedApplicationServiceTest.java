@@ -1,138 +1,173 @@
-package com.grow.member_service.accomplished.application.service;
+package com.grow.member_service.challenge.accomplished.application.service;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.BDDMockito.*;
+import static org.mockito.Mockito.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 
 import com.grow.member_service.challenge.accomplished.application.dto.AccomplishedResponse;
 import com.grow.member_service.challenge.accomplished.application.dto.CreateAccomplishedRequest;
-import com.grow.member_service.challenge.accomplished.application.model.AccomplishedPeriod;
-import com.grow.member_service.challenge.accomplished.application.service.AccomplishedApplicationService;
+import com.grow.member_service.challenge.accomplished.application.event.AchievementAchievedEvent;
+import com.grow.member_service.challenge.accomplished.application.event.AchievementEventPublisher;
 import com.grow.member_service.challenge.accomplished.domain.model.Accomplished;
 import com.grow.member_service.challenge.accomplished.domain.repository.AccomplishedRepository;
-import com.grow.member_service.common.exception.AccomplishedException;
-import com.grow.member_service.global.exception.ErrorCode;
+import com.grow.member_service.challenge.challenge.domain.model.Challenge;
+import com.grow.member_service.challenge.challenge.domain.repository.ChallengeRepository;
 
+@ExtendWith(MockitoExtension.class)
 class AccomplishedApplicationServiceTest {
 
 	@Mock
 	private AccomplishedRepository repo;
 
+	@Mock
+	private ChallengeRepository challengeRepo;
+
+	@Mock
+	private AchievementEventPublisher achievementPublisher;
+
 	@InjectMocks
-	private AccomplishedApplicationService service;
-
-	private final Long MEMBER_ID = 42L;
-	private final Long CHALLENGE_ID = 99L;
-
-	@BeforeEach
-	void setUp() {
-		MockitoAnnotations.openMocks(this);
-	}
+	private AccomplishedApplicationService sut; // System Under Test
 
 	@Test
-	@DisplayName("새 업적 생성 성공")
+	@DisplayName("업적 달성 성공 → 저장 & 이벤트 발행(업적명/포인트 포함)")
 	void createAccomplishment_success() {
-		CreateAccomplishedRequest req = new CreateAccomplishedRequest(CHALLENGE_ID);
-		// 중복 없음
-		given(repo.findByMemberIdAndChallengeId(MEMBER_ID, CHALLENGE_ID))
-			.willReturn(Optional.empty());
+		// given
+		Long memberId = 10L;
+		Long challengeId = 2001L; // 예: 첫 출석
+		CreateAccomplishedRequest req = new CreateAccomplishedRequest(challengeId);
 
-		// save 시 도메인 객체 리턴
-		Accomplished savedDomain = new Accomplished(MEMBER_ID, CHALLENGE_ID, LocalDateTime.now());
-		given(repo.save(any(Accomplished.class))).willReturn(savedDomain);
+		Challenge challenge = new Challenge(challengeId, "첫 출석", "처음으로 출석", 50);
+		when(challengeRepo.findById(challengeId)).thenReturn(Optional.of(challenge));
+		when(repo.findByMemberIdAndChallengeId(memberId, challengeId)).thenReturn(Optional.empty());
 
-		AccomplishedResponse resp = service.createAccomplishment(MEMBER_ID, req);
+		LocalDateTime now = LocalDateTime.now();
+		Accomplished saved = new Accomplished(1L, memberId, challengeId, now);
+		when(repo.save(any(Accomplished.class))).thenReturn(saved);
 
-		assertThat(resp.getChallengeId()).isEqualTo(CHALLENGE_ID);
-		assertThat(resp.getAccomplishedAt()).isEqualTo(savedDomain.getAccomplishedAt());
+		// when
+		AccomplishedResponse res = sut.createAccomplishment(memberId, req);
+
+		// then
+		assertThat(res.getAccomplishedId()).isEqualTo(1L);
+		assertThat(res.getChallengeId()).isEqualTo(challengeId);
+		assertThat(res.getAccomplishedAt()).isNotNull();
+
+		// 이벤트 발행 검증
+		ArgumentCaptor<AchievementAchievedEvent> captor = ArgumentCaptor.forClass(AchievementAchievedEvent.class);
+		verify(achievementPublisher, times(1)).publish(captor.capture());
+
+		AchievementAchievedEvent ev = captor.getValue();
+		assertThat(ev.memberId()).isEqualTo(memberId);
+		assertThat(ev.challengeId()).isEqualTo(challengeId);
+		assertThat(ev.challengeName()).isEqualTo("첫 출석");
+		assertThat(ev.rewardPoint()).isEqualTo(50);
+		assertThat(ev.dedupKey()).isEqualTo("ACHV-" + challengeId + "-MEM-" + memberId);
+
+		// 저장/조회 호출도 검증
+		verify(challengeRepo).findById(challengeId);
+		verify(repo).findByMemberIdAndChallengeId(memberId, challengeId);
+		verify(repo).save(any(Accomplished.class));
 	}
 
 	@Test
-	@DisplayName("중복 업적 생성 시 REVIEW_ALREADY_EXISTS 예외")
-	void createAccomplishment_duplicateThrows() {
-		CreateAccomplishedRequest req = new CreateAccomplishedRequest(CHALLENGE_ID);
-		// 이미 존재하는 업적
-		given(repo.findByMemberIdAndChallengeId(MEMBER_ID, CHALLENGE_ID))
-			.willReturn(Optional.of(new Accomplished(MEMBER_ID, CHALLENGE_ID, LocalDateTime.now())));
+	@DisplayName("이미 달성한 업적이면 예외 대신 기존 레코드 반환(저장/이벤트 없음)")
+	void createAccomplishment_duplicateReturnsExisting() {
+		// given
+		Long memberId = 10L;
+		Long challengeId = 2001L;
+		CreateAccomplishedRequest req = new CreateAccomplishedRequest(challengeId);
 
-		AccomplishedException ex = assertThrows(
-			AccomplishedException.class,
-			() -> service.createAccomplishment(MEMBER_ID, req)
-		);
-		assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.REVIEW_ALREADY_EXISTS);
+		Challenge challenge = new Challenge(challengeId, "첫 출석", "처음으로 출석", 50);
+		when(challengeRepo.findById(challengeId)).thenReturn(Optional.of(challenge));
+
+		LocalDateTime createdAt = LocalDateTime.now().minusDays(1);
+		Accomplished existing = new Accomplished(99L, memberId, challengeId, createdAt);
+		when(repo.findByMemberIdAndChallengeId(memberId, challengeId)).thenReturn(Optional.of(existing));
+
+		// when
+		AccomplishedResponse res = sut.createAccomplishment(memberId, req);
+
+		// then
+		assertThat(res.getAccomplishedId()).isEqualTo(99L);
+		assertThat(res.getChallengeId()).isEqualTo(challengeId);
+		assertThat(res.getAccomplishedAt()).isEqualTo(createdAt);
+
+		verify(repo, never()).save(any());
+		verify(achievementPublisher, never()).publish(any());
 	}
 
 	@Test
-	@DisplayName("기간 없이 조회하면 findByMemberId 호출")
-	void searchAccomplishments_withoutPeriod() {
-		Pageable page = PageRequest.of(0, 10, Sort.by("accomplishedAt").descending());
-		// 더미 페이징 결과
-		Accomplished a1 = new Accomplished(MEMBER_ID, 1L, LocalDateTime.now());
-		Accomplished a2 = new Accomplished(MEMBER_ID, 2L, LocalDateTime.now().minusDays(1));
-		Page<Accomplished> domainPage = new PageImpl<>(List.of(a1, a2));
-		given(repo.findByMemberId(eq(MEMBER_ID), eq(page))).willReturn(domainPage);
+	@DisplayName("기간 조회(존재) → 페이지 반환")
+	void searchAccomplishments_withPeriod_ok() {
+		// given
+		Long memberId = 10L;
+		LocalDateTime start = LocalDateTime.now().minusDays(7);
+		LocalDateTime end   = LocalDateTime.now();
+		PageRequest pageable = PageRequest.of(0, 20);
 
-		Page<AccomplishedResponse> respPage = service.searchAccomplishments(MEMBER_ID, null, null, page);
+		Accomplished a1 = new Accomplished(1L, memberId, 2001L, start.plusDays(1));
+		Page<Accomplished> page = new PageImpl<>(List.of(a1), pageable, 1);
+		when(repo.findByMemberIdAndAccomplishedAtBetween(memberId, start, end, pageable)).thenReturn(page);
 
-		assertThat(respPage.getContent())
-			.extracting(AccomplishedResponse::getChallengeId)
-			.containsExactlyInAnyOrder(1L, 2L);
+		// when
+		Page<AccomplishedResponse> result = sut.searchAccomplishments(memberId, start, end, pageable);
+
+		// then
+		assertThat(result.getTotalElements()).isEqualTo(1);
+		assertThat(result.getContent().get(0).getAccomplishedId()).isEqualTo(1L);
 	}
 
 	@Test
-	@DisplayName("유효 기간을 주고 조회 성공")
-	void searchAccomplishments_withValidPeriod() {
-		LocalDateTime start = LocalDateTime.of(2025, 7, 1, 0, 0);
-		LocalDateTime end   = LocalDateTime.of(2025, 7, 31, 23, 59);
-		Pageable page = PageRequest.of(0, 5);
-		AccomplishedPeriod period = new AccomplishedPeriod(start, end);
+	@DisplayName("기간 조회(없음) → 빈 페이지 반환(예외 없음)")
+	void searchAccomplishments_withPeriod_empty_ok() {
+		// given
+		Long memberId = 10L;
+		LocalDateTime start = LocalDateTime.now().minusDays(7);
+		LocalDateTime end   = LocalDateTime.now();
+		PageRequest pageable = PageRequest.of(0, 20);
 
-		Accomplished a = new Accomplished(MEMBER_ID, 3L, start.plusDays(1));
-		Page<Accomplished> domainPage = new PageImpl<>(List.of(a));
-		given(repo.findByMemberIdAndAccomplishedAtBetween(
-			MEMBER_ID, period.getStartAt(), period.getEndAt(), page))
-			.willReturn(domainPage);
+		when(repo.findByMemberIdAndAccomplishedAtBetween(memberId, start, end, pageable))
+			.thenReturn(Page.empty(pageable));
 
-		Page<AccomplishedResponse> respPage =
-			service.searchAccomplishments(MEMBER_ID, start, end, page);
+		// when
+		Page<AccomplishedResponse> result = sut.searchAccomplishments(memberId, start, end, pageable);
 
-		assertThat(respPage).hasSize(1);
-		assertThat(respPage.getContent().get(0).getChallengeId()).isEqualTo(3L);
+		// then
+		assertThat(result.getTotalElements()).isEqualTo(0);
+		assertThat(result.getContent()).isEmpty();
 	}
 
 	@Test
-	@DisplayName("유효 기간 조회 결과가 없으면 ACCOMPLISHED_PERIOD_EMPTY 예외")
-	void searchAccomplishments_withPeriodEmptyThrows() {
-		LocalDateTime start = LocalDateTime.of(2025, 7, 1, 0, 0);
-		LocalDateTime end   = LocalDateTime.of(2025, 7, 31, 23, 59);
-		Pageable page = PageRequest.of(0, 5);
-		AccomplishedPeriod period = new AccomplishedPeriod(start, end);
+	@DisplayName("기간 미지정 → 전체 조회")
+	void searchAccomplishments_withoutPeriod_ok() {
+		// given
+		Long memberId = 10L;
+		PageRequest pageable = PageRequest.of(0, 20);
 
-		given(repo.findByMemberIdAndAccomplishedAtBetween(
-			MEMBER_ID, period.getStartAt(), period.getEndAt(), page))
-			.willReturn(Page.empty());
+		Accomplished a1 = new Accomplished(1L, memberId, 2001L, LocalDateTime.now());
+		when(repo.findByMemberId(memberId, pageable))
+			.thenReturn(new PageImpl<>(List.of(a1), pageable, 1));
 
-		AccomplishedException ex = assertThrows(
-			AccomplishedException.class,
-			() -> service.searchAccomplishments(MEMBER_ID, start, end, page)
-		);
-		assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.ACCOMPLISHED_PERIOD_EMPTY);
+		// when
+		Page<AccomplishedResponse> result = sut.searchAccomplishments(memberId, null, null, pageable);
+
+		// then
+		assertThat(result.getTotalElements()).isEqualTo(1);
+		assertThat(result.getContent().get(0).getChallengeId()).isEqualTo(2001L);
 	}
 }
