@@ -1,4 +1,4 @@
-package com.grow.member_service.accomplished.infra.persistence.entity;
+package com.grow.member_service.challenge.accomplished.infra.persistence.entity;
 
 import java.time.LocalDateTime;
 

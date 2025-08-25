@@ -1,4 +1,4 @@
-package com.grow.member_service.accomplished.infra.persistence.repository;
+package com.grow.member_service.challenge.accomplished.infra.persistence.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -8,7 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.grow.member_service.accomplished.infra.persistence.entity.AccomplishedJpaEntity;
+import com.grow.member_service.challenge.accomplished.infra.persistence.entity.AccomplishedJpaEntity;
 
 public interface AccomplishedJpaRepository extends JpaRepository<AccomplishedJpaEntity, Long> {
     Optional<AccomplishedJpaEntity> findByMemberIdAndChallengeId(Long memberId, Long challengeId);

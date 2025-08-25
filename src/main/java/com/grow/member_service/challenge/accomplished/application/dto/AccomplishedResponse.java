@@ -1,8 +1,8 @@
-package com.grow.member_service.accomplished.application.dto;
+package com.grow.member_service.challenge.accomplished.application.dto;
 
 import java.time.LocalDateTime;
 
-import com.grow.member_service.accomplished.domain.model.Accomplished;
+import com.grow.member_service.challenge.accomplished.domain.model.Accomplished;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

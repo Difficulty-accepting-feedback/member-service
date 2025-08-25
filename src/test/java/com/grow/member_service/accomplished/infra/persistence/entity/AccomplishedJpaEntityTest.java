@@ -11,7 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.dao.DataIntegrityViolationException;
 
-import com.grow.member_service.accomplished.infra.persistence.repository.AccomplishedJpaRepository;
+import com.grow.member_service.challenge.accomplished.infra.persistence.entity.AccomplishedJpaEntity;
+import com.grow.member_service.challenge.accomplished.infra.persistence.repository.AccomplishedJpaRepository;
 
 @DataJpaTest
 class AccomplishedJpaEntityTest {

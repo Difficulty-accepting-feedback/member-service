@@ -1,9 +1,9 @@
-package com.grow.member_service.accomplished.infra.persistence.mapper;
+package com.grow.member_service.challenge.accomplished.infra.persistence.mapper;
 
 import org.springframework.stereotype.Component;
 
-import com.grow.member_service.accomplished.domain.model.Accomplished;
-import com.grow.member_service.accomplished.infra.persistence.entity.AccomplishedJpaEntity;
+import com.grow.member_service.challenge.accomplished.domain.model.Accomplished;
+import com.grow.member_service.challenge.accomplished.infra.persistence.entity.AccomplishedJpaEntity;
 
 @Component
 public class AccomplishedMapper {

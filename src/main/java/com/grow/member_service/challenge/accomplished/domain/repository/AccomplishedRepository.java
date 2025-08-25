@@ -1,4 +1,4 @@
-package com.grow.member_service.accomplished.domain.repository;
+package com.grow.member_service.challenge.accomplished.domain.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -7,7 +7,7 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import com.grow.member_service.accomplished.domain.model.Accomplished;
+import com.grow.member_service.challenge.accomplished.domain.model.Accomplished;
 
 public interface AccomplishedRepository {
     Accomplished save(Accomplished domain);

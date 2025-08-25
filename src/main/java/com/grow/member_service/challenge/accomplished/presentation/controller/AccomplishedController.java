@@ -1,4 +1,4 @@
-package com.grow.member_service.accomplished.presentation.controller;
+package com.grow.member_service.challenge.accomplished.presentation.controller;
 
 import java.time.LocalDateTime;
 
@@ -17,9 +17,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.grow.member_service.accomplished.application.dto.AccomplishedResponse;
-import com.grow.member_service.accomplished.application.dto.CreateAccomplishedRequest;
-import com.grow.member_service.accomplished.application.service.AccomplishedApplicationService;
+import com.grow.member_service.challenge.accomplished.application.dto.AccomplishedResponse;
+import com.grow.member_service.challenge.accomplished.application.dto.CreateAccomplishedRequest;
+import com.grow.member_service.challenge.accomplished.application.service.AccomplishedApplicationService;
 import com.grow.member_service.global.dto.RsData;
 
 import io.swagger.v3.oas.annotations.Operation;

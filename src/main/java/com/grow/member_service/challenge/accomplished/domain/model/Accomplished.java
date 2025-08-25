@@ -1,4 +1,4 @@
-package com.grow.member_service.accomplished.domain.model;
+package com.grow.member_service.challenge.accomplished.domain.model;
 
 import java.time.LocalDateTime;
 

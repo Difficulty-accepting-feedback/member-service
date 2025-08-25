@@ -1,4 +1,4 @@
-package com.grow.member_service.accomplished.application.dto;
+package com.grow.member_service.challenge.accomplished.application.dto;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;

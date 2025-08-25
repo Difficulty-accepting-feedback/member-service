@@ -14,8 +14,8 @@ import javax.crypto.SecretKey;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
-import com.grow.member_service.accomplished.domain.model.Accomplished;
-import com.grow.member_service.accomplished.domain.repository.AccomplishedRepository;
+import com.grow.member_service.challenge.accomplished.domain.model.Accomplished;
+import com.grow.member_service.challenge.accomplished.domain.repository.AccomplishedRepository;
 import com.grow.member_service.auth.infra.security.jwt.JwtProperties;
 import com.grow.member_service.history.point.application.service.PointCommandService;
 import com.grow.member_service.history.point.domain.model.PointHistory; // ★ 추가
