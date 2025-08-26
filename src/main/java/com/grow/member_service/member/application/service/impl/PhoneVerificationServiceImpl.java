@@ -3,6 +3,7 @@ package com.grow.member_service.member.application.service.impl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.grow.member_service.achievement.trigger.event.AchievementTriggerPublisher;
 import com.grow.member_service.common.exception.MemberException;
 import com.grow.member_service.global.exception.ErrorCode;
 import com.grow.member_service.member.application.event.MemberNotificationPublisher;
@@ -24,6 +25,7 @@ public class PhoneVerificationServiceImpl implements PhoneVerificationService {
 	private final SmsService smsService;
 	private final MemberRepository memberRepository;
 	private final MemberNotificationPublisher notificationPublisher;
+	private final AchievementTriggerPublisher achievementTriggerPublisher;
 
 	/**
 	 * 소셜 가입 직후 호출되어,
@@ -62,6 +64,9 @@ public class PhoneVerificationServiceImpl implements PhoneVerificationService {
 
 		// 3) 인증 성공 알림
 		notificationPublisher.publishPhoneVerifiedSuccess(memberId);
+
+		// 업적 이벤트
+		achievementTriggerPublisher.publishPhoneVerifiedIfFirst(memberId);
 	}
 
 	/**

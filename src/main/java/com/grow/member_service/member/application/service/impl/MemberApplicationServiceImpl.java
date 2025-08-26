@@ -8,6 +8,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.grow.member_service.achievement.trigger.event.AchievementTriggerPublisher;
 import com.grow.member_service.common.exception.MemberException;
 import com.grow.member_service.global.exception.ErrorCode;
 import com.grow.member_service.member.application.dto.MemberInfoResponse;
@@ -33,6 +34,8 @@ public class MemberApplicationServiceImpl implements MemberApplicationService {
 	private final MemberWithdrawalLogRepository withdrawalLogRepository;
 	private final ObjectProvider<GeoIndexPort> geoIndexProvider;
 	private final MemberNotificationPublisher notificationPublisher;
+	private final AchievementTriggerPublisher achievementTriggerPublisher;
+
 
 
 	@Transactional(readOnly = true)
@@ -122,6 +125,14 @@ public class MemberApplicationServiceImpl implements MemberApplicationService {
 		}
 
 		memberRepository.save(m);
+
+		// 업적 이벤트
+		if (addressChanged) {
+			// 주소가 실제로 바뀐 경우에만 + '첫 1회'일 때만 발행
+			boolean published = achievementTriggerPublisher.publishAddressSetIfFirst(memberId);
+			log.info("[업적] 주소 변경 -> published={}", published);
+		}
+
 		log.info("회원 정보 업데이트 완료 - memberId={}, changed[nickname={}, image={}, address={}]",
 			memberId, nicknameChanged, imageChanged, addressChanged);
 	}
