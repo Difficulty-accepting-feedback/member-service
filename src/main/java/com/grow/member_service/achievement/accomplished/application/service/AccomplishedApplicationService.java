@@ -22,7 +22,9 @@ import com.grow.member_service.common.exception.AccomplishedException;
 import com.grow.member_service.global.exception.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AccomplishedApplicationService {
@@ -62,6 +64,9 @@ public class AccomplishedApplicationService {
 			if (again.isPresent()) return AccomplishedResponse.from(again.get());
 			throw new AccomplishedException(ErrorCode.ACCOMPLISHED_DUPLICATE, dupe);
 		}
+
+		log.info("[업적] 저장 완료: accomplishedId={}, memberId={}, challengeId={}",
+			saved.getAccomplishedId(), memberId, req.getChallengeId());
 
 		// 4) 업적 달성 이벤트 발행(업적명/보상포인트 포함)
 		String dedup = "ACHV-" + req.getChallengeId() + "-MEM-" + memberId;
