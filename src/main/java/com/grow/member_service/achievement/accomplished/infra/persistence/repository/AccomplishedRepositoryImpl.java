@@ -26,7 +26,8 @@ public class AccomplishedRepositoryImpl implements AccomplishedRepository {
     @Override
     public Accomplished save(Accomplished domain) {
         AccomplishedJpaEntity entity = mapper.toEntity(domain);
-        return mapper.toDomain(jpaRepository.save(entity));
+        AccomplishedJpaEntity savedEntity = jpaRepository.save(entity);
+        return mapper.toDomain(savedEntity);
     }
 
     @Override
@@ -68,5 +69,10 @@ public class AccomplishedRepositoryImpl implements AccomplishedRepository {
     public Optional<Accomplished> findByMemberIdAndChallengeId(Long memberId, Long challengeId) {
         return jpaRepository.findByMemberIdAndChallengeId(memberId, challengeId)
             .map(mapper::toDomain);
+    }
+
+    @Override
+    public boolean existsByMemberIdAndChallengeId(Long memberId, Long challengeId) {
+        return jpaRepository.existsByMemberIdAndChallengeId(memberId, challengeId);
     }
 }

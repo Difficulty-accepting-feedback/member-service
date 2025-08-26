@@ -22,4 +22,7 @@ public interface AccomplishedRepository {
         Pageable pageable
     );
     Optional<Accomplished> findByMemberIdAndChallengeId(Long memberId, Long challengeId);
+
+    // 해당 챌린지를 해당 멤버가 달성했는지 여부
+    boolean existsByMemberIdAndChallengeId(Long memberId, Long challengeId);
 }

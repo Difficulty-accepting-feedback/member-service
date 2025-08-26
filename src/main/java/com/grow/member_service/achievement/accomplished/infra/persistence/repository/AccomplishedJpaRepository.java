@@ -20,4 +20,5 @@ public interface AccomplishedJpaRepository extends JpaRepository<AccomplishedJpa
         LocalDateTime endAt,
         Pageable pageable
     );
+    boolean existsByMemberIdAndChallengeId(Long memberId, Long challengeId);
 }
