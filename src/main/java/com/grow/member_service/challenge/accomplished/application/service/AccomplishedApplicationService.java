@@ -60,7 +60,7 @@ public class AccomplishedApplicationService {
 		} catch (DataIntegrityViolationException dupe) {
 			Optional<Accomplished> again = repo.findByMemberIdAndChallengeId(memberId, req.getChallengeId());
 			if (again.isPresent()) return AccomplishedResponse.from(again.get());
-			throw dupe;
+			throw new AccomplishedException(ErrorCode.ACCOMPLISHED_DUPLICATE, dupe);
 		}
 
 		// 4) 업적 달성 이벤트 발행(업적명/보상포인트 포함)
