@@ -6,21 +6,20 @@ import org.springframework.stereotype.Component;
 import com.grow.member_service.achievement.accomplished.application.event.AchievementAchievedEvent;
 import com.grow.member_service.achievement.accomplished.application.event.AchievementEventPublisher;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Component
+@RequiredArgsConstructor
 public class AchievementEventPublisherImpl implements AchievementEventPublisher {
 
 	private final ApplicationEventPublisher delegate;
 
-	public AchievementEventPublisherImpl(ApplicationEventPublisher delegate) {
-		this.delegate = delegate;
-	}
-
-	/**
-	 * 이벤트를 발행합니다.
-	 * @param event 발행할 이벤트 객체
-	 */
 	@Override
 	public void publish(AchievementAchievedEvent event) {
+		log.info("[업적] 달성 이벤트 발행: memberId={}, challengeId={}, point={}",
+			event.memberId(), event.challengeId(), event.rewardPoint());
 		delegate.publishEvent(event);
 	}
 }
