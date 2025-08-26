@@ -16,6 +16,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import com.grow.member_service.achievement.trigger.event.AchievementTriggerPublisher;
 import com.grow.member_service.common.exception.MemberException;
 import com.grow.member_service.global.exception.ErrorCode;
 import com.grow.member_service.member.application.event.MemberNotificationPublisher;
@@ -42,6 +43,9 @@ class PhoneVerificationServiceImplTest {
 	@Mock private MemberRepository memberRepo;
 
 	@Mock private MemberNotificationPublisher notificationPublisher;
+
+	@Mock
+	private AchievementTriggerPublisher achievementTriggerPublisher;
 
 	@InjectMocks
 	private PhoneVerificationServiceImpl service;

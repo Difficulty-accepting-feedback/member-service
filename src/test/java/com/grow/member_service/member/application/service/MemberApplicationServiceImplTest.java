@@ -19,6 +19,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.ObjectProvider;
 
+import com.grow.member_service.achievement.trigger.event.AchievementTriggerPublisher;
 import com.grow.member_service.common.exception.MemberException;
 import com.grow.member_service.member.application.dto.MemberInfoResponse;
 import com.grow.member_service.member.application.event.MemberNotificationPublisher;
@@ -49,6 +50,9 @@ class MemberApplicationServiceImplTest {
 	@Mock GeoIndexPort geoIndexPort;
 
 	@Mock private MemberNotificationPublisher notificationPublisher;
+
+	@Mock
+	private AchievementTriggerPublisher achievementTriggerPublisher;
 
 	@InjectMocks
 	private MemberApplicationServiceImpl service;
