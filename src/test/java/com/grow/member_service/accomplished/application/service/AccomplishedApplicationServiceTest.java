@@ -1,4 +1,4 @@
-package com.grow.member_service.challenge.accomplished.application.service;
+package com.grow.member_service.achievement.accomplished.application.service;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -19,14 +19,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 
-import com.grow.member_service.challenge.accomplished.application.dto.AccomplishedResponse;
-import com.grow.member_service.challenge.accomplished.application.dto.CreateAccomplishedRequest;
-import com.grow.member_service.challenge.accomplished.application.event.AchievementAchievedEvent;
-import com.grow.member_service.challenge.accomplished.application.event.AchievementEventPublisher;
-import com.grow.member_service.challenge.accomplished.domain.model.Accomplished;
-import com.grow.member_service.challenge.accomplished.domain.repository.AccomplishedRepository;
-import com.grow.member_service.challenge.challenge.domain.model.Challenge;
-import com.grow.member_service.challenge.challenge.domain.repository.ChallengeRepository;
+import com.grow.member_service.achievement.accomplished.application.dto.AccomplishedResponse;
+import com.grow.member_service.achievement.accomplished.application.dto.CreateAccomplishedRequest;
+import com.grow.member_service.achievement.accomplished.application.event.AchievementAchievedEvent;
+import com.grow.member_service.achievement.accomplished.application.event.AchievementEventPublisher;
+import com.grow.member_service.achievement.accomplished.domain.model.Accomplished;
+import com.grow.member_service.achievement.accomplished.domain.repository.AccomplishedRepository;
+import com.grow.member_service.achievement.challenge.domain.model.Challenge;
+import com.grow.member_service.achievement.challenge.domain.repository.ChallengeRepository;
 
 @ExtendWith(MockitoExtension.class)
 class AccomplishedApplicationServiceTest {
