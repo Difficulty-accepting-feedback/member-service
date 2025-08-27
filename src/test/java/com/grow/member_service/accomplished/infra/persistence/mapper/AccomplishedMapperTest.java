@@ -9,9 +9,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.grow.member_service.challenge.accomplished.domain.model.Accomplished;
-import com.grow.member_service.challenge.accomplished.infra.persistence.entity.AccomplishedJpaEntity;
-import com.grow.member_service.challenge.accomplished.infra.persistence.mapper.AccomplishedMapper;
+import com.grow.member_service.achievement.accomplished.domain.model.Accomplished;
+import com.grow.member_service.achievement.accomplished.infra.persistence.entity.AccomplishedJpaEntity;
+import com.grow.member_service.achievement.accomplished.infra.persistence.mapper.AccomplishedMapper;
 
 class AccomplishedMapperTest {
 
