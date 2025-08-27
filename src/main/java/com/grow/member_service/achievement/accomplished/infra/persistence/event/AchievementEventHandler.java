@@ -4,6 +4,7 @@ import static org.springframework.transaction.event.TransactionPhase.*;
 
 import java.time.LocalDateTime;
 
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionalEventListener;
 
@@ -29,6 +30,7 @@ public class AchievementEventHandler {
 	 * 기존 포인트 서비스가 그대로 처리하게 합니다.
 	 * @param e 업적 달성 이벤트 객체
 	 */
+	@Async
 	@TransactionalEventListener(phase = AFTER_COMMIT)
 	public void on(AchievementAchievedEvent e) {
 		log.info("[업적] 이벤트 수신: memberId={}, challengeId={}, reward={}", e.memberId(), e.challengeId(), e.rewardPoint());
