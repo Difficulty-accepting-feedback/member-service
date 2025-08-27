@@ -18,12 +18,22 @@ public class AccomplishedResponse {
 
 	private Long accomplishedId;
 	private Long challengeId;
+	private String challengeName;   // ✅ 확장 필드
 	private LocalDateTime accomplishedAt;
 
 	public static AccomplishedResponse from(Accomplished d) {
 		return AccomplishedResponse.builder()
 			.accomplishedId(d.getAccomplishedId())
 			.challengeId(d.getChallengeId())
+			.accomplishedAt(d.getAccomplishedAt())
+			.build();
+	}
+
+	public static AccomplishedResponse from(Accomplished d, String challengeName) {
+		return AccomplishedResponse.builder()
+			.accomplishedId(d.getAccomplishedId())
+			.challengeId(d.getChallengeId())
+			.challengeName(challengeName)
 			.accomplishedAt(d.getAccomplishedAt())
 			.build();
 	}
