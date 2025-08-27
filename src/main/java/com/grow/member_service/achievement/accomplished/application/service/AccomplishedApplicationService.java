@@ -32,6 +32,7 @@ public class AccomplishedApplicationService {
 	private final AccomplishedRepository repo;
 	private final ChallengeRepository challengeRepo;
 	private final AchievementEventPublisher achievementPublisher;
+	private final ChallengeRepository challengeRepository;
 
 	/**
 	 * 업적 달성
@@ -102,6 +103,11 @@ public class AccomplishedApplicationService {
 		} else {
 			domainPage = repo.findByMemberId(memberId, pageable);
 		}
-		return domainPage.map(AccomplishedResponse::from);
+		return domainPage.map(a -> {
+			String name = challengeRepository.findById(a.getChallengeId())
+				.map(Challenge::getName)
+				.orElse("알 수 없는 업적");
+			return AccomplishedResponse.from(a, name);
+		});
 	}
 }
