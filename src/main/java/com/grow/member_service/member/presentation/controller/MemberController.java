@@ -7,13 +7,17 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.grow.member_service.global.dto.RsData;
 import com.grow.member_service.member.application.dto.MemberInfoResponse;
+import com.grow.member_service.member.application.dto.MemberPublicResponse;
+import com.grow.member_service.member.application.dto.ResolveMemberResponse;
 import com.grow.member_service.member.application.service.MemberApplicationService;
 import com.grow.member_service.member.presentation.dto.MatchingToggleRequest;
 import com.grow.member_service.member.presentation.dto.MemberUpdateRequest;
@@ -22,6 +26,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -87,5 +92,24 @@ public class MemberController {
 			.header(HttpHeaders.SET_COOKIE, a.toString())
 			.header(HttpHeaders.SET_COOKIE, r.toString())
 			.body(new RsData<>("200", "로그아웃 되었습니다.", null));
+	}
+
+	@Operation(summary = "닉네임으로 회원 정보 해석", description = "닉네임을 통해 회원의 ID를 조회합니다.")
+	@GetMapping("/resolve")
+	public ResponseEntity<RsData<ResolveMemberResponse>> resolveByNickname(
+		@RequestParam("nickname") @NotBlank String nickname
+	) {
+		ResolveMemberResponse dto = memberApplicationService.resolveByNickname(nickname);
+		return ResponseEntity.ok(new RsData<>("200", "닉네임 변환 성공", dto));
+	}
+
+	@Operation(summary = "회원 공개 정보 조회 (아이디)", description = "회원 아이디로 공개 프로필 정보를 조회합니다.")
+	@GetMapping("/{id}")
+	public ResponseEntity<RsData<MemberPublicResponse>> getById(
+		@Parameter(description = "조회할 회원 아이디") @PathVariable("id") Long id
+	) {
+		MemberPublicResponse dto = memberApplicationService.getByIdPublic(id);
+		return ResponseEntity.ok()
+			.body(new RsData<>("200", "회원 공개 정보 조회 성공", dto));
 	}
 }
