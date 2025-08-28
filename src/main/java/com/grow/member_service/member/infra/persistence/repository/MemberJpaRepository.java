@@ -17,4 +17,5 @@ public interface MemberJpaRepository extends JpaRepository<MemberJpaEntity, Long
 	List<MemberJpaEntity> findByMemberIdNot(Long memberId);
 	List<MemberScoreProjection> findAllBy(); // memberId와 score를 가진 dto 리스트 반환
 	List<MemberJpaEntity> findAllByMemberIdIn(List<Long> ids);
+	Optional<MemberJpaEntity> findByNicknameIgnoreCaseAndWithdrawalAtIsNull(String nickname); // 대소문자 구분 없이, 탈퇴하지 않은 회원 검색
 }

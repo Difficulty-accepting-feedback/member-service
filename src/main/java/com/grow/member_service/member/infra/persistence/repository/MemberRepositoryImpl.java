@@ -97,4 +97,11 @@ public class MemberRepositoryImpl implements MemberRepository {
         List<MemberJpaEntity> list = memberJpaRepository.findAllByMemberIdIn(ids);
         return list.stream().map(memberMapper::toDomain).collect(Collectors.toList());
     }
+
+    @Override
+    public Optional<Member> findActiveByNicknameIgnoreCase(String nickname) {
+        return memberJpaRepository
+            .findByNicknameIgnoreCaseAndWithdrawalAtIsNull(nickname)
+            .map(memberMapper::toDomain);
+    }
 }
