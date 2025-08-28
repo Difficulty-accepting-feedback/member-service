@@ -12,6 +12,8 @@ import com.grow.member_service.achievement.trigger.event.AchievementTriggerPubli
 import com.grow.member_service.common.exception.MemberException;
 import com.grow.member_service.global.exception.ErrorCode;
 import com.grow.member_service.member.application.dto.MemberInfoResponse;
+import com.grow.member_service.member.application.dto.MemberPublicResponse;
+import com.grow.member_service.member.application.dto.ResolveMemberResponse;
 import com.grow.member_service.member.application.event.MemberNotificationPublisher;
 import com.grow.member_service.member.application.port.GeoIndexPort;
 import com.grow.member_service.member.application.service.MemberApplicationService;
@@ -161,5 +163,25 @@ public class MemberApplicationServiceImpl implements MemberApplicationService {
 
 		memberRepository.save(member);
 		log.info("매칭 기능 상태 변경 - memberId={}, enabled={}", memberId, enabled);
+	}
+
+	/**
+	 * 닉네임으로 회원 조회
+	 */
+	@Transactional(readOnly = true)
+	@Override
+	public ResolveMemberResponse resolveByNickname(String nickname) {
+		Member m = memberService.getActiveByNicknameOrThrow(nickname);
+		return new ResolveMemberResponse(m.getMemberId(), m.getMemberProfile().getNickname());
+	}
+
+	/**
+	 * 공개용 회원 정보 조회
+	 */
+	@Transactional(readOnly = true)
+	@Override
+	public MemberPublicResponse getByIdPublic(Long memberId) {
+		Member m = findById(memberId);
+		return MemberPublicResponse.of(m);
 	}
 }
