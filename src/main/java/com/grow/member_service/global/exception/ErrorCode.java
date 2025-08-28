@@ -24,6 +24,7 @@ public enum ErrorCode {
 	MEMBER_REJOIN_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "400-10", "member.rejoin.not.allowed"),
 	PHONE_VERIFICATION_NOT_REQUESTED(HttpStatus.BAD_REQUEST, "400-11", "phone.verification.not.requested"),
 	SMS_SEND_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "500-1", "sms.send.failed"),
+	NICKNAME_INVALID(HttpStatus.BAD_REQUEST, "400-20", "nickname.invalid"),
 
 	// 리뷰 도메인
 	REVIEW_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "400-12", "review.already.exists"),

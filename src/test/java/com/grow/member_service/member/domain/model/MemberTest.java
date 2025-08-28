@@ -1,6 +1,8 @@
 package com.grow.member_service.member.domain.model;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -46,7 +48,7 @@ class MemberTest {
 		assertEquals(profile, member.getMemberProfile());
 		assertEquals(additionalInfo, member.getAdditionalInfo());
 		assertEquals(0, member.getTotalPoint());
-		assertEquals(36.5, member.getScore());
+		assertEquals(36.5, member.getScore(), 0.0001);
 		assertFalse(member.isWithdrawn());
 		assertFalse(member.isPhoneVerified());
 	}
@@ -93,13 +95,13 @@ class MemberTest {
 	@DisplayName("adjustScore(): score가 올바르게 증가 및 감소한다")
 	void adjustScore_ChangesScore() {
 		Member member = new Member(profile, additionalInfo, fixedClock);
-		assertEquals(36.5, member.getScore());
+		assertEquals(36.5, member.getScore(), 0.0001);
 
 		member.adjustScore(2.5);
-		assertEquals(39.0, member.getScore());
+		assertEquals(39.0, member.getScore(), 0.0001);
 
 		member.adjustScore(-1.5);
-		assertEquals(37.5, member.getScore());
+		assertEquals(37.5, member.getScore(), 0.0001);
 	}
 
 	@Test
@@ -154,7 +156,10 @@ class MemberTest {
 	@DisplayName("changeNickname(): 고유한 닉네임 입력 시 nickname이 변경된다")
 	void changeNickname_Unique_SetsNewNickname() {
 		Member member = new Member(profile, additionalInfo, fixedClock);
-		MemberService service = nickname -> true;
+
+		// Mockito mock 사용: 모든 닉네임에 대해 고유하다고 응답하도록 설정
+		MemberService service = mock(MemberService.class);
+		when(service.isNicknameUnique(anyString())).thenReturn(true);
 
 		member.changeNickname("newNick", service);
 
@@ -165,7 +170,10 @@ class MemberTest {
 	@DisplayName("changeNickname(): null nickname 전달 시 NullPointerException 발생")
 	void changeNickname_NullNickname_ThrowsNullPointerException() {
 		Member member = new Member(profile, additionalInfo, fixedClock);
-		MemberService service = nickname -> true;
+
+		// service는 사용되지 않더라도 mock으로 준비
+		MemberService service = mock(MemberService.class);
+		when(service.isNicknameUnique(anyString())).thenReturn(true);
 
 		NullPointerException ex = assertThrows(
 			NullPointerException.class,
@@ -178,7 +186,12 @@ class MemberTest {
 	@DisplayName("changeNickname(): 중복된 닉네임 입력 시 예외 발생")
 	void changeNickname_Duplicate_ThrowsDomainException() {
 		Member member = new Member(profile, additionalInfo, fixedClock);
-		MemberService service = nickname -> false;
+
+		MemberService service = mock(MemberService.class);
+		// 특정 닉네임에 대해서만 중복(false) 응답하도록 설정
+		when(service.isNicknameUnique("dupNick")).thenReturn(false);
+		// 기본적으로 다른 닉네임은 고유하다고 응답
+		when(service.isNicknameUnique(argThat(n -> n != null && !n.equals("dupNick")))).thenReturn(true);
 
 		MemberDomainException ex = assertThrows(
 			MemberDomainException.class,
