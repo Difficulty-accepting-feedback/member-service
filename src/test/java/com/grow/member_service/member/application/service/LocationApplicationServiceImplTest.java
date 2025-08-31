@@ -1,6 +1,6 @@
 package com.grow.member_service.member.application.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -12,7 +12,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.ObjectProvider;
@@ -39,7 +38,7 @@ class LocationApplicationServiceImplTest {
 	@Mock GeocodingPort geocodingPort;
 	@Mock GeoIndexPort geoIndex;
 
-	LocationApplicationServiceImpl sut;
+	LocationApplicationService sut;
 
 	@BeforeEach
 	void setUp() {

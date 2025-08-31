@@ -23,7 +23,7 @@ import com.grow.member_service.auth.infra.config.OAuthProperties;
 import com.grow.member_service.auth.infra.security.jwt.JwtProperties;
 import com.grow.member_service.auth.infra.security.jwt.JwtTokenProvider;
 import com.grow.member_service.member.application.event.LoginEventPublisher;
-import com.grow.member_service.member.application.service.impl.PhoneVerificationServiceImpl;
+import com.grow.member_service.member.application.service.PhoneVerificationService;
 
 @ExtendWith(MockitoExtension.class)
 class OAuth2AuthenticationSuccessHandlerTest {
@@ -31,7 +31,7 @@ class OAuth2AuthenticationSuccessHandlerTest {
 	private OAuth2AuthenticationSuccessHandler handler;
 
 	@Mock
-	private PhoneVerificationServiceImpl phoneVerificationServiceImpl;
+	private PhoneVerificationService phoneVerificationServiceImpl;
 
 	@Mock
 	private OAuthProperties oauthProperties;

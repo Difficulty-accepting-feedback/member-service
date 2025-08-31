@@ -1,12 +1,18 @@
 package com.grow.member_service.quiz.result.application.service;
 
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.BDDMockito.*;
+
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.*;
-import static org.mockito.BDDMockito.*;
-import static org.assertj.core.api.Assertions.*;
-import java.util.List;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import com.grow.member_service.quiz.result.application.service.impl.QuizResultServiceImpl;
 import com.grow.member_service.quiz.result.domain.model.QuizResult;
 import com.grow.member_service.quiz.result.domain.repository.QuizResultRepository;
 import com.grow.member_service.quiz.result.domain.service.QuizResultStatisticsService;
@@ -16,7 +22,8 @@ class QuizResultServiceImplTest {
 
 	@Mock QuizResultRepository repository;
 	@Mock QuizResultStatisticsService statisticsService;
-	@InjectMocks QuizResultServiceImpl service;
+	@InjectMocks
+	QuizResultServiceImpl service;
 
 	@BeforeEach
 	void setUp() {

@@ -31,7 +31,7 @@ class ScoreUpdateServiceImplUnitTest {
 	@Mock
 	ValueOperations<String, Double> valueOps;
 
-	ScoreUpdateServiceImpl service;
+	ScoreUpdateService service;
 
 	private static final String TRUST_KEY = ScoreUpdateServiceImpl.TRUST_KEY;
 	private final Long MEMBER_ID = 999L;

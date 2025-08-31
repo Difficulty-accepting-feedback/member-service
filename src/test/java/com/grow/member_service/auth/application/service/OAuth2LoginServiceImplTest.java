@@ -3,8 +3,9 @@ package com.grow.member_service.auth.application.service;
 import static com.grow.member_service.auth.infra.security.oauth2.OAuth2AttributeKey.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.BDDMockito.any;
 import static org.mockito.BDDMockito.*;
-import static org.mockito.ArgumentMatchers.anyString;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -20,6 +21,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.grow.member_service.auth.application.service.impl.OAuth2LoginServiceImpl;
 import com.grow.member_service.auth.infra.security.oauth2.processor.OAuth2UserProcessor;
 import com.grow.member_service.common.exception.OAuthException;
 import com.grow.member_service.global.exception.ErrorCode;
@@ -31,7 +33,7 @@ import com.grow.member_service.member.domain.model.enums.Platform;
 import com.grow.member_service.member.domain.repository.MemberRepository;
 
 @ExtendWith(MockitoExtension.class)
-class OAuth2LoginServiceTest {
+class OAuth2LoginServiceImplTest {
 
 	private OAuth2LoginService oAuth2LoginService;
 
@@ -53,7 +55,7 @@ class OAuth2LoginServiceTest {
 		lenient().when(nicknameGenerator.generate(anyString()))
 			.thenAnswer(invocation -> invocation.getArgument(0));
 
-		oAuth2LoginService = new OAuth2LoginService(
+		oAuth2LoginService = new OAuth2LoginServiceImpl(
 			List.of(kakaoProcessor),
 			memberRepository,
 			nicknameGenerator,

@@ -1,4 +1,4 @@
-package com.grow.member_service.quiz.result.application.service;
+package com.grow.member_service.quiz.result.application.service.impl;
 
 import java.util.List;
 
@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.grow.member_service.common.exception.QuizResultException;
 import com.grow.member_service.global.exception.ErrorCode;
+import com.grow.member_service.quiz.result.application.service.QuizResultService;
 import com.grow.member_service.quiz.result.domain.model.QuizResult;
 import com.grow.member_service.quiz.result.domain.repository.QuizResultRepository;
 import com.grow.member_service.quiz.result.domain.service.QuizResultStatisticsService;

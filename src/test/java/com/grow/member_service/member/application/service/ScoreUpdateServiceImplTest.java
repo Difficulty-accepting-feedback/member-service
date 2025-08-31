@@ -1,10 +1,9 @@
 package com.grow.member_service.member.application.service;
 
-import com.grow.member_service.member.application.service.impl.ScoreUpdateServiceImpl;
-import com.grow.member_service.member.domain.model.enums.Platform;
-import com.grow.member_service.member.infra.persistence.entity.MemberJpaEntity;
-import com.grow.member_service.member.infra.persistence.repository.MemberJpaRepository;
-import jakarta.persistence.EntityManager;
+import static org.assertj.core.api.Assertions.*;
+
+import java.time.LocalDateTime;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,16 +12,18 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import com.grow.member_service.member.domain.model.enums.Platform;
+import com.grow.member_service.member.infra.persistence.entity.MemberJpaEntity;
+import com.grow.member_service.member.infra.persistence.repository.MemberJpaRepository;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import jakarta.persistence.EntityManager;
 
 @Transactional
 @SpringBootTest
 class ScoreUpdateServiceImplTest {
 
     @Autowired
-    private ScoreUpdateServiceImpl scoreUpdateServiceImpl;
+    private ScoreUpdateService scoreUpdateServiceImpl;
 
     @Autowired
     private EntityManager entityManager;
