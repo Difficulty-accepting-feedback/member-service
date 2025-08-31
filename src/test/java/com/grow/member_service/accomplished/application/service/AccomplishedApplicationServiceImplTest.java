@@ -1,4 +1,4 @@
-package com.grow.member_service.achievement.accomplished.application.service;
+package com.grow.member_service.accomplished.application.service;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -23,13 +23,14 @@ import com.grow.member_service.achievement.accomplished.application.dto.Accompli
 import com.grow.member_service.achievement.accomplished.application.dto.CreateAccomplishedRequest;
 import com.grow.member_service.achievement.accomplished.application.event.AchievementAchievedEvent;
 import com.grow.member_service.achievement.accomplished.application.event.AchievementEventPublisher;
+import com.grow.member_service.achievement.accomplished.application.service.impl.AccomplishedApplicationServiceImpl;
 import com.grow.member_service.achievement.accomplished.domain.model.Accomplished;
 import com.grow.member_service.achievement.accomplished.domain.repository.AccomplishedRepository;
 import com.grow.member_service.achievement.challenge.domain.model.Challenge;
 import com.grow.member_service.achievement.challenge.domain.repository.ChallengeRepository;
 
 @ExtendWith(MockitoExtension.class)
-class AccomplishedApplicationServiceTest {
+class AccomplishedApplicationServiceImplTest {
 
 	@Mock
 	private AccomplishedRepository repo;
@@ -41,7 +42,7 @@ class AccomplishedApplicationServiceTest {
 	private AchievementEventPublisher achievementPublisher;
 
 	@InjectMocks
-	private AccomplishedApplicationService sut; // System Under Test
+	private AccomplishedApplicationServiceImpl sut; // System Under Test
 
 	@Test
 	@DisplayName("업적 달성 성공 → 저장 & 이벤트 발행(업적명/포인트 포함)")

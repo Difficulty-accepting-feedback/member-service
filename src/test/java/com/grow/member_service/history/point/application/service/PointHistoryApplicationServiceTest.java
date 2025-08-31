@@ -34,7 +34,7 @@ class PointHistoryApplicationServiceTest {
 	private PointHistoryRepository repository;
 
 	@InjectMocks
-	private PointHistoryApplicationService service;
+	private com.grow.member_service.history.point.application.service.PointHistoryApplicationServiceImpl service;
 
 	private static final Long MEMBER_ID = 123L;
 	private Pageable pageable;

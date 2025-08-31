@@ -38,7 +38,8 @@ class PointCommandServiceImplTest {
 	@Mock PointHistoryRepository historyRepository;
 	@Mock ApplicationEventPublisher events;
 
-	@InjectMocks PointCommandServiceImpl sut;
+	@InjectMocks
+	PointCommandServiceImpl sut;
 
 	private Member newMember(Long id, int totalPoint) {
 		MemberProfile profile = new MemberProfile("u@test.com", "nick", null, Platform.KAKAO, "pid");

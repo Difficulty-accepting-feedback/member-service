@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.grow.member_service.global.dto.RsData;
-import com.grow.member_service.member.application.service.impl.PhoneVerificationServiceImpl;
+import com.grow.member_service.member.application.service.PhoneVerificationService;
 import com.grow.member_service.member.presentation.dto.CodeRequest;
 import com.grow.member_service.member.presentation.dto.PhoneRequest;
 
@@ -26,7 +26,7 @@ import lombok.RequiredArgsConstructor;
 @Tag(name = "PhoneVerification", description = "전화번호 인증 API")
 public class PhoneVerificationController {
 
-	private final PhoneVerificationServiceImpl phoneVerificationServiceImpl;
+	private final PhoneVerificationService phoneVerificationServiceImpl;
 
 	/**
 	 * 사용자로부터 전화번호를 받아 SMS 인증 코드를 전송합니다.

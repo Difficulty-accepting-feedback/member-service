@@ -1,6 +1,6 @@
 package com.grow.member_service.member.application.service.impl;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.time.LocalDate;

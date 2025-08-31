@@ -19,7 +19,7 @@ import com.grow.member_service.auth.infra.security.jwt.JwtProperties;
 import com.grow.member_service.auth.infra.security.jwt.JwtTokenProvider;
 import com.grow.member_service.common.exception.OAuthException;
 import com.grow.member_service.member.application.event.LoginEventPublisher;
-import com.grow.member_service.member.application.service.impl.PhoneVerificationServiceImpl;
+import com.grow.member_service.member.application.service.PhoneVerificationService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -35,7 +35,7 @@ import lombok.RequiredArgsConstructor;
 public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 	private final JwtTokenProvider jwtProvider;
 	private final JwtProperties jwtProperties;
-	private final PhoneVerificationServiceImpl phoneVerificationServiceImpl;
+	private final PhoneVerificationService phoneVerificationServiceImpl;
 	private final OAuthProperties oauthProperties;
 	private final LoginEventPublisher loginEventPublisher;
 

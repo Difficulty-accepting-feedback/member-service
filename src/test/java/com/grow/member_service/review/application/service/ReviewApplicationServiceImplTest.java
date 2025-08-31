@@ -17,13 +17,14 @@ import org.mockito.MockitoAnnotations;
 
 import com.grow.member_service.common.exception.ReviewException;
 import com.grow.member_service.global.exception.ErrorCode;
-import com.grow.member_service.member.application.service.impl.MemberProfileServiceImpl;
+import com.grow.member_service.member.application.service.MemberProfileService;
 import com.grow.member_service.member.domain.model.Member;
 import com.grow.member_service.member.domain.model.MemberAdditionalInfo;
 import com.grow.member_service.member.domain.model.MemberProfile;
 import com.grow.member_service.member.domain.model.enums.Platform;
 import com.grow.member_service.member.domain.repository.MemberRepository;
 import com.grow.member_service.review.application.dto.ReviewCandidateResponse;
+import com.grow.member_service.review.application.service.impl.ReviewApplicationServiceImpl;
 import com.grow.member_service.review.domain.model.Review;
 import com.grow.member_service.review.domain.repository.ReviewRepository;
 
@@ -33,7 +34,7 @@ class ReviewApplicationServiceImplTest {
 	private ReviewRepository reviewRepository;
 
 	@Mock
-	private MemberProfileServiceImpl memberProfileServiceImpl;
+	private MemberProfileService memberProfileServiceImpl;
 
 	@Mock
 	private MemberRepository memberRepository;

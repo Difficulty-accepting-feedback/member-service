@@ -1,4 +1,4 @@
-package com.grow.member_service.review.application.service;
+package com.grow.member_service.review.application.service.impl;
 
 import java.util.List;
 
@@ -7,10 +7,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.grow.member_service.common.exception.ReviewException;
 import com.grow.member_service.global.exception.ErrorCode;
-import com.grow.member_service.member.application.service.impl.MemberProfileServiceImpl;
+import com.grow.member_service.member.application.service.MemberProfileService;
 import com.grow.member_service.member.domain.model.Member;
 import com.grow.member_service.member.domain.repository.MemberRepository;
 import com.grow.member_service.review.application.dto.ReviewCandidateResponse;
+import com.grow.member_service.review.application.service.ReviewApplicationService;
 import com.grow.member_service.review.domain.model.Review;
 import com.grow.member_service.review.domain.repository.ReviewRepository;
 
@@ -21,7 +22,7 @@ import lombok.RequiredArgsConstructor;
 public class ReviewApplicationServiceImpl implements ReviewApplicationService {
 
 	private final ReviewRepository reviewRepository;
-	private final MemberProfileServiceImpl memberProfileServiceImpl;
+	private final MemberProfileService memberProfileServiceImpl;
 	private final MemberRepository memberRepository;
 
 	/**
