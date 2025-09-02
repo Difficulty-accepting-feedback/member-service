@@ -1,4 +1,4 @@
-package com.grow.member_service.admin.presentation;
+package com.grow.member_service.admin.presentation.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
