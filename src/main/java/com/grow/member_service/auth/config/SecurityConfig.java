@@ -63,7 +63,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/members/resolve").permitAll() // 인증 제외
                         .requestMatchers("/api/v2/**").permitAll()  // 인증 제외
-                        .anyRequest().authenticated()
+                        .requestMatchers("/api/v1/admin/members/**").permitAll() // 인증 제외
+                    .anyRequest().authenticated()
                 )
                 .oauth2Login(o -> o.disable())
                 .formLogin(f -> f.disable())
