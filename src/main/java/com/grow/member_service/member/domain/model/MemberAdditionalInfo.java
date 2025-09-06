@@ -53,4 +53,14 @@ public class MemberAdditionalInfo {
             this.phoneVerified
         );
     }
+
+    /** 주소가 비어있는지(누락) 여부 */
+    public boolean isAddressMissing() {
+        return this.address == null || this.address.isBlank();
+    }
+
+    /** 주소가 존재하는지(채워짐) 여부 */
+    public boolean hasAddress() {
+        return !isAddressMissing();
+    }
 }

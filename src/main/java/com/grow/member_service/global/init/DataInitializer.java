@@ -12,13 +12,14 @@ import java.util.stream.IntStream;
 import javax.crypto.SecretKey;
 
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.stereotype.Component;
 
 import com.grow.member_service.achievement.accomplished.domain.model.Accomplished;
 import com.grow.member_service.achievement.accomplished.domain.repository.AccomplishedRepository;
 import com.grow.member_service.auth.infra.security.jwt.JwtProperties;
 import com.grow.member_service.history.point.application.service.PointCommandService;
-import com.grow.member_service.history.point.domain.model.PointHistory; // ★ 추가
+import com.grow.member_service.history.point.domain.model.PointHistory;
 import com.grow.member_service.history.point.domain.model.enums.PointActionType;
 import com.grow.member_service.history.point.domain.model.enums.SourceType;
 import com.grow.member_service.history.point.domain.repository.PointHistoryRepository;
@@ -48,6 +49,7 @@ public class DataInitializer {
 	private final AccomplishedRepository accomplishedRepository;
 	private final QuizResultRepository quizResultRepository;
 	private final JwtProperties props;
+	private final RedisConnectionFactory redisConnectionFactory;
 
 	// ✅ 포인트 정책: 반드시 커맨드 서비스로 적립/차감(원장/스냅샷/멱등/낙관락 처리)
 	private final PointCommandService pointCommandService;
@@ -57,6 +59,10 @@ public class DataInitializer {
 
 	@PostConstruct
 	public void init() {
+		// redis 초기화 로직 실행
+		redisConnectionFactory.getConnection().serverCommands().flushAll();
+		log.debug("redis flush all.");
+
 		// 1) 테스트용 단일 회원
 		Member testUser = memberRepository.findByPlatformId("test-platform-id", Platform.KAKAO)
 			.orElseGet(() -> {

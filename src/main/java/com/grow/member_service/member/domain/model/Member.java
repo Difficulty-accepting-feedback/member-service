@@ -235,4 +235,11 @@ public class Member {
         this.lastAttendanceDay = today;
         return true;
     }
+
+    /** 온보딩 주소 리마인더가 필요한지 여부 */
+    public boolean needsAddressReminder() {
+        // additionalInfo 자체가 없거나, 주소가 비어있으면 리마인더 필요
+        return this.additionalInfo == null || this.additionalInfo.isAddressMissing();
+    }
+
 }

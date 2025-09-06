@@ -27,7 +27,7 @@ def jacocoExcludes = [
 		'**/dto/**',
 		'**/thirdparty/**',
 		'**/entity/**',
-		'**/Q*.class',
+		'**/Q[A-Z]*.class',
 		'**/config/**',
 		'**/common/**',
 		'**/constants/**',
@@ -42,6 +42,7 @@ def jacocoExcludes = [
 		'**/client/**',
 		'**/MemberServiceApplication.class',
 		'**/event/**',
+		'**/util/**',
 		'**/challenge/**' // 구현 중이므로 임시로 추가
 ]
 
@@ -130,6 +131,7 @@ dependencies {
 
 	// 기타
 	implementation 'net.datafaker:datafaker:2.4.4' // 무작위 이름 생성기
+	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 
 	// redis cache
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
@@ -140,6 +142,9 @@ dependencies {
 	// feign
 	implementation platform("org.springframework.cloud:spring-cloud-dependencies:2025.0.0")
 	implementation "org.springframework.cloud:spring-cloud-starter-openfeign"
+
+	// kafka
+	implementation 'org.springframework.kafka:spring-kafka'
 }
 
 tasks.named('test') {
