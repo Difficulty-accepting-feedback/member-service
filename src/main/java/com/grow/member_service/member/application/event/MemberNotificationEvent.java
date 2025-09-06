@@ -4,8 +4,8 @@ import java.time.LocalDateTime;
 
 public record MemberNotificationEvent(
 	Long memberId,
-	String type,
 	String code,
+	String notificationType,
 	String title,
 	String content,
 	LocalDateTime occurredAt
