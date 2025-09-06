@@ -18,7 +18,7 @@ public class KafkaTopicConfig {
 	public NewTopic memberNotificationRequested() {
 		return TopicBuilder.name("member.notification.requested")
 			.partitions(3)
-			.replicas(1)
+			.replicas(3)
 			.build();
 	}
 }
