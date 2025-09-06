@@ -193,7 +193,7 @@ public class MemberApplicationServiceImpl implements MemberApplicationService {
 	}
 
 	private void publishOnboardingReminderEvent(Member m) {
-		if (needsAddressReminder(m)) {
+		if (m.needsAddressReminder()) {
 			sendIfDedupeOk(
 				buildDedupeKey(NotificationType.ADDR_REMINDER.name(), m.getMemberId()),
 				createMemberNotificationEvent(m.getMemberId(), NotificationType.ADDR_REMINDER)
@@ -205,17 +205,6 @@ public class MemberApplicationServiceImpl implements MemberApplicationService {
 				createMemberNotificationEvent(m.getMemberId(), NotificationType.PHONE_REMINDER)
 			);
 		}
-	}
-
-	/**
-	 * 주소 정보가 없는지 확인
-	 * @param m 회원 엔티티
-	 * @return 주소 정보가 없으면 true
-	 */
-	private boolean needsAddressReminder(Member m) {
-		return m.getAdditionalInfo() == null
-			|| m.getAdditionalInfo().getAddress() == null
-			|| m.getAdditionalInfo().getAddress().isBlank();
 	}
 
 	/**
