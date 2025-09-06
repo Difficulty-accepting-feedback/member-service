@@ -27,7 +27,7 @@ def jacocoExcludes = [
 		'**/dto/**',
 		'**/thirdparty/**',
 		'**/entity/**',
-		'**/Q*.class',
+		'**/Q[A-Z]*.class',
 		'**/config/**',
 		'**/common/**',
 		'**/constants/**',
@@ -42,6 +42,7 @@ def jacocoExcludes = [
 		'**/client/**',
 		'**/MemberServiceApplication.class',
 		'**/event/**',
+		'**/util/**',
 		'**/challenge/**' // 구현 중이므로 임시로 추가
 ]
 
