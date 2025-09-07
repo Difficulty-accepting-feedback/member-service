@@ -21,4 +21,12 @@ public class KafkaTopicConfig {
 			.replicas(3)
 			.build();
 	}
+
+	@Bean
+	public NewTopic pointNotificationRequested() {
+		return TopicBuilder.name("point.notification.requested")
+			.partitions(3)
+			.replicas(3)
+			.build();
+	}
 }
