@@ -15,12 +15,15 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.context.ApplicationEventPublisher;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 
 import com.grow.member_service.common.exception.PointHistoryException;
-import com.grow.member_service.history.point.application.event.PointNotificationEvent;
 import com.grow.member_service.history.point.domain.model.PointHistory;
 import com.grow.member_service.history.point.domain.model.enums.PointActionType;
 import com.grow.member_service.history.point.domain.model.enums.SourceType;
@@ -32,11 +35,15 @@ import com.grow.member_service.member.domain.model.enums.Platform;
 import com.grow.member_service.member.domain.repository.MemberRepository;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class PointCommandServiceImplTest {
 
 	@Mock MemberRepository memberRepository;
 	@Mock PointHistoryRepository historyRepository;
-	@Mock ApplicationEventPublisher events;
+
+	// 변경: Kafka/Redis 의존성 추가
+	@Mock KafkaTemplate<String, String> kafkaTemplate;
+	@Mock ObjectProvider<StringRedisTemplate> redisProvider;
 
 	@InjectMocks
 	PointCommandServiceImpl sut;
@@ -44,7 +51,6 @@ class PointCommandServiceImplTest {
 	private Member newMember(Long id, int totalPoint) {
 		MemberProfile profile = new MemberProfile("u@test.com", "nick", null, Platform.KAKAO, "pid");
 		MemberAdditionalInfo info = new MemberAdditionalInfo(null, "Seoul", true);
-		// 생성자 시그니처는 현재 코드 기준. (출석 스냅샷 필드 버전이면 인자만 맞춰주세요)
 		return new Member(id, profile, info, LocalDateTime.now(), totalPoint, 36.5, true);
 	}
 
@@ -60,9 +66,11 @@ class PointCommandServiceImplTest {
 	class Grant {
 
 		@Test
-		@DisplayName("적립 성공 → 히스토리 저장 + 이벤트 1회 발행")
-		void grant_success_publishes_event() {
-			// given
+		@DisplayName("적립 성공 → 히스토리 저장 + Kafka 전송 1회")
+		void grant_success_publishes_kafka() {
+			// Redis 멱등 스킵(=null)로 설정
+			when(redisProvider.getIfAvailable()).thenReturn(null);
+
 			Long memberId = 1L;
 			int amount = 100;
 			String dedup = "K-1";
@@ -80,32 +88,35 @@ class PointCommandServiceImplTest {
 			when(historyRepository.findByDedupKey(dedup)).thenReturn(Optional.empty());
 			when(historyRepository.save(any(PointHistory.class))).thenReturn(saved);
 
-			// when
 			PointHistory result = sut.grant(
 				memberId, amount,
 				PointActionType.DAILY_CHECK_IN, SourceType.ATTENDANCE,
 				"2025-08-24", "출석 체크", dedup, when
 			);
 
-			// then
 			assertThat(result.getPointHistoryId()).isEqualTo(10L);
 			assertThat(result.getAmount()).isEqualTo(100);
 			assertThat(result.getBalanceAfter()).isEqualTo(100L);
-
-			ArgumentCaptor<PointNotificationEvent> evCap = ArgumentCaptor.forClass(PointNotificationEvent.class);
-			verify(events, times(1)).publishEvent(evCap.capture());
-			PointNotificationEvent ev = evCap.getValue();
-			assertThat(ev.memberId()).isEqualTo(memberId);
-			assertThat(ev.amount()).isEqualTo(100);
-			assertThat(ev.balanceAfter()).isEqualTo(100L);
-			assertThat(ev.actionType()).isEqualTo(PointActionType.DAILY_CHECK_IN);
 			verify(historyRepository, times(1)).save(any(PointHistory.class));
+
+			// Kafka send 검증
+			verify(kafkaTemplate, times(1))
+				.send(eq("point.notification.requested"), eq(memberId.toString()), anyString());
+
+			// (선택) payload 내용 간단 점검
+			ArgumentCaptor<String> payloadCap = ArgumentCaptor.forClass(String.class);
+			verify(kafkaTemplate).send(eq("point.notification.requested"), eq(memberId.toString()), payloadCap.capture());
+			String payload = payloadCap.getValue();
+			assertThat(payload).contains("\"memberId\":1");
+			assertThat(payload).contains("\"notificationType\":\"POINT\"");
+			assertThat(payload).contains("출석 체크");
 		}
 
 		@Test
-		@DisplayName("멱등 선조회 hit → 기존 히스토리 반환, 저장/이벤트 없음")
-		void grant_idempotent_hit_returns_existing_without_event() {
-			// given
+		@DisplayName("멱등 선조회 hit → 기존 히스토리 반환, 저장/Kafka 전송 없음")
+		void grant_idempotent_hit_returns_existing_without_kafka() {
+			when(redisProvider.getIfAvailable()).thenReturn(null);
+
 			Long memberId = 1L;
 			String dedup = "K-dup";
 			PointHistory existed = savedHistory(
@@ -115,24 +126,23 @@ class PointCommandServiceImplTest {
 			);
 			when(historyRepository.findByDedupKey(dedup)).thenReturn(Optional.of(existed));
 
-			// when
 			PointHistory result = sut.grant(
 				memberId, 100,
 				PointActionType.ADMIN_ADJUST, SourceType.SYSTEM,
 				"seed", "seed", dedup, LocalDateTime.now()
 			);
 
-			// then
 			assertThat(result.getPointHistoryId()).isEqualTo(99L);
 			verify(historyRepository, never()).save(any());
 			verify(memberRepository, never()).save(any());
-			verify(events, never()).publishEvent(any());
+			verifyNoInteractions(kafkaTemplate); // Kafka 전송 없음
 		}
 
 		@Test
-		@DisplayName("히스토리 저장 UNIQUE 충돌 → 기존 히스토리 반환, 이벤트 미발행")
+		@DisplayName("히스토리 저장 UNIQUE 충돌 → 기존 히스토리 반환, Kafka 전송 없음")
 		void grant_unique_conflict_returns_existing() {
-			// given
+			when(redisProvider.getIfAvailable()).thenReturn(null);
+
 			Long memberId = 1L;
 			int amount = 100;
 			String dedup = "K-unique";
@@ -149,22 +159,21 @@ class PointCommandServiceImplTest {
 				)));
 			when(historyRepository.save(any())).thenThrow(new DataIntegrityViolationException("dupe"));
 
-			// when
 			PointHistory result = sut.grant(
 				memberId, amount,
 				PointActionType.ADMIN_ADJUST, SourceType.SYSTEM,
 				"seed", "seed", dedup, LocalDateTime.now()
 			);
 
-			// then
 			assertThat(result.getPointHistoryId()).isEqualTo(7L);
-			verify(events, never()).publishEvent(any()); // 저장 성공이 아니라 충돌 → 이벤트 없음
+			verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString());
 		}
 
 		@Test
-		@DisplayName("낙관락 충돌 발생 시 재시도 후 성공")
+		@DisplayName("낙관락 충돌 발생 시 재시도 후 성공 → Kafka 전송 1회")
 		void grant_retry_on_optimistic_lock() {
-			// given
+			when(redisProvider.getIfAvailable()).thenReturn(null);
+
 			Long memberId = 1L;
 			int amount = 50;
 			String dedup = "K-retry";
@@ -184,17 +193,16 @@ class PointCommandServiceImplTest {
 			);
 			when(historyRepository.save(any())).thenReturn(saved);
 
-			// when
 			PointHistory result = sut.grant(
 				memberId, amount,
 				PointActionType.DAILY_CHECK_IN, SourceType.ATTENDANCE,
 				"2025-08-24", "출석 체크", dedup, LocalDateTime.now()
 			);
 
-			// then
 			assertThat(result.getPointHistoryId()).isEqualTo(11L);
-			verify(events, times(1)).publishEvent(any(PointNotificationEvent.class));
-			verify(memberRepository, times(3)).save(any()); // 두 번 실패 + 한 번 성공
+			verify(memberRepository, times(3)).save(any()); // 2회 실패 + 1회 성공
+			verify(kafkaTemplate, times(1))
+				.send(eq("point.notification.requested"), eq(memberId.toString()), anyString());
 		}
 
 		@Test
@@ -204,7 +212,7 @@ class PointCommandServiceImplTest {
 				1L, 0, PointActionType.ADMIN_ADJUST, SourceType.SYSTEM,
 				"s", "c", "k", LocalDateTime.now()
 			)).isInstanceOf(PointHistoryException.class);
-			verifyNoInteractions(memberRepository, historyRepository, events);
+			verifyNoInteractions(memberRepository, historyRepository, kafkaTemplate);
 		}
 	}
 
@@ -212,9 +220,10 @@ class PointCommandServiceImplTest {
 	class Spend {
 
 		@Test
-		@DisplayName("차감 성공 → 히스토리 저장 + 이벤트 1회 발행")
-		void spend_success_publishes_event() {
-			// given
+		@DisplayName("차감 성공 → 히스토리 저장 + Kafka 전송 1회")
+		void spend_success_publishes_kafka() {
+			when(redisProvider.getIfAvailable()).thenReturn(null);
+
 			Long memberId = 1L;
 			int start = 200;
 			int use = 50;
@@ -232,22 +241,23 @@ class PointCommandServiceImplTest {
 			when(historyRepository.findByDedupKey(dedup)).thenReturn(Optional.empty());
 			when(historyRepository.save(any())).thenReturn(saved);
 
-			// when
 			PointHistory result = sut.spend(
 				memberId, use,
 				PointActionType.ADMIN_ADJUST, SourceType.SYSTEM,
 				"seed", "사용", dedup, LocalDateTime.now()
 			);
 
-			// then
 			assertThat(result.getAmount()).isEqualTo(-50);
 			assertThat(result.getBalanceAfter()).isEqualTo(150L);
-			verify(events, times(1)).publishEvent(any(PointNotificationEvent.class));
+			verify(kafkaTemplate, times(1))
+				.send(eq("point.notification.requested"), eq(memberId.toString()), anyString());
 		}
 
 		@Test
-		@DisplayName("멱등 선조회 hit → 기존 히스토리 반환, 저장/이벤트 없음")
-		void spend_idempotent_hit_returns_existing_without_event() {
+		@DisplayName("멱등 선조회 hit → 기존 히스토리 반환, 저장/Kafka 전송 없음")
+		void spend_idempotent_hit_returns_existing_without_kafka() {
+			when(redisProvider.getIfAvailable()).thenReturn(null);
+
 			Long memberId = 1L;
 			String dedup = "S-dup";
 			PointHistory existed = savedHistory(
@@ -266,7 +276,7 @@ class PointCommandServiceImplTest {
 			assertThat(result.getPointHistoryId()).isEqualTo(77L);
 			verify(historyRepository, never()).save(any());
 			verify(memberRepository, never()).save(any());
-			verify(events, never()).publishEvent(any());
+			verifyNoInteractions(kafkaTemplate);
 		}
 
 		@Test
@@ -276,7 +286,7 @@ class PointCommandServiceImplTest {
 				1L, 0, PointActionType.ADMIN_ADJUST, SourceType.SYSTEM,
 				"s", "c", "k", LocalDateTime.now()
 			)).isInstanceOf(PointHistoryException.class);
-			verifyNoInteractions(memberRepository, historyRepository, events);
+			verifyNoInteractions(memberRepository, historyRepository, kafkaTemplate);
 		}
 	}
 }
