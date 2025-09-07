@@ -18,7 +18,7 @@ import com.grow.member_service.member.application.dto.MemberInfoResponse;
 import com.grow.member_service.member.application.dto.MemberPublicResponse;
 import com.grow.member_service.member.application.dto.ResolveMemberResponse;
 import com.grow.member_service.member.application.event.MemberNotificationEvent;
-import com.grow.member_service.member.application.event.NotificationType;
+import com.grow.member_service.global.event.NotificationType;
 import com.grow.member_service.member.application.port.GeoIndexPort;
 import com.grow.member_service.member.application.service.MemberApplicationService;
 import com.grow.member_service.member.domain.model.Member;
@@ -41,7 +41,6 @@ public class MemberApplicationServiceImpl implements MemberApplicationService {
 	private final ObjectProvider<GeoIndexPort> geoIndexProvider;
 	private final AchievementTriggerPublisher achievementTriggerPublisher;
 	private final KafkaTemplate<String, String> kafkaTemplate;
-	private final JsonUtils json;
 	private final ObjectProvider<StringRedisTemplate> redisProvider;
 
 	private static final java.time.Duration DEDUPE_TTL = java.time.Duration.ofHours(12);
@@ -239,7 +238,7 @@ public class MemberApplicationServiceImpl implements MemberApplicationService {
 			return;
 		}
 		String key = event.memberId().toString();
-		String payload = json.toJsonString(event); // ★ 스터디 PR 유틸 스타일
+		String payload = JsonUtils.toJsonString(event); // ★ 스터디 PR 유틸 스타일
 		kafkaTemplate.send(TOPIC, key, payload);
 		log.info("[KAFKA][SENT] topic={}, key={}, code={}", TOPIC, key, event.code());
 	}
