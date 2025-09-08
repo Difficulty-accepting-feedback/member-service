@@ -10,15 +10,17 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.grow.member_service.achievement.trigger.event.AchievementTriggerPublisher;
+import com.grow.member_service.achievement.challenge.domain.model.enums.ChallengeIds;
+import com.grow.member_service.achievement.trigger.event.AchievementTriggerEvent;
+import com.grow.member_service.achievement.trigger.listener.AchievementTriggerProducer;
 import com.grow.member_service.common.exception.MemberException;
+import com.grow.member_service.global.event.NotificationType;
 import com.grow.member_service.global.exception.ErrorCode;
 import com.grow.member_service.global.util.JsonUtils;
 import com.grow.member_service.member.application.dto.MemberInfoResponse;
 import com.grow.member_service.member.application.dto.MemberPublicResponse;
 import com.grow.member_service.member.application.dto.ResolveMemberResponse;
 import com.grow.member_service.member.application.event.MemberNotificationEvent;
-import com.grow.member_service.global.event.NotificationType;
 import com.grow.member_service.member.application.port.GeoIndexPort;
 import com.grow.member_service.member.application.service.MemberApplicationService;
 import com.grow.member_service.member.domain.model.Member;
@@ -41,7 +43,7 @@ public class MemberApplicationServiceImpl implements MemberApplicationService {
 	private final MemberService memberService;
 	private final MemberWithdrawalLogRepository withdrawalLogRepository;
 	private final ObjectProvider<GeoIndexPort> geoIndexProvider;
-	private final AchievementTriggerPublisher achievementTriggerPublisher;
+	private final AchievementTriggerProducer achievementTriggerProducer;
 	private final KafkaTemplate<String, String> kafkaTemplate;
 	private final ObjectProvider<StringRedisTemplate> redisProvider;
 
@@ -135,9 +137,21 @@ public class MemberApplicationServiceImpl implements MemberApplicationService {
 
 		// 업적 이벤트
 		if (addressChanged) {
-			// 주소가 실제로 바뀐 경우에만 + '첫 1회'일 때만 발행
-			boolean published = achievementTriggerPublisher.publishAddressSetIfFirst(memberId);
-			log.info("[업적] 주소 변경 -> published={}", published);
+			try {
+				achievementTriggerProducer.send(
+					new AchievementTriggerEvent(
+						memberId,
+						ChallengeIds.ADDRESS_SET,
+						"ADDRESS_SET",
+						"ADDR-" + memberId,
+						LocalDateTime.now()
+					)
+				);
+				log.info("[ACHV][TRIGGER] ADDRESS_SET sent - memberId={}", memberId);
+			} catch (Exception ex) {
+				log.warn("[ACHV][TRIGGER][SEND-FAIL] ADDRESS_SET - memberId={}, err={}",
+					memberId, ex.toString(), ex);
+			}
 		}
 
 		log.info("회원 정보 업데이트 완료 - memberId={}, changed[nickname={}, image={}, address={}]",
