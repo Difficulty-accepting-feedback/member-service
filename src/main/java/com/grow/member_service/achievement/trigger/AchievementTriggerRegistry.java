@@ -22,12 +22,10 @@ public class AchievementTriggerRegistry {
 
 	/**
 	 * 이벤트 객체로부터 카탈로그 ID 조회
-	 * @param event 이벤트 객체
+	 * @param eventType 이벤트 타입
 	 * @return 카탈로그 ID (없으면 Optional.empty())
 	 */
-	public Optional<Long> resolveByEvent(Object event) {
-		if (event == null) return Optional.empty();
-		String simple = event.getClass().getSimpleName();
-		return Optional.ofNullable(TRIGGERS.get(simple));
+	public Optional<Long> resolveId(String eventType) {
+		return Optional.ofNullable(TRIGGERS.get(eventType));
 	}
 }
