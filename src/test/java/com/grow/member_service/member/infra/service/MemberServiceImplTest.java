@@ -19,6 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.grow.member_service.common.exception.MemberException;
 import com.grow.member_service.global.exception.ErrorCode;
+import com.grow.member_service.member.application.service.impl.MemberServiceImpl;
 import com.grow.member_service.member.domain.model.Member;
 import com.grow.member_service.member.domain.model.MemberAdditionalInfo;
 import com.grow.member_service.member.domain.model.MemberProfile;
