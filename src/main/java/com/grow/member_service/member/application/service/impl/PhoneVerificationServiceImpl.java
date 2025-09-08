@@ -1,9 +1,13 @@
 package com.grow.member_service.member.application.service.impl;
 
+import java.time.LocalDateTime;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.grow.member_service.achievement.trigger.event.AchievementTriggerPublisher;
+import com.grow.member_service.achievement.challenge.domain.model.enums.ChallengeIds;
+import com.grow.member_service.achievement.trigger.event.AchievementTriggerEvent;
+import com.grow.member_service.achievement.trigger.listener.AchievementTriggerProducer;
 import com.grow.member_service.common.exception.MemberException;
 import com.grow.member_service.global.exception.ErrorCode;
 import com.grow.member_service.member.application.event.MemberNotificationPublisher;
@@ -15,7 +19,9 @@ import com.grow.member_service.member.domain.repository.PhoneVerificationReposit
 import com.grow.member_service.member.domain.service.SmsService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -25,7 +31,7 @@ public class PhoneVerificationServiceImpl implements PhoneVerificationService {
 	private final SmsService smsService;
 	private final MemberRepository memberRepository;
 	private final MemberNotificationPublisher notificationPublisher;
-	private final AchievementTriggerPublisher achievementTriggerPublisher;
+	private final AchievementTriggerProducer achievementTriggerProducer;
 
 	/**
 	 * 소셜 가입 직후 호출되어,
@@ -66,7 +72,21 @@ public class PhoneVerificationServiceImpl implements PhoneVerificationService {
 		notificationPublisher.publishPhoneVerifiedSuccess(memberId);
 
 		// 업적 이벤트
-		achievementTriggerPublisher.publishPhoneVerifiedIfFirst(memberId);
+		try {
+			achievementTriggerProducer.send(
+				new AchievementTriggerEvent(
+					memberId,
+					ChallengeIds.PHONE_VERIFIED,
+					"PHONE_VERIFIED",
+					"PHONE-" + memberId,
+					LocalDateTime.now()
+				)
+			);
+			log.info("[ACHV][TRIGGER] PHONE_VERIFIED sent - memberId={}", memberId);
+		} catch (Exception ex) {
+			log.warn("[ACHV][TRIGGER][SEND-FAIL] PHONE_VERIFIED - memberId={}, err={}",
+				memberId, ex.toString(), ex);
+		}
 	}
 
 	/**
