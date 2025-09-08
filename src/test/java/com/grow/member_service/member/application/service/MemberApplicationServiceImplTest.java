@@ -23,10 +23,9 @@ import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.grow.member_service.achievement.trigger.event.AchievementTriggerPublisher;
+import com.grow.member_service.achievement.trigger.listener.AchievementTriggerProducer;
 import com.grow.member_service.common.exception.MemberException;
 import com.grow.member_service.member.application.dto.MemberInfoResponse;
-import com.grow.member_service.member.application.event.MemberNotificationPublisher;
 import com.grow.member_service.member.application.port.GeoIndexPort;
 import com.grow.member_service.member.application.service.impl.MemberApplicationServiceImpl;
 import com.grow.member_service.member.domain.exception.MemberDomainException;
@@ -37,35 +36,23 @@ import com.grow.member_service.member.domain.repository.MemberWithdrawalLogRepos
 import com.grow.member_service.member.domain.service.MemberService;
 import com.grow.member_service.member.presentation.dto.MemberUpdateRequest;
 
+
 @ExtendWith(MockitoExtension.class)
 class MemberApplicationServiceImplTest {
 
-	@Mock
-	private MemberRepository memberRepository;
-
-	@Mock
-	private MemberService memberService;
-
-	@Mock
-	private MemberWithdrawalLogRepository withdrawalLogRepository;
+	@Mock private MemberRepository memberRepository;
+	@Mock private MemberService memberService;
+	@Mock private MemberWithdrawalLogRepository withdrawalLogRepository;
 
 	@Mock ObjectProvider<GeoIndexPort> geoIndexProvider;
-
 	@Mock GeoIndexPort geoIndexPort;
 
-	@Mock private MemberNotificationPublisher notificationPublisher;
+	@Mock private KafkaTemplate<String, String> kafkaTemplate;
 
-	@Mock
-	private AchievementTriggerPublisher achievementTriggerPublisher;
+	@Mock private StringRedisTemplate redis;
+	@Mock private ValueOperations<String, String> valueOps;
 
-	@Mock
-	private KafkaTemplate<Object, Object> kafkaTemplate;
-
-	@Mock
-	private StringRedisTemplate redis;
-
-	@Mock
-	private ValueOperations<String, String> valueOps;
+	@Mock private AchievementTriggerProducer achievementTriggerProducer;
 
 	@InjectMocks
 	private MemberApplicationServiceImpl service;
@@ -103,10 +90,9 @@ class MemberApplicationServiceImplTest {
 	@DisplayName("getMyInfo(): 회원이 존재하면 MemberInfoResponse 반환")
 	void getMyInfo_Found_ReturnsResponse() {
 		Long memberId = 1L;
-		setId(sampleMember, memberId); // id 세팅
+		setId(sampleMember, memberId);
 
-		when(memberRepository.findById(memberId))
-			.thenReturn(Optional.of(sampleMember));
+		when(memberRepository.findById(memberId)).thenReturn(Optional.of(sampleMember));
 
 		MemberInfoResponse resp = service.getMyInfo(memberId);
 
@@ -117,15 +103,13 @@ class MemberApplicationServiceImplTest {
 	@Test
 	@DisplayName("getMyInfo(): 회원이 존재하지 않으면 MemberException 발생")
 	void getMyInfo_NotFound_ThrowsMemberException() {
-		when(memberRepository.findById(anyLong()))
-			.thenReturn(Optional.empty());
+		when(memberRepository.findById(anyLong())).thenReturn(Optional.empty());
 
-		assertThrows(MemberException.class,
-			() -> service.getMyInfo(99L));
+		assertThrows(MemberException.class, () -> service.getMyInfo(99L));
 	}
 
 	@Test
-	@DisplayName("withdraw(): 회원이 존재하면 로그 저장 → 도메인 탈퇴 → 저장 + Redis GEO에서 제거")
+	@DisplayName("withdraw(): 회원이 존재하면 로그 저장 → 도메인 탈퇴 → 저장 + GEO 제거")
 	void withdraw_Found_LogsAndWithdraws_AndRemoveFromGeo() {
 		Long memberId = 2L;
 		setId(sampleMember, memberId);
@@ -146,11 +130,9 @@ class MemberApplicationServiceImplTest {
 	@Test
 	@DisplayName("withdraw(): 회원이 존재하지 않으면 MemberException 발생")
 	void withdraw_NotFound_ThrowsMemberException() {
-		when(memberRepository.findById(anyLong()))
-			.thenReturn(Optional.empty());
+		when(memberRepository.findById(anyLong())).thenReturn(Optional.empty());
 
-		assertThrows(MemberException.class,
-			() -> service.withdraw(123L));
+		assertThrows(MemberException.class, () -> service.withdraw(123L));
 		verifyNoInteractions(withdrawalLogRepository);
 		verify(memberRepository, never()).save(any());
 	}
@@ -158,24 +140,20 @@ class MemberApplicationServiceImplTest {
 	@Test
 	@DisplayName("updateMember(): 회원이 존재하지 않으면 MemberException 발생")
 	void updateMember_NotFound_ThrowsMemberException() {
-		when(memberRepository.findById(anyLong()))
-			.thenReturn(Optional.empty());
+		when(memberRepository.findById(anyLong())).thenReturn(Optional.empty());
 
 		MemberUpdateRequest req = new MemberUpdateRequest("nick", "img", "addr");
-		assertThrows(MemberException.class,
-			() -> service.updateMember(5L, req));
+		assertThrows(MemberException.class, () -> service.updateMember(5L, req));
 	}
 
 	@Test
-	@DisplayName("updateMember(): 모든 필드가 주어지면 각 변경 메서드 호출 후 저장")
-	void updateMember_AllFields_UpdatesAndSaves() {
+	@DisplayName("updateMember(): 모든 필드가 주어지면 각 변경 메서드 호출 후 저장 + 주소 변경 시 업적 트리거 발행")
+	void updateMember_AllFields_UpdatesAndSaves_AndPublishesTriggerOnAddressChange() {
 		Long memberId = 3L;
 		setId(sampleMember, memberId);
 
-		when(memberRepository.findById(memberId))
-			.thenReturn(Optional.of(sampleMember));
-		when(memberService.isNicknameUnique("newNick"))
-			.thenReturn(true);
+		when(memberRepository.findById(memberId)).thenReturn(Optional.of(sampleMember));
+		when(memberService.isNicknameUnique("newNick")).thenReturn(true);
 
 		MemberUpdateRequest req = new MemberUpdateRequest("newNick", "newImg", "newAddr");
 		service.updateMember(memberId, req);
@@ -184,6 +162,9 @@ class MemberApplicationServiceImplTest {
 		assertEquals("newImg", sampleMember.getMemberProfile().getProfileImage());
 		assertEquals("newAddr", sampleMember.getAdditionalInfo().getAddress());
 		verify(memberRepository).save(sampleMember);
+
+		// ✅ 주소가 바뀌었으면 업적 트리거 발행 호출됨
+		verify(achievementTriggerProducer, times(1)).send(any());
 	}
 
 	@Test
@@ -192,44 +173,41 @@ class MemberApplicationServiceImplTest {
 		Long memberId = 4L;
 		setId(sampleMember, memberId);
 
-		when(memberRepository.findById(memberId))
-			.thenReturn(Optional.of(sampleMember));
-		when(memberService.isNicknameUnique("dupNick"))
-			.thenReturn(false);
+		when(memberRepository.findById(memberId)).thenReturn(Optional.of(sampleMember));
+		when(memberService.isNicknameUnique("dupNick")).thenReturn(false);
 
 		MemberUpdateRequest req = new MemberUpdateRequest("dupNick", "img", null);
 
-		assertThrows(MemberDomainException.class,
-			() -> service.updateMember(memberId, req));
+		assertThrows(MemberDomainException.class, () -> service.updateMember(memberId, req));
 		verify(memberRepository, never()).save(any());
+		// 닉네임 충돌로 저장 전에 예외 → 트리거도 발행되지 않아야 함
+		verify(achievementTriggerProducer, never()).send(any());
 	}
 
 	@Test
-	@DisplayName("updateMember(): nickname null 이면 changeNickname 미호출")
+	@DisplayName("updateMember(): nickname null 이면 changeNickname 미호출(주소 변경 없으면 트리거도 없음)")
 	void updateMember_NullNickname_SkipsNickname() {
 		Long memberId = 5L;
 		setId(sampleMember, memberId);
 
-		when(memberRepository.findById(memberId))
-			.thenReturn(Optional.of(sampleMember));
+		when(memberRepository.findById(memberId)).thenReturn(Optional.of(sampleMember));
 
 		MemberUpdateRequest req = new MemberUpdateRequest(null, "imgOnly", null);
 		service.updateMember(memberId, req);
 
 		assertEquals("imgOnly", sampleMember.getMemberProfile().getProfileImage());
 		verify(memberRepository).save(sampleMember);
+		verify(achievementTriggerProducer, never()).send(any()); // 주소 변경이 없으니 트리거 없음
 	}
 
 	@Test
-	@DisplayName("updateMember(): address null 이면 changeAddress 미호출")
+	@DisplayName("updateMember(): address null 이면 changeAddress 미호출(트리거 없음)")
 	void updateMember_NullAddress_SkipsAddress() {
 		Long memberId = 6L;
 		setId(sampleMember, memberId);
 
-		when(memberRepository.findById(memberId))
-			.thenReturn(Optional.of(sampleMember));
-		when(memberService.isNicknameUnique("okNick"))
-			.thenReturn(true);
+		when(memberRepository.findById(memberId)).thenReturn(Optional.of(sampleMember));
+		when(memberService.isNicknameUnique("okNick")).thenReturn(true);
 
 		MemberUpdateRequest req = new MemberUpdateRequest("okNick", "img", null);
 		service.updateMember(memberId, req);
@@ -238,6 +216,7 @@ class MemberApplicationServiceImplTest {
 		assertEquals("img", sampleMember.getMemberProfile().getProfileImage());
 		assertEquals("Seoul", sampleMember.getAdditionalInfo().getAddress());
 		verify(memberRepository).save(sampleMember);
+		verify(achievementTriggerProducer, never()).send(any()); // 주소 변경이 없으니 트리거 없음
 	}
 
 	@Test
@@ -247,8 +226,7 @@ class MemberApplicationServiceImplTest {
 		setId(sampleMember, memberId);
 
 		sampleMember.disableMatching();
-		when(memberRepository.findById(memberId))
-			.thenReturn(Optional.of(sampleMember));
+		when(memberRepository.findById(memberId)).thenReturn(Optional.of(sampleMember));
 
 		service.toggleMatching(memberId, true);
 
@@ -262,8 +240,7 @@ class MemberApplicationServiceImplTest {
 		Long memberId = 8L;
 		setId(sampleMember, memberId);
 
-		when(memberRepository.findById(memberId))
-			.thenReturn(Optional.of(sampleMember));
+		when(memberRepository.findById(memberId)).thenReturn(Optional.of(sampleMember));
 
 		service.toggleMatching(memberId, false);
 
@@ -274,11 +251,9 @@ class MemberApplicationServiceImplTest {
 	@Test
 	@DisplayName("toggleMatching(): 회원이 존재하지 않으면 MemberException 발생")
 	void toggleMatching_NotFound_ThrowsMemberException() {
-		when(memberRepository.findById(anyLong()))
-			.thenReturn(Optional.empty());
+		when(memberRepository.findById(anyLong())).thenReturn(Optional.empty());
 
-		assertThrows(MemberException.class,
-			() -> service.toggleMatching(9L, true));
+		assertThrows(MemberException.class, () -> service.toggleMatching(9L, true));
 		verify(memberRepository, never()).save(any());
 	}
 }
