@@ -18,7 +18,7 @@ import com.grow.member_service.member.application.dto.MemberInfoResponse;
 import com.grow.member_service.member.application.dto.MemberPublicResponse;
 import com.grow.member_service.member.application.dto.ResolveMemberResponse;
 import com.grow.member_service.member.application.event.MemberNotificationEvent;
-import com.grow.member_service.member.application.event.NotificationType;
+import com.grow.member_service.global.event.NotificationType;
 import com.grow.member_service.member.application.port.GeoIndexPort;
 import com.grow.member_service.member.application.service.MemberApplicationService;
 import com.grow.member_service.member.domain.model.Member;
@@ -35,17 +35,15 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class MemberApplicationServiceImpl implements MemberApplicationService {
 
+	private static final java.time.Duration DEDUPE_TTL = java.time.Duration.ofHours(12);
+	private static final String TOPIC = "member.notification.requested";
 	private final MemberRepository memberRepository;
 	private final MemberService memberService;
 	private final MemberWithdrawalLogRepository withdrawalLogRepository;
 	private final ObjectProvider<GeoIndexPort> geoIndexProvider;
 	private final AchievementTriggerPublisher achievementTriggerPublisher;
 	private final KafkaTemplate<String, String> kafkaTemplate;
-	private final JsonUtils json;
 	private final ObjectProvider<StringRedisTemplate> redisProvider;
-
-	private static final java.time.Duration DEDUPE_TTL = java.time.Duration.ofHours(12);
-	private static final String TOPIC = "member.notification.requested";
 
 	@Transactional(readOnly = true)
 	@Override
@@ -94,8 +92,8 @@ public class MemberApplicationServiceImpl implements MemberApplicationService {
 			.orElseThrow(() -> new MemberException(ErrorCode.MEMBER_NOT_FOUND));
 
 		boolean nicknameChanged = false;
-		boolean addressChanged  = false;
-		boolean imageChanged    = false;
+		boolean addressChanged = false;
+		boolean imageChanged = false;
 
 		// 실제 값이 바뀐 경우에만 변경 (자기 자신 중복 예외 방지)
 		if (req.getNickname() != null) {
@@ -239,7 +237,7 @@ public class MemberApplicationServiceImpl implements MemberApplicationService {
 			return;
 		}
 		String key = event.memberId().toString();
-		String payload = json.toJsonString(event); // ★ 스터디 PR 유틸 스타일
+		String payload = JsonUtils.toJsonString(event);
 		kafkaTemplate.send(TOPIC, key, payload);
 		log.info("[KAFKA][SENT] topic={}, key={}, code={}", TOPIC, key, event.code());
 	}
@@ -257,7 +255,8 @@ public class MemberApplicationServiceImpl implements MemberApplicationService {
 	 */
 	private boolean acquireOnce(String key, java.time.Duration ttl) {
 		StringRedisTemplate r = redisProvider.getIfAvailable();
-		if (r == null) return true;
+		if (r == null)
+			return true;
 		Boolean ok = r.opsForValue().setIfAbsent(key, "1", ttl);
 		return Boolean.TRUE.equals(ok);
 	}
