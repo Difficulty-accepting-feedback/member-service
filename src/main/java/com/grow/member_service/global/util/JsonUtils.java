@@ -33,4 +33,12 @@ public class JsonUtils {
 			throw new RuntimeException("JSON 직렬화 실패", e);
 		}
 	}
+
+	public static <T> T fromJson(String json, Class<T> type) {
+		try {
+			return objectMapper.readValue(json, type);
+		} catch (JsonProcessingException e) {
+			throw new RuntimeException("JSON 역직렬화 실패", e);
+		}
+	}
 }

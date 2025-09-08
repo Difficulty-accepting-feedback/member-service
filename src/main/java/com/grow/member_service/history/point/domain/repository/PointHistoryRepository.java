@@ -31,4 +31,6 @@ public interface PointHistoryRepository {
 
     // 특정 기간 동안 특정 액션 타입의 포인트 기록 개수 조회
     long countByMemberIdAndActionTypeBetween(Long memberId, PointActionType actionType, LocalDateTime startAt, LocalDateTime endAt);
+
+    void flush();
 }

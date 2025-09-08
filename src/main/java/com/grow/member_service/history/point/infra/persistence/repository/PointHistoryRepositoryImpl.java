@@ -109,4 +109,9 @@ public class PointHistoryRepositoryImpl implements PointHistoryRepository {
     public long countByMemberIdAndActionTypeBetween(Long memberId, PointActionType actionType, LocalDateTime startAt, LocalDateTime endAt) {
         return jpaRepository.countByMemberIdAndActionTypeBetween(memberId, actionType, startAt, endAt);
     }
+
+    @Override
+    public void flush() {
+        jpaRepository.flush();
+    }
 }
