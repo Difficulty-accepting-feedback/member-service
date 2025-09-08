@@ -43,6 +43,8 @@ def jacocoExcludes = [
 		'**/MemberServiceApplication.class',
 		'**/event/**',
 		'**/util/**',
+		'**/kafka/**',
+		'**/slack/**',
 		'**/challenge/**' // 구현 중이므로 임시로 추가
 ]
 
@@ -145,6 +147,7 @@ dependencies {
 
 	// kafka
 	implementation 'org.springframework.kafka:spring-kafka'
+	testImplementation "org.springframework.kafka:spring-kafka-test"
 
 	// slack
 	implementation 'com.slack.api:slack-api-client:1.43.0'

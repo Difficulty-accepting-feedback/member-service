@@ -40,7 +40,7 @@ public class SlackErrorSendService {
 			))));
 		} catch (IOException e) {
 			log.warn("[DLT ERROR] 이벤트 처리 실패: {}", e.getMessage());
-			throw new RuntimeException("slack 에 오류 메시지 전송 실패", e); // 뭔 오류를 던져야 됨... 참나... 귀찮게
+			throw new RuntimeException("slack 에 오류 메시지 전송 실패", e);
 		}
 	}
 }
