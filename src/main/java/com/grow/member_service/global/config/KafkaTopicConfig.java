@@ -29,4 +29,12 @@ public class KafkaTopicConfig {
 			.replicas(3)
 			.build();
 	}
+
+	@Bean
+	public NewTopic achievementAchieved() {
+		return TopicBuilder.name("achievement.achieved")
+			.partitions(3)
+			.replicas(3)
+			.build();
+	}
 }

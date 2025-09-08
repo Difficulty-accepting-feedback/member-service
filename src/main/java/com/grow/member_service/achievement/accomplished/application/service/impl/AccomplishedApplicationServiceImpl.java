@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.grow.member_service.achievement.accomplished.application.dto.AccomplishedResponse;
 import com.grow.member_service.achievement.accomplished.application.dto.CreateAccomplishedRequest;
+import com.grow.member_service.achievement.accomplished.application.event.AchievementAchievedEvent;
 import com.grow.member_service.achievement.accomplished.application.model.AccomplishedPeriod;
 import com.grow.member_service.achievement.accomplished.application.service.AccomplishedApplicationService;
 import com.grow.member_service.achievement.accomplished.domain.model.Accomplished;
@@ -21,7 +22,6 @@ import com.grow.member_service.achievement.challenge.domain.repository.Challenge
 import com.grow.member_service.common.exception.AccomplishedException;
 import com.grow.member_service.global.exception.ErrorCode;
 import com.grow.member_service.global.util.JsonUtils;
-import com.grow.member_service.history.point.application.event.PointGrantRequest;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +31,8 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class AccomplishedApplicationServiceImpl implements AccomplishedApplicationService {
 
-	private static final String POINT_GRANT_TOPIC = "point.grant.requested";
+	private static final String ACHIEVEMENT_TOPIC = "achievement.achieved";
+
 	private final AccomplishedRepository repo;
 	private final ChallengeRepository challengeRepo;
 	private final ChallengeRepository challengeRepository;
@@ -41,7 +42,7 @@ public class AccomplishedApplicationServiceImpl implements AccomplishedApplicati
 	 * 업적 달성
 	 * 1) challengeId 유효성 검증
 	 * 2) (memberId, challengeId) 중복 방지
-	 * 3) 저장 성공 후 포인트 지급 커맨드 Kafka 퍼블리시
+	 * 3) 저장 성공 후 업적 달성 도메인 이벤트 Kafka 퍼블리시
 	 */
 	@Override
 	@Transactional
@@ -73,24 +74,8 @@ public class AccomplishedApplicationServiceImpl implements AccomplishedApplicati
 		log.info("[업적] 저장 완료: accomplishedId={}, memberId={}, challengeId={}",
 			saved.getAccomplishedId(), memberId, req.getChallengeId());
 
-		// 4) 포인트 지급 커맨드 Kafka 퍼블리시 (멱등키 포함)
-		String dedup = "ACHV-" + req.getChallengeId() + "-MEM-" + memberId;
-		PointGrantRequest cmd = new PointGrantRequest(
-			memberId,
-			challenge.getPoint(),                  // amount (+ 적립)
-			"ACHIEVEMENT",                         // actionType
-			"CHALLENGE",                           // sourceType
-			String.valueOf(req.getChallengeId()),  // sourceId
-			"[업적] " + challenge.getName(),        // content
-			dedup,                                 // dedupKey
-			saved.getAccomplishedAt()              // occurredAt
-		);
-
-		String key = memberId.toString();         // 같은 멤버는 같은 파티션으로
-		String payload = JsonUtils.toJsonString(cmd);
-		kafkaTemplate.send(POINT_GRANT_TOPIC, key, payload);
-		log.info("[KAFKA][SENT] topic={}, key={}, memberId={}, challengeId={}, amount={}, action={}",
-			POINT_GRANT_TOPIC, key, memberId, req.getChallengeId(), challenge.getPoint(), "ACHIEVEMENT");
+		// 3) 저장 성공 후 업적 달성 도메인 이벤트 Kafka 퍼블리시
+		publishAchievementAchievedEvent(saved, challenge, memberId);
 
 		return AccomplishedResponse.from(saved);
 	}
@@ -121,5 +106,33 @@ public class AccomplishedApplicationServiceImpl implements AccomplishedApplicati
 				.orElse("알 수 없는 업적");
 			return AccomplishedResponse.from(a, name);
 		});
+	}
+
+	// 헬퍼
+
+	/** 업적 달성 도메인 이벤트 퍼블리시 */
+	private void publishAchievementAchievedEvent(Accomplished saved, Challenge challenge, Long memberId) {
+		String key = memberId.toString(); // 같은 멤버 이벤트는 같은 파티션에
+		String dedupKey = buildAchievementDedupKey(memberId, saved.getChallengeId());
+
+		AchievementAchievedEvent event = new AchievementAchievedEvent(
+			saved.getAccomplishedId(),
+			memberId,
+			saved.getChallengeId(),
+			challenge.getName(),
+			challenge.getPoint(),
+			saved.getAccomplishedAt(),
+			dedupKey
+		);
+
+		String payload = JsonUtils.toJsonString(event);
+		kafkaTemplate.send(ACHIEVEMENT_TOPIC, key, payload);
+		log.info("[KAFKA][SENT] topic={}, key={}, memberId={}, challengeId={}, name={}, reward={}",
+			ACHIEVEMENT_TOPIC, key, memberId, saved.getChallengeId(), challenge.getName(), challenge.getPoint());
+	}
+
+	/** 업적 멱등 키 생성 */
+	private String buildAchievementDedupKey(Long memberId, Long challengeId) {
+		return "ACHV-" + challengeId + "-MEM-" + memberId;
 	}
 }
