@@ -4,15 +4,14 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.grow.member_service.common.exception.MemberException;
 import com.grow.member_service.global.exception.ErrorCode;
-import com.grow.member_service.history.point.application.service.PointCommandService;
-import com.grow.member_service.history.point.domain.model.PointHistory;
-import com.grow.member_service.history.point.domain.model.enums.PointActionType;
-import com.grow.member_service.history.point.domain.model.enums.SourceType;
+import com.grow.member_service.global.util.JsonUtils;
+import com.grow.member_service.history.point.application.event.PointGrantRequest;
 import com.grow.member_service.member.application.dto.AttendanceResult;
 import com.grow.member_service.member.application.service.MemberAttendanceApplicationService;
 import com.grow.member_service.member.domain.model.Member;
@@ -28,9 +27,10 @@ public class MemberAttendanceApplicationServiceImpl implements MemberAttendanceA
 	private static final int DAILY_ATTEND_POINT = 10;
 	private static final int STREAK_3_BONUS    = 30;
 	private static final int STREAK_7_BONUS    = 70;
+	private static final String POINT_GRANT_TOPIC = "point.grant.requested";
 
 	private final MemberRepository memberRepository;
-	private final PointCommandService point;
+	private final KafkaTemplate<String, String> kafkaTemplate;
 
 	/**
 	 * 출석 체크 및 보상 지급
@@ -60,30 +60,33 @@ public class MemberAttendanceApplicationServiceImpl implements MemberAttendanceA
 		memberRepository.save(m);
 
 		String dayKey = today.toString(); // yyyy-MM-dd
+		LocalDateTime when = (occurredAt != null ? occurredAt : LocalDateTime.now());
 
-		// 1) 기본 출석 포인트
-		PointHistory base = point.grant(
+		// 1) 기본 출석 포인트 (커맨드 전송)
+		publishPointGrant(
 			memberId, DAILY_ATTEND_POINT,
-			PointActionType.DAILY_CHECK_IN, SourceType.ATTENDANCE,
+			"DAILY_CHECK_IN", "ATTENDANCE",
 			dayKey, "출석 체크",
 			"ATTEND:" + memberId + ":" + dayKey,
-			occurredAt
+			when
 		);
 
-		// 2) 연속 보너스
+		// 2) 연속 보너스 (커맨드 전송)
 		if (m.getAttendanceStreak() == 3) {
-			point.grant(memberId, STREAK_3_BONUS,
-				PointActionType.STREAK_3, SourceType.ATTENDANCE,
+			publishPointGrant(
+				memberId, STREAK_3_BONUS,
+				"STREAK_3", "ATTENDANCE",
 				dayKey, "출석 3일 연속 보너스",
 				"ATTEND_STREAK3:" + memberId + ":" + dayKey,
-				occurredAt
+				when
 			);
 		} else if (m.getAttendanceStreak() == 7) {
-			point.grant(memberId, STREAK_7_BONUS,
-				PointActionType.STREAK_7, SourceType.ATTENDANCE,
+			publishPointGrant(
+				memberId, STREAK_7_BONUS,
+				"STREAK_7", "ATTENDANCE",
 				dayKey, "출석 7일 연속 보너스",
 				"ATTEND_STREAK7:" + memberId + ":" + dayKey,
-				occurredAt
+				when
 			);
 		}
 
@@ -92,7 +95,35 @@ public class MemberAttendanceApplicationServiceImpl implements MemberAttendanceA
 			m.getAttendanceStreak(),
 			m.getAttendanceBestStreak(),
 			DAILY_ATTEND_POINT,
-			base.getBalanceAfter()
+			null
 		);
+	}
+
+	// === 내부 헬퍼: 포인트 지급 커맨드 발행 ===
+	private void publishPointGrant(
+		Long memberId,
+		int amount,
+		String actionType,
+		String sourceType,
+		String sourceId,
+		String content,
+		String dedupKey,
+		LocalDateTime occurredAt
+	) {
+		PointGrantRequest cmd = new PointGrantRequest(
+			memberId,
+			Integer.valueOf(amount),
+			actionType,
+			sourceType,
+			sourceId,
+			content,
+			dedupKey,
+			occurredAt
+		);
+
+		// 같은 멤버는 같은 파티션으로 라우팅되도록 key를 memberId로
+		String key = memberId.toString();
+		String payload = JsonUtils.toJsonString(cmd);
+		kafkaTemplate.send(POINT_GRANT_TOPIC, key, payload);
 	}
 }
