@@ -100,6 +100,9 @@ public class PointCommandServiceImpl implements PointCommandService {
 				try {
 					PointHistory saved = historyRepository.save(ph);
 
+
+					historyRepository.flush();
+
 					// 저장 성공 후 알림/후속처리를 위한 이벤트 발행
 					publishPointNotificationEvent(saved);
 
@@ -164,7 +167,6 @@ public class PointCommandServiceImpl implements PointCommandService {
 					.orElseThrow(() -> new MemberException(ErrorCode.MEMBER_NOT_FOUND));
 
 				// 차감 도메인 규칙 (잔액 검증 포함)
-				// - Member.deductPoint(amount) 메서드가 있어야 함
 				member.deductPoint(amount);
 
 				// 히스토리 생성 (음수 금액, 거래 후 잔액)
@@ -186,6 +188,8 @@ public class PointCommandServiceImpl implements PointCommandService {
 				memberRepository.save(member);
 				try {
 					PointHistory saved = historyRepository.save(ph);
+
+					historyRepository.flush();
 
 					// 저장 성공 후 알림/후속처리를 위한 이벤트 발행
 					publishPointNotificationEvent(saved);
