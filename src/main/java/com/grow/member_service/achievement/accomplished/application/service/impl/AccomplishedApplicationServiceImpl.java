@@ -6,13 +6,12 @@ import java.util.Optional;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.grow.member_service.achievement.accomplished.application.dto.AccomplishedResponse;
 import com.grow.member_service.achievement.accomplished.application.dto.CreateAccomplishedRequest;
-import com.grow.member_service.achievement.accomplished.application.event.AchievementAchievedEvent;
-import com.grow.member_service.achievement.accomplished.application.event.AchievementEventPublisher;
 import com.grow.member_service.achievement.accomplished.application.model.AccomplishedPeriod;
 import com.grow.member_service.achievement.accomplished.application.service.AccomplishedApplicationService;
 import com.grow.member_service.achievement.accomplished.domain.model.Accomplished;
@@ -21,6 +20,8 @@ import com.grow.member_service.achievement.challenge.domain.model.Challenge;
 import com.grow.member_service.achievement.challenge.domain.repository.ChallengeRepository;
 import com.grow.member_service.common.exception.AccomplishedException;
 import com.grow.member_service.global.exception.ErrorCode;
+import com.grow.member_service.global.util.JsonUtils;
+import com.grow.member_service.history.point.application.event.PointGrantRequest;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,16 +31,17 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class AccomplishedApplicationServiceImpl implements AccomplishedApplicationService {
 
+	private static final String POINT_GRANT_TOPIC = "point.grant.requested";
 	private final AccomplishedRepository repo;
 	private final ChallengeRepository challengeRepo;
-	private final AchievementEventPublisher achievementPublisher;
 	private final ChallengeRepository challengeRepository;
+	private final KafkaTemplate<String, String> kafkaTemplate;
 
 	/**
 	 * 업적 달성
 	 * 1) challengeId 유효성 검증
 	 * 2) (memberId, challengeId) 중복 방지
-	 * 3) 저장 성공 후 업적명/보상포인트를 포함한 이벤트 발행 (AFTER_COMMIT에서 포인트/알림 처리)
+	 * 3) 저장 성공 후 포인트 지급 커맨드 Kafka 퍼블리시
 	 */
 	@Override
 	@Transactional
@@ -71,17 +73,24 @@ public class AccomplishedApplicationServiceImpl implements AccomplishedApplicati
 		log.info("[업적] 저장 완료: accomplishedId={}, memberId={}, challengeId={}",
 			saved.getAccomplishedId(), memberId, req.getChallengeId());
 
-		// 4) 업적 달성 이벤트 발행(업적명/보상포인트 포함)
+		// 4) 포인트 지급 커맨드 Kafka 퍼블리시 (멱등키 포함)
 		String dedup = "ACHV-" + req.getChallengeId() + "-MEM-" + memberId;
-		achievementPublisher.publish(new AchievementAchievedEvent(
-			saved.getAccomplishedId(),
+		PointGrantRequest cmd = new PointGrantRequest(
 			memberId,
-			req.getChallengeId(),
-			challenge.getName(),
-			challenge.getPoint(),
-			saved.getAccomplishedAt(),
-			dedup
-		));
+			challenge.getPoint(),                  // amount (+ 적립)
+			"ACHIEVEMENT",                         // actionType
+			"CHALLENGE",                           // sourceType
+			String.valueOf(req.getChallengeId()),  // sourceId
+			"[업적] " + challenge.getName(),        // content
+			dedup,                                 // dedupKey
+			saved.getAccomplishedAt()              // occurredAt
+		);
+
+		String key = memberId.toString();         // 같은 멤버는 같은 파티션으로
+		String payload = JsonUtils.toJsonString(cmd);
+		kafkaTemplate.send(POINT_GRANT_TOPIC, key, payload);
+		log.info("[KAFKA][SENT] topic={}, key={}, memberId={}, challengeId={}, amount={}, action={}",
+			POINT_GRANT_TOPIC, key, memberId, req.getChallengeId(), challenge.getPoint(), "ACHIEVEMENT");
 
 		return AccomplishedResponse.from(saved);
 	}
