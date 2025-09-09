@@ -1,4 +1,4 @@
-package com.grow.member_service.member.infra.service;
+package com.grow.member_service.member.application.service.impl;
 
 import java.util.Optional;
 

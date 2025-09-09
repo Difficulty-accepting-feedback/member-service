@@ -1,6 +1,7 @@
 package com.grow.member_service.member.application.service;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import java.time.Clock;
@@ -16,7 +17,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import com.grow.member_service.achievement.trigger.event.AchievementTriggerPublisher;
+import com.grow.member_service.achievement.trigger.listener.AchievementTriggerProducer;
 import com.grow.member_service.common.exception.MemberException;
 import com.grow.member_service.global.exception.ErrorCode;
 import com.grow.member_service.member.application.event.MemberNotificationPublisher;
@@ -31,21 +32,16 @@ import com.grow.member_service.member.domain.repository.MemberRepository;
 import com.grow.member_service.member.domain.repository.PhoneVerificationRepository;
 import com.grow.member_service.member.domain.service.SmsService;
 
-;
 
 @DisplayName("PhoneVerificationService 테스트")
 class PhoneVerificationServiceImplTest {
 
 	@Mock private PhoneVerificationRepository verificationRepo;
-
 	@Mock private SmsService smsService;
-
 	@Mock private MemberRepository memberRepo;
-
 	@Mock private MemberNotificationPublisher notificationPublisher;
 
-	@Mock
-	private AchievementTriggerPublisher achievementTriggerPublisher;
+	@Mock private AchievementTriggerProducer achievementTriggerProducer;
 
 	@InjectMocks
 	private PhoneVerificationServiceImpl service;
@@ -81,27 +77,31 @@ class PhoneVerificationServiceImplTest {
 		assertEquals(PHONE, arg.getPhoneNumber());
 		assertFalse(arg.isVerified());
 		verify(smsService).send(eq(PHONE), contains("인증 코드: "));
+		// 트리거/알림은 이 단계에서 안 보냄
+		verifyNoInteractions(achievementTriggerProducer);
+		verifyNoInteractions(notificationPublisher);
 	}
 
 	@Test
 	@DisplayName("requestVerification(): SMS 전송 실패 시 예외 발생")
-	void requestVerification_whenSmsSendFails_shouldThrowMemberDomainException() {
+	void requestVerification_whenSmsSendFails_shouldThrowMemberException() {
 		// given
 		PhoneVerification toSave = PhoneVerification.newRequest(MEMBER_ID, PHONE);
 		when(verificationRepo.save(any())).thenReturn(toSave);
-		doThrow(new MemberException(ErrorCode.SMS_SEND_FAILED)).when(smsService).send(any(), any());
+		doThrow(new MemberException(ErrorCode.SMS_SEND_FAILED))
+			.when(smsService).send(any(), any());
 
 		// when / then
-		assertThrows(MemberException.class,
-			() -> service.requestVerification(MEMBER_ID, PHONE)
-		);
+		assertThrows(MemberException.class, () -> service.requestVerification(MEMBER_ID, PHONE));
 		verify(verificationRepo).save(any());
 		verify(smsService).send(any(), any());
+		verifyNoInteractions(achievementTriggerProducer);
+		verifyNoInteractions(notificationPublisher);
 	}
 
 	@Test
-	@DisplayName("verifyCode(): 올바른 코드 입력 시 회원 핸드폰 인증 처리 및 저장")
-	void verifyCode_withCorrectCode_shouldMarkMemberVerified() {
+	@DisplayName("verifyCode(): 올바른 코드 입력 시 회원 핸드폰 인증 처리 + 알림 발행 + 업적 트리거 발행")
+	void verifyCode_withCorrectCode_shouldMarkMemberVerified_andPublishEvents() {
 		// given
 		PhoneVerification existing = new PhoneVerification(
 			10L, MEMBER_ID, PHONE, CODE, Instant.now(), false
@@ -122,10 +122,17 @@ class PhoneVerificationServiceImplTest {
 		service.verifyCode(MEMBER_ID, CODE);
 
 		// then
+		// 저장 및 도메인 반영
 		verify(verificationRepo).save(any(PhoneVerification.class));
 		verify(memberRepo).save(member);
 		assertTrue(member.isPhoneVerified());
 		assertEquals(PHONE, member.getAdditionalInfo().getPhoneNumber());
+
+		// ✅ 인증 성공 알림 발행
+		verify(notificationPublisher, times(1)).publishPhoneVerifiedSuccess(MEMBER_ID);
+
+		// ✅ 업적 트리거 발행 (항상 발행)
+		verify(achievementTriggerProducer, times(1)).send(any());
 	}
 
 	@Test
@@ -139,12 +146,12 @@ class PhoneVerificationServiceImplTest {
 			.thenReturn(Optional.of(existing));
 
 		// when / then
-		assertThrows(MemberDomainException.class,
-			() -> service.verifyCode(MEMBER_ID, CODE)
-		);
+		assertThrows(MemberDomainException.class, () -> service.verifyCode(MEMBER_ID, CODE));
 
-		// save는 호출되지 않아야 함
+		// 저장/알림/트리거 모두 호출되지 않음
 		verify(verificationRepo, never()).save(any());
 		verify(memberRepo, never()).save(any());
+		verifyNoInteractions(notificationPublisher);
+		verifyNoInteractions(achievementTriggerProducer);
 	}
 }

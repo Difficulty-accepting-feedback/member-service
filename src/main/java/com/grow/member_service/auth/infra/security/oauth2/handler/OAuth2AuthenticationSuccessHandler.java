@@ -14,22 +14,26 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationSu
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import com.grow.member_service.achievement.trigger.event.AchievementTriggerEvent;
+import com.grow.member_service.achievement.trigger.listener.AchievementTriggerProducer;
 import com.grow.member_service.auth.infra.config.OAuthProperties;
 import com.grow.member_service.auth.infra.security.jwt.JwtProperties;
 import com.grow.member_service.auth.infra.security.jwt.JwtTokenProvider;
 import com.grow.member_service.common.exception.OAuthException;
-import com.grow.member_service.member.application.event.LoginEventPublisher;
+import com.grow.member_service.member.application.service.MemberAttendanceApplicationService;
 import com.grow.member_service.member.application.service.PhoneVerificationService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * OAuth2 인증 성공 시 JWT 토큰을 생성하고
  * HttpOnly 쿠키에 담아 리다이렉트하는 핸들러
  * 지정된 URL로 리다이렉트 (변경 필요-> 핸드폰 인증 화면으로 바로 리다이렉트)
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
@@ -37,7 +41,8 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 	private final JwtProperties jwtProperties;
 	private final PhoneVerificationService phoneVerificationServiceImpl;
 	private final OAuthProperties oauthProperties;
-	private final LoginEventPublisher loginEventPublisher;
+	private final AchievementTriggerProducer achievementTriggerProducer;
+	private final MemberAttendanceApplicationService attendanceService;
 
 	/**
 	 * 인증 성공 후 호출되는 메서드
@@ -65,7 +70,36 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 		addAuthCookie(res, "access_token", accessToken, accessDuration);
 		addAuthCookie(res, "refresh_token", refreshToken, refreshDuration);
 
-		loginEventPublisher.publishLoginSucceeded(memberId);
+		// 출석 체크 & 포인트 지급
+		try {
+			var when = java.time.LocalDateTime.now();
+			var result = attendanceService.checkInAndReward(memberId, when);
+			if (result.attended()) {
+				log.info("[Member] 로그인 출석 완료 - memberId={}, day={}, streak={}, best={}, granted={}, balanceAfter={}",
+					memberId, result.day(), result.streak(), result.bestStreak(), result.grantedAmount(), result.balanceAfter());
+			} else {
+				log.debug("[Member] 로그인 출석 스킵(이미 처리됨) - memberId={}, day={}", memberId, result.day());
+			}
+		} catch (Exception ex) {
+			// 로그인은 성공했으니 출석/포인트 실패가 흐름을 막지 않도록
+			log.warn("[LOGIN][POST] 출석/포인트 처리 실패 - memberId={}, err={}", memberId, ex.toString(), ex);
+		}
+
+		// 첫 로그인 업적 트리거 발행
+		try {
+			achievementTriggerProducer.send(
+				new AchievementTriggerEvent(
+					memberId,
+					com.grow.member_service.achievement.challenge.domain.model.enums.ChallengeIds.FIRST_LOGIN,
+					"LOGIN_SUCCEEDED",
+					"LOGIN-" + memberId,
+					java.time.LocalDateTime.now()
+				)
+			);
+			log.info("[ACHV][TRIGGER] FIRST_LOGIN sent - memberId={}", memberId);
+		} catch (Exception ex) {
+			log.warn("[ACHV][TRIGGER][SEND-FAIL] FIRST_LOGIN - memberId={}, err={}", memberId, ex.toString(), ex);
+		}
 
 		// 핸드폰 인증 여부 확인
 		boolean verified = phoneVerificationServiceImpl.isPhoneVerified(memberId);
