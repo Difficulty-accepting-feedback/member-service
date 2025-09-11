@@ -26,7 +26,7 @@ public class QuizAnsweredDltConsumer {
 		slackErrorSendService.sendError(
 			"퀴즈 정답 기록 실패",
 			"카테고리: [QUIZ → RESULT]\n"
-				+ "상세: 퀴즈 정답 이벤트 처리에 실패했습니다. (DLT)\n"
+				+ "상세: 퀴즈 정답 이벤트 처리에 실패했습니다.\n"
 				+ "영향: 사용자 퀴즈 결과 누락 가능",
 			message
 		);
