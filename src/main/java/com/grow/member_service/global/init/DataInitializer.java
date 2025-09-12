@@ -59,9 +59,9 @@ public class DataInitializer {
 
 	@PostConstruct
 	public void init() {
-		// // redis 초기화 로직 실행
-		// redisConnectionFactory.getConnection().serverCommands().flushAll();
-		// log.debug("redis flush all.");
+		// redis 초기화 로직 실행
+		redisConnectionFactory.getConnection().serverCommands().flushAll();
+		log.debug("redis flush all.");
 
 		// 1) 테스트용 단일 회원
 		Member testUser = memberRepository.findByPlatformId("test-platform-id", Platform.KAKAO)
