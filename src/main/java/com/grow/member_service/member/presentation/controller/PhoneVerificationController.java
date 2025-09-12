@@ -21,7 +21,7 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/verification")
+@RequestMapping("/api/v1/members/verification")
 @SecurityRequirement(name = "cookieAuth")
 @Tag(name = "PhoneVerification", description = "전화번호 인증 API")
 public class PhoneVerificationController {

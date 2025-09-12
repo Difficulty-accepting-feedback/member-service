@@ -26,7 +26,7 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/points")
+@RequestMapping("api/v1/members/points")
 @Tag(name = "PointHistory", description = "포인트 내역 관련 API")
 @Validated
 public class PointHistoryController {

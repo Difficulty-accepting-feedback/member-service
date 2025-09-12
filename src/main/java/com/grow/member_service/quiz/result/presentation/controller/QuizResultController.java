@@ -26,7 +26,7 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/quizzes")
+@RequestMapping("/api/v1/members/quizzes")
 @Tag(name = "QuizResult", description = "퀴즈 결과 관리 API")
 public class QuizResultController {
 	private final QuizResultService quizResultService;

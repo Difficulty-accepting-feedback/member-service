@@ -61,7 +61,7 @@ public class SecurityConfig {
                 .sessionManagement(sm ->
                         sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/members/resolve").permitAll() // 인증 제외
+                        .requestMatchers("/api/v1/members/resolve").permitAll() // 인증 제외
                         .requestMatchers("/api/v1/admin/members/**").permitAll() // 인증 제외
                         .requestMatchers("/api/v2/**", "/api/v3/members/**").permitAll()  // 인증 제외
                         .anyRequest().authenticated()

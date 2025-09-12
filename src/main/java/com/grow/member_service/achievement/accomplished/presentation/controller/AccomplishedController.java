@@ -29,7 +29,7 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/accomplished")
+@RequestMapping("/api/v1/members/accomplished")
 @Tag(name = "Accomplished", description = "업적 내역 관련 API")
 @Validated
 public class AccomplishedController {
