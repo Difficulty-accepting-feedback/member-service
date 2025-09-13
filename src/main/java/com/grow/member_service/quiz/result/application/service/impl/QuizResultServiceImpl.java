@@ -59,4 +59,17 @@ public class QuizResultServiceImpl implements QuizResultService {
 		List<QuizResult> list = getResultsForMember(memberId);
 		return statisticsService.successRate(list);
 	}
+
+	/**
+	 * 특정 멤버의 퀴즈 결과를 카테고리 및 정답 여부로 필터링하여 조회합니다.
+	 * @param memberId 멤버 ID
+	 * @param categoryId 카테고리 ID (현재 미사용)
+	 * @param correct 정답 여부 (null일 경우 필터링 없음)
+	 * @return 퀴즈 결과 리스트 (없을 경우 빈 리스트)
+	 */
+	@Override
+	@Transactional(readOnly = true)
+	public List<QuizResult> findByMemberWithFilter(Long memberId, Long categoryId, Boolean correct) {
+		return repository.findByMemberWithFilter(memberId, correct);
+	}
 }

@@ -10,4 +10,5 @@ public interface QuizResultService {
 	List<QuizResult> getResultsForMember(Long memberId);
 	long countCorrectAnswers(Long memberId);
 	double getSuccessRate(Long memberId);
+	List<QuizResult> findByMemberWithFilter(Long memberId, Long categoryId, Boolean correct);
 }
