@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.grow.member_service.quiz.result.domain.model.QuizResult;
 import com.grow.member_service.quiz.result.domain.repository.QuizResultRepository;
+import com.grow.member_service.quiz.result.infra.persistence.entity.QuizResultJpaEntity;
 import com.grow.member_service.quiz.result.infra.persistence.mapper.QuizResultMapper;
 
 import lombok.RequiredArgsConstructor;
@@ -50,5 +51,20 @@ public class QuizResultRepositoryImpl implements QuizResultRepository {
     @Override
     public List<QuizResult> findByMemberId(Long memberId) {
         return jpaRepository.findByMemberId(memberId).stream().map(mapper::toDomain).toList();
+    }
+
+    /**
+     * 특정 멤버의 퀴즈 결과를 정답 여부로 필터링하여 조회합니다.
+     * @param memberId 멤버 ID
+     * @param correct 정답 여부 (null일 경우 필터링 없음)
+     * @return 퀴즈 결과 리스트 (없을 경우 빈 리스트)
+     */
+    @Override
+    public List<QuizResult> findByMemberWithFilter(Long memberId, Boolean correct) {
+        List<QuizResultJpaEntity> rows = (correct == null)
+            ? jpaRepository.findByMemberId(memberId)
+            : jpaRepository.findByMemberIdAndIsCorrect(memberId, correct);
+
+        return rows.stream().map(mapper::toDomain).toList();
     }
 }

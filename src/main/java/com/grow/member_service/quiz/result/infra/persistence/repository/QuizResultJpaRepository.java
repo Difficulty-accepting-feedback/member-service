@@ -30,5 +30,5 @@ public interface QuizResultJpaRepository extends JpaRepository<QuizResultJpaEnti
     void upsert(@Param("memberId") Long memberId,
         @Param("quizId") Long quizId,
         @Param("isCorrect") boolean isCorrect);
-
+    List<QuizResultJpaEntity> findByMemberIdAndIsCorrect(Long memberId, Boolean isCorrect);
 }

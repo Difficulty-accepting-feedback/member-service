@@ -9,4 +9,5 @@ public interface QuizResultRepository {
     List<QuizResult> findByMemberId(Long memberId);
     void upsert(Long memberId, Long quizId, boolean isCorrect);
     Optional<QuizResult> findOne(Long memberId, Long quizId);
+    List<QuizResult> findByMemberWithFilter(Long memberId, Boolean correct);
 }
