@@ -1,4 +1,4 @@
-package com.grow.member_service.quiz.result.infra.service;
+package com.grow.member_service.quiz.result.application.service.impl;
 
 import java.util.List;
 

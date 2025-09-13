@@ -2,40 +2,34 @@ package com.grow.member_service.quiz.result.infra.persistence.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
-@Table(name = "quizResult")
+@Builder
+@Table(
+    name = "quiz_result",
+    uniqueConstraints = @UniqueConstraint(name = "uk_member_quiz", columnNames = {"member_id","quiz_id"}),
+    indexes = @Index(name = "idx_qr_member", columnList = "member_id")
+)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class QuizResultJpaEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "quizResultId", nullable = false)
+    @Column(name = "quiz_result_id", nullable = false)
     private Long quizResultId;
 
-    @Column(name = "memberId",
-            nullable = false,
-            updatable = false
-    )
-    private Long memberId; // 멤버 ID
+    @Column(name = "member_id", nullable = false, updatable = false)
+    private Long memberId;
 
-    @Column(name = "quizId", nullable = false, updatable = false)
+    @Column(name = "quiz_id", nullable = false, updatable = false)
     private Long quizId; // 퀴즈 (실제 문제) ID
 
-    @Column(name = "isCorrect", nullable = false)
+    @Column(name = "is_correct", nullable = false)
     private Boolean isCorrect; // 문제의 정답 여부
-
-    @Builder
-    public QuizResultJpaEntity(Long memberId,
-                               Long quizId,
-                               Boolean isCorrect
-    ) {
-        this.memberId = memberId;
-        this.quizId = quizId;
-        this.isCorrect = isCorrect;
-    }
 }

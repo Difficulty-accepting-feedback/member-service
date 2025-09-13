@@ -29,7 +29,6 @@ import com.grow.member_service.member.domain.model.MemberAdditionalInfo;
 import com.grow.member_service.member.domain.model.MemberProfile;
 import com.grow.member_service.member.domain.model.enums.Platform;
 import com.grow.member_service.member.domain.repository.MemberRepository;
-import com.grow.member_service.quiz.result.domain.model.QuizResult;
 import com.grow.member_service.quiz.result.domain.repository.QuizResultRepository;
 
 import io.jsonwebtoken.Jwts;
@@ -158,14 +157,14 @@ public class DataInitializer {
 			log.info("[INIT] 테스트용 업적 60건 생성 완료");
 		}
 
-		// 4) 퀴즈 결과 더미
+		// 4) 퀴즈 결과 더미 (UPSERT로 상태만 세팅)
 		if (quizResultRepository.findByMemberId(memberId).isEmpty()) {
 			IntStream.rangeClosed(1, 20).forEach(i -> {
 				long quizId = (i % 5) + 1;
 				boolean isCorrect = (i % 3 != 0); // 3의 배수만 틀리게
-				quizResultRepository.save(new QuizResult(memberId, quizId, isCorrect));
+				quizResultRepository.upsert(memberId, quizId, isCorrect);
 			});
-			log.info("[INIT] 테스트용 퀴즈 결과 20건 생성 완료");
+			log.info("[INIT] 테스트용 퀴즈 결과 상태 upsert 완료");
 		}
 
 		// 5) 더미 멤버 10명 (서울 8개 구 + 경기 2개 시)
