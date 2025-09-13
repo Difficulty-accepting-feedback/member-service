@@ -24,12 +24,17 @@ public class QuizResultServiceImpl implements QuizResultService {
 
 	@Override
 	public QuizResult recordResult(Long memberId, Long quizId, Boolean isCorrect) {
-		if (isCorrect == null) {
-			throw new QuizResultException(ErrorCode.NULL_CORRECTNESS);
-		}
-		QuizResult result = new QuizResult(memberId, quizId, isCorrect);
-		return repository.save(result);
+		// 필수 값 검증
+		if (isCorrect == null) throw new QuizResultException(ErrorCode.NULL_CORRECTNESS);
+
+		// 요청 값 그대로 상태 저장 (정답<->오답 자유롭게 변경)
+		repository.upsert(memberId, quizId, isCorrect);
+
+		// 저장된 결과 반환
+		return repository.findOne(memberId, quizId)
+			.orElseThrow(() -> new QuizResultException(ErrorCode.QUIZ_RESULT_NOT_FOUND));
 	}
+
 
 	@Override
 	@Transactional(readOnly = true)
