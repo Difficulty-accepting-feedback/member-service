@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.*;
 import java.util.List;
 import com.grow.member_service.quiz.result.domain.model.QuizResult;
-import com.grow.member_service.quiz.result.infra.service.QuizResultStatisticsServiceImpl;
+import com.grow.member_service.quiz.result.application.service.impl.QuizResultStatisticsServiceImpl;
 
 @DisplayName("QuizResultStatisticsService 순수 계산 로직 검증")
 class QuizResultStatisticsServiceTest {
