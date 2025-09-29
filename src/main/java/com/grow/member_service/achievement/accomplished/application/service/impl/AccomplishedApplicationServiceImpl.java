@@ -23,6 +23,9 @@ import com.grow.member_service.common.exception.AccomplishedException;
 import com.grow.member_service.global.exception.ErrorCode;
 import com.grow.member_service.global.util.JsonUtils;
 
+import io.micrometer.core.annotation.Counted;
+import io.micrometer.core.annotation.Timed;
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,6 +40,7 @@ public class AccomplishedApplicationServiceImpl implements AccomplishedApplicati
 	private final ChallengeRepository challengeRepo;
 	private final ChallengeRepository challengeRepository;
 	private final KafkaTemplate<String, String> kafkaTemplate;
+	private final MeterRegistry meterRegistry;
 
 	/**
 	 * 업적 달성
@@ -46,6 +50,8 @@ public class AccomplishedApplicationServiceImpl implements AccomplishedApplicati
 	 */
 	@Override
 	@Transactional
+	@Timed(value="achievement_issue_latency")
+	@Counted(value="achievement_issue_total")
 	public AccomplishedResponse createAccomplishment(Long memberId, CreateAccomplishedRequest req) {
 		// 1) 챌린지 검증
 		Challenge challenge = challengeRepo.findById(req.getChallengeId())
@@ -54,6 +60,8 @@ public class AccomplishedApplicationServiceImpl implements AccomplishedApplicati
 		// 2) 중복 가드(읽기)
 		Optional<Accomplished> existing = repo.findByMemberIdAndChallengeId(memberId, req.getChallengeId());
 		if (existing.isPresent()) {
+			// 멱등 성공 -> 성공 카운트 증가
+			meterRegistry.counter("achievement_issue_successes").increment();
 			return AccomplishedResponse.from(existing.get());
 		}
 
@@ -67,12 +75,18 @@ public class AccomplishedApplicationServiceImpl implements AccomplishedApplicati
 			));
 		} catch (DataIntegrityViolationException dupe) {
 			Optional<Accomplished> again = repo.findByMemberIdAndChallengeId(memberId, req.getChallengeId());
-			if (again.isPresent()) return AccomplishedResponse.from(again.get());
+			if (again.isPresent()) {
+				meterRegistry.counter("achievement_issue_successes").increment();
+				return AccomplishedResponse.from(again.get());
+			}
 			throw new AccomplishedException(ErrorCode.ACCOMPLISHED_DUPLICATE, dupe);
 		}
 
 		log.info("[업적] 저장 완료: accomplishedId={}, memberId={}, challengeId={}",
 			saved.getAccomplishedId(), memberId, req.getChallengeId());
+
+		// 성공 카운트
+		meterRegistry.counter("achievement_issue_successes").increment();
 
 		// 3) 저장 성공 후 업적 달성 도메인 이벤트 Kafka 퍼블리시
 		publishAchievementAchievedEvent(saved, challenge, memberId);
