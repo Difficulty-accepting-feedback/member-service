@@ -30,98 +30,101 @@ import lombok.RequiredArgsConstructor;
 @EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-    private final CustomOAuth2Service oauth2Service;
-    private final OAuth2AuthenticationSuccessHandler successHandler;
-    private final OAuth2AuthenticationFailureHandler failureHandler;
-    private final JwtAuthenticationFilter jwtFilter;
+	private final CustomOAuth2Service oauth2Service;
+	private final OAuth2AuthenticationSuccessHandler successHandler;
+	private final OAuth2AuthenticationFailureHandler failureHandler;
+	private final JwtAuthenticationFilter jwtFilter;
 
-    // 게이트웨이 미구현으로 인한 임시 설정 (추후 제거)
-    @Bean
-    @Order(0)
-    public SecurityFilterChain internalOpenSecurity(HttpSecurity http) throws Exception {
-        http
-                .securityMatcher("/internal/**")
-                .csrf(csrf -> csrf.disable())
-                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+	// 게이트웨이 미구현으로 인한 임시 설정 (추후 제거)
+	@Bean
+	@Order(0)
+	public SecurityFilterChain internalOpenSecurity(HttpSecurity http) throws Exception {
+		http
+			.securityMatcher("/internal/**")
+			.csrf(csrf -> csrf.disable())
+			.sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+			.authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
 
-        return http.build();
-    }
+		return http.build();
+	}
 
-    /**
-     * API 요청: JWT 검증만 수행, OAuth2·폼 로그인은 비활성화
-     */
-    @Bean
-    @Order(1)
-    public SecurityFilterChain apiSecurity(HttpSecurity http) throws Exception {
-        http
-                .securityMatcher("/api/**")
-                .cors(withDefaults())
-                .csrf(csrf -> csrf.disable())
-                .sessionManagement(sm ->
-                        sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/members/resolve").permitAll() // 인증 제외
-                        .requestMatchers("/api/v1/admin/members/**").permitAll() // 인증 제외
-                        .requestMatchers("/api/v2/**", "/api/v3/members/**").permitAll()  // 인증 제외
-                        .anyRequest().authenticated()
-                )
-                .oauth2Login(o -> o.disable())
-                .formLogin(f -> f.disable())
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+	/**
+	 * API 요청: JWT 검증만 수행, OAuth2·폼 로그인은 비활성화
+	 */
+	@Bean
+	@Order(1)
+	public SecurityFilterChain apiSecurity(HttpSecurity http) throws Exception {
+		http
+			.securityMatcher("/api/**")
+			.cors(withDefaults())
+			.csrf(csrf -> csrf.disable())
+			.sessionManagement(sm ->
+				sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+			.authorizeHttpRequests(auth -> auth
+				.requestMatchers("/api/v1/members/resolve").permitAll() // 인증 제외
+				.requestMatchers("/api/v1/admin/members/**").permitAll() // 인증 제외
+				.requestMatchers("/api/v2/**", "/api/v3/members/**").permitAll()  // 인증 제외
+				.anyRequest().authenticated()
+			)
+			.oauth2Login(o -> o.disable())
+			.formLogin(f -> f.disable())
+			.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
-        return http.build();
-    }
+		return http.build();
+	}
 
-    /**
-     * Web 요청: OAuth2 로그인 UI 활성화, 기타 퍼블릭 경로는 모두 permitAll
-     */
-    @Bean
-    @Order(2)
-    public SecurityFilterChain webSecurity(HttpSecurity http) throws Exception {
-        http
-                .cors(withDefaults())
-                .csrf(csrf -> csrf.disable())
-                .headers((headers) -> headers
-                        .addHeaderWriter(new XFrameOptionsHeaderWriter(
-                                XFrameOptionsHeaderWriter.XFrameOptionsMode.SAMEORIGIN)))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/",
-                                "/login/**",
-                                "/oauth2/**",
-                                "/login/oauth2/code/**",
-                                "/error",
-                                "/h2-console/**",
-                                "/health",
-                                "/env",
-                                "/v3/api-docs",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html"
-                        ).permitAll()
-                        .anyRequest().authenticated()
-                )
-                .oauth2Login(oauth2 -> oauth2
-                        .userInfoEndpoint(u -> u.userService(oauth2Service))
-                        .successHandler(successHandler)
-                        .failureHandler(failureHandler)
-                );
+	/**
+	 * Web 요청: OAuth2 로그인 UI 활성화, 기타 퍼블릭 경로는 모두 permitAll
+	 */
+	@Bean
+	@Order(2)
+	public SecurityFilterChain webSecurity(HttpSecurity http) throws Exception {
+		http
+			.cors(withDefaults())
+			.csrf(csrf -> csrf.disable())
+			.headers((headers) -> headers
+				.addHeaderWriter(new XFrameOptionsHeaderWriter(
+					XFrameOptionsHeaderWriter.XFrameOptionsMode.SAMEORIGIN)))
+			.authorizeHttpRequests(auth -> auth
+				.requestMatchers(
+					"/",
+					"/login/**",
+					"/oauth2/**",
+					"/login/oauth2/code/**",
+					"/error",
+					"/h2-console/**",
+					"/health",
+					"/env",
+					"/v3/api-docs",
+					"/swagger-ui/**",
+					"/swagger-ui.html",
+					"/actuator/health",
+					"/actuator/info",
+					"/actuator/prometheus"
+				).permitAll()
+				.anyRequest().authenticated()
+			)
+			.oauth2Login(oauth2 -> oauth2
+				.userInfoEndpoint(u -> u.userService(oauth2Service))
+				.successHandler(successHandler)
+				.failureHandler(failureHandler)
+			);
 
-        return http.build();
-    }
+		return http.build();
+	}
 
-    //게이트웨이 미구현 상태에서 cors 허용하기 위해 추가
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:3000")); // 프론트 도메인
-        config.setAllowedMethods(List.of("GET", "POST", "PATCH", "DELETE", "OPTIONS", "PUT"));
-        config.setAllowedHeaders(List.of("Content-Type", "Accept", "Authorization", "X-Requested-With"));
-        config.setAllowCredentials(true);
-        config.setMaxAge(3600L);
+	//게이트웨이 미구현 상태에서 cors 허용하기 위해 추가
+	@Bean
+	public CorsConfigurationSource corsConfigurationSource() {
+		CorsConfiguration config = new CorsConfiguration();
+		config.setAllowedOrigins(List.of("http://localhost:3000")); // 프론트 도메인
+		config.setAllowedMethods(List.of("GET", "POST", "PATCH", "DELETE", "OPTIONS", "PUT"));
+		config.setAllowedHeaders(List.of("Content-Type", "Accept", "Authorization", "X-Requested-With"));
+		config.setAllowCredentials(true);
+		config.setMaxAge(3600L);
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
-        return source;
-    }
+		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+		source.registerCorsConfiguration("/**", config);
+		return source;
+	}
 }
