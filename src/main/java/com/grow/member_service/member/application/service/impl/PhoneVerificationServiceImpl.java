@@ -18,6 +18,9 @@ import com.grow.member_service.member.domain.repository.MemberRepository;
 import com.grow.member_service.member.domain.repository.PhoneVerificationRepository;
 import com.grow.member_service.member.domain.service.SmsService;
 
+import io.micrometer.core.annotation.Counted;
+import io.micrometer.core.annotation.Timed;
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,6 +35,7 @@ public class PhoneVerificationServiceImpl implements PhoneVerificationService {
 	private final MemberRepository memberRepository;
 	private final MemberNotificationPublisher notificationPublisher;
 	private final AchievementTriggerProducer achievementTriggerProducer;
+	private final MeterRegistry meterRegistry;
 
 	/**
 	 * 소셜 가입 직후 호출되어,
@@ -42,10 +46,13 @@ public class PhoneVerificationServiceImpl implements PhoneVerificationService {
 	 * @return 생성된 PhoneVerification 의 ID
 	 */
 	@Override
+	@Timed(value="phone_verify_send_latency")
+	@Counted(value="phone_verify_send_total")
 	public Long requestVerification(Long memberId, String phoneNumber) {
 		PhoneVerification verification = PhoneVerification.newRequest(memberId, phoneNumber);
 		PhoneVerification saved = repository.save(verification);
 		smsService.send(saved.getPhoneNumber(), "인증 코드: " + saved.getCode());
+		meterRegistry.counter("phone_verify_send_successes").increment();
 		return saved.getId();
 	}
 
@@ -55,6 +62,8 @@ public class PhoneVerificationServiceImpl implements PhoneVerificationService {
 	 * Member 도메인에 인증 완료 처리
 	 */
 	@Override
+	@Timed(value="phone_verify_check_latency")
+	@Counted(value="phone_verify_check_total")
 	public void verifyCode(Long memberId, String code) {
 		// 1) PhoneVerification 검증
 		PhoneVerification v = repository.findByMemberId(memberId)
@@ -70,6 +79,8 @@ public class PhoneVerificationServiceImpl implements PhoneVerificationService {
 
 		// 3) 인증 성공 알림
 		notificationPublisher.publishPhoneVerifiedSuccess(memberId);
+
+		meterRegistry.counter("phone_verify_check_successes").increment();
 
 		// 업적 이벤트
 		try {
