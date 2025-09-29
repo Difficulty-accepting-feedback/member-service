@@ -17,6 +17,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -32,16 +34,22 @@ import com.grow.member_service.achievement.accomplished.domain.repository.Accomp
 import com.grow.member_service.achievement.challenge.domain.model.Challenge;
 import com.grow.member_service.achievement.challenge.domain.repository.ChallengeRepository;
 
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class AccomplishedApplicationServiceImplTest {
 
 	@Mock private AccomplishedRepository repo;
 
-	// 서비스에 동일 타입 필드가 2개 있으므로 둘 다 모킹 필요
-	@Mock private ChallengeRepository challengeRepo;        // createAccomplishment()에서 사용
-	@Mock private ChallengeRepository challengeRepository;  // searchAccomplishments()에서 사용
+	@Mock private ChallengeRepository challengeRepo;
+	@Mock private ChallengeRepository challengeRepository;
 
 	@Mock private KafkaTemplate<String, String> kafkaTemplate;
+
+	@Mock private MeterRegistry meterRegistry;
+	@Mock private Counter counter;
 
 	@InjectMocks
 	private AccomplishedApplicationServiceImpl sut;
@@ -57,10 +65,13 @@ class AccomplishedApplicationServiceImplTest {
 	void forceInject() {
 		ReflectionTestUtils.setField(sut, "challengeRepo", challengeRepo);
 		ReflectionTestUtils.setField(sut, "challengeRepository", challengeRepository);
+
+		// 메트릭 스텁: 성공 카운터 요청 시 동일 Counter 반환
+		given(meterRegistry.counter("achievement_issue_successes")).willReturn(counter);
 	}
 
 	@Test
-	@DisplayName("업적 달성 성공 → 저장 & Kafka 이벤트 발행(업적명/포인트/멱등키 포함)")
+	@DisplayName("업적 달성 성공 → 저장 & Kafka 이벤트 발행(업적명/포인트/멱등키 포함) + 성공카운터 증가")
 	void createAccomplishment_success() {
 		// given
 		stubKafkaSend();
@@ -100,23 +111,26 @@ class AccomplishedApplicationServiceImplTest {
 		assertThat(keyCap.getValue()).isEqualTo(memberId.toString());
 
 		String payload = payloadCap.getValue();
-		// payload는 AchievementAchievedEvent의 JSON 문자열 — 핵심 필드 포함 여부로 느슨 검증
 		assertThat(payload).contains("\"accomplishedId\":1");
 		assertThat(payload).contains("\"memberId\":" + memberId);
 		assertThat(payload).contains("\"challengeId\":" + challengeId);
 		assertThat(payload).contains("\"challengeName\":\"첫 출석\"");
 		assertThat(payload).contains("\"rewardPoint\":50");
 		assertThat(payload).contains("\"dedupKey\":\"ACHV-" + challengeId + "-MEM-" + memberId + "\"");
-		assertThat(payload).contains("\"occurredAt\":\"" + now.toLocalDate());// 날짜 prefix 정도만
+		assertThat(payload).contains("\"occurredAt\":\"" + now.toLocalDate()); // 날짜 prefix 정도만
 
 		// 저장/조회 호출 검증
 		then(challengeRepo).should().findById(challengeId);
 		then(repo).should().findByMemberIdAndChallengeId(memberId, challengeId);
 		then(repo).should().save(any(Accomplished.class));
+
+		// 메트릭: 성공 카운터 1회 증가
+		then(meterRegistry).should(times(1)).counter("achievement_issue_successes");
+		then(counter).should(times(1)).increment();
 	}
 
 	@Test
-	@DisplayName("이미 달성한 업적이면 기존 레코드 반환(저장/카프카 발행 없음)")
+	@DisplayName("이미 달성한 업적이면 기존 레코드 반환(저장/카프카 발행 없음) + 성공카운터 증가(멱등)")
 	void createAccomplishment_duplicateReturnsExisting() {
 		// given
 		Long memberId = 10L;
@@ -140,6 +154,10 @@ class AccomplishedApplicationServiceImplTest {
 
 		then(repo).should(never()).save(any());
 		then(kafkaTemplate).should(never()).send(anyString(), anyString(), anyString());
+
+		// 메트릭: 멱등 성공도 카운트 1회 증가
+		then(meterRegistry).should(times(1)).counter("achievement_issue_successes");
+		then(counter).should(times(1)).increment();
 	}
 
 	@Test
@@ -154,7 +172,6 @@ class AccomplishedApplicationServiceImplTest {
 		Accomplished a1 = new Accomplished(1L, memberId, 2001L, start.plusDays(1));
 		Page<Accomplished> page = new PageImpl<>(List.of(a1), pageable, 1);
 		given(repo.findByMemberIdAndAccomplishedAtBetween(memberId, start, end, pageable)).willReturn(page);
-		// 이름 resolve (없어도 동작은 하지만, 현실성 있게 스텁)
 		given(challengeRepository.findById(2001L))
 			.willReturn(Optional.of(new Challenge(2001L, "첫 출석", "처음으로 출석", 50)));
 
@@ -165,6 +182,9 @@ class AccomplishedApplicationServiceImplTest {
 		assertThat(result.getTotalElements()).isEqualTo(1);
 		assertThat(result.getContent().get(0).getAccomplishedId()).isEqualTo(1L);
 		assertThat(result.getContent().get(0).getChallengeId()).isEqualTo(2001L);
+
+		// 조회에서는 카운터 증가 없음
+		then(counter).shouldHaveNoMoreInteractions();
 	}
 
 	@Test
@@ -185,6 +205,8 @@ class AccomplishedApplicationServiceImplTest {
 		// then
 		assertThat(result.getTotalElements()).isEqualTo(0);
 		assertThat(result.getContent()).isEmpty();
+
+		then(counter).shouldHaveNoMoreInteractions();
 	}
 
 	@Test
@@ -206,5 +228,7 @@ class AccomplishedApplicationServiceImplTest {
 		// then
 		assertThat(result.getTotalElements()).isEqualTo(1);
 		assertThat(result.getContent().get(0).getChallengeId()).isEqualTo(2001L);
+
+		then(counter).shouldHaveNoMoreInteractions();
 	}
 }

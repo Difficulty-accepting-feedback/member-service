@@ -19,21 +19,30 @@ import com.grow.member_service.quiz.result.domain.model.QuizResult;
 import com.grow.member_service.quiz.result.domain.repository.QuizResultRepository;
 import com.grow.member_service.quiz.result.domain.service.QuizResultStatisticsService;
 
+// ✅ 메트릭 모킹 추가
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+
 @DisplayName("QuizResultServiceImpl 유스케이스 흐름 검증")
 class QuizResultServiceImplTest {
 
 	@Mock QuizResultRepository repository;
 	@Mock QuizResultStatisticsService statisticsService;
+
+	@Mock MeterRegistry meterRegistry;
+	@Mock Counter successCounter; // quiz_result_save_successes
+
 	@InjectMocks QuizResultServiceImpl service;
 
 	@BeforeEach
 	void setUp() {
 		MockitoAnnotations.openMocks(this);
+		given(meterRegistry.counter("quiz_result_save_successes")).willReturn(successCounter);
 	}
 
 	@Test
-	@DisplayName("recordResult(): upsert 호출 후 findOne 결과 반환")
-	void recordResult_callsUpsert_andReturnsFindOne() {
+	@DisplayName("recordResult(): upsert 호출 후 findOne 결과 반환 + 성공 카운터 증가")
+	void recordResult_callsUpsert_andReturnsFindOne_andIncrementsCounter() {
 		// given
 		Long memberId = 1L;
 		Long quizId = 10L;
@@ -50,14 +59,19 @@ class QuizResultServiceImplTest {
 		then(repository).should().upsert(memberId, quizId, isCorrect);
 		then(repository).should().findOne(memberId, quizId);
 		assertThat(result).isSameAs(returned);
+
+		then(meterRegistry).should(times(1)).counter("quiz_result_save_successes");
+		then(successCounter).should(times(1)).increment();
 	}
 
 	@Test
-	@DisplayName("recordResult(): isCorrect == null 이면 예외")
+	@DisplayName("recordResult(): isCorrect == null 이면 예외 (저장/메트릭 호출 없음)")
 	void recordResult_whenIsCorrectNull_throws() {
 		assertThatThrownBy(() -> service.recordResult(1L, 10L, null))
 			.isInstanceOf(QuizResultException.class);
+
 		then(repository).shouldHaveNoInteractions();
+		then(successCounter).shouldHaveNoInteractions();
 	}
 
 	@Test

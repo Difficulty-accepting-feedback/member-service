@@ -34,6 +34,10 @@ import com.grow.member_service.member.domain.model.MemberProfile;
 import com.grow.member_service.member.domain.model.enums.Platform;
 import com.grow.member_service.member.domain.repository.MemberRepository;
 
+// ✅ 메트릭 모킹 추가
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class PointCommandServiceImplTest {
@@ -43,6 +47,10 @@ class PointCommandServiceImplTest {
 
 	@Mock KafkaTemplate<String, String> kafkaTemplate;
 	@Mock ObjectProvider<StringRedisTemplate> redisProvider;
+
+	@Mock MeterRegistry meterRegistry;
+	@Mock Counter accrualCounter;
+	@Mock Counter deductionCounter;
 
 	@InjectMocks
 	PointCommandServiceImpl sut;
@@ -61,6 +69,11 @@ class PointCommandServiceImplTest {
 		);
 	}
 
+	private void stubCounters() {
+		when(meterRegistry.counter("point_accrual_successes")).thenReturn(accrualCounter);
+		when(meterRegistry.counter("point_deduction_successes")).thenReturn(deductionCounter);
+	}
+
 	@Nested
 	class Grant {
 
@@ -69,6 +82,7 @@ class PointCommandServiceImplTest {
 		void grant_success_publishes_kafka() {
 			// Redis 멱등 스킵(=null)로 설정
 			when(redisProvider.getIfAvailable()).thenReturn(null);
+			stubCounters();
 
 			Long memberId = 1L;
 			int amount = 100;
@@ -108,12 +122,16 @@ class PointCommandServiceImplTest {
 			assertThat(payload).contains("\"memberId\":1");
 			assertThat(payload).contains("\"notificationType\":\"POINT\"");
 			assertThat(payload).contains("출석 체크");
+
+			verify(meterRegistry, times(1)).counter("point_accrual_successes");
+			verify(accrualCounter, times(1)).increment();
 		}
 
 		@Test
 		@DisplayName("멱등 선조회 hit → 기존 히스토리 반환, 저장/Kafka 전송 없음")
 		void grant_idempotent_hit_returns_existing_without_kafka() {
 			when(redisProvider.getIfAvailable()).thenReturn(null);
+			stubCounters();
 
 			Long memberId = 1L;
 			String dedup = "K-dup";
@@ -133,13 +151,17 @@ class PointCommandServiceImplTest {
 			assertThat(result.getPointHistoryId()).isEqualTo(99L);
 			verify(historyRepository, never()).save(any());
 			verify(memberRepository, never()).save(any());
-			verifyNoInteractions(kafkaTemplate); // Kafka 전송 없음
+			verifyNoInteractions(kafkaTemplate);
+
+			verify(meterRegistry, times(1)).counter("point_accrual_successes");
+			verify(accrualCounter, times(1)).increment();
 		}
 
 		@Test
 		@DisplayName("히스토리 저장 UNIQUE 충돌 → 기존 히스토리 반환, Kafka 전송 없음")
 		void grant_unique_conflict_returns_existing() {
 			when(redisProvider.getIfAvailable()).thenReturn(null);
+			stubCounters();
 
 			Long memberId = 1L;
 			int amount = 100;
@@ -167,12 +189,16 @@ class PointCommandServiceImplTest {
 			// then
 			assertThat(result.getPointHistoryId()).isEqualTo(7L);
 			verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString());
+
+			verify(meterRegistry, times(1)).counter("point_accrual_successes");
+			verify(accrualCounter, times(1)).increment();
 		}
 
 		@Test
 		@DisplayName("낙관락 충돌 발생 시 재시도 후 성공 → Kafka 전송 1회")
 		void grant_retry_on_optimistic_lock() {
 			when(redisProvider.getIfAvailable()).thenReturn(null);
+			stubCounters();
 
 			Long memberId = 1L;
 			int amount = 50;
@@ -205,6 +231,9 @@ class PointCommandServiceImplTest {
 			verify(memberRepository, times(3)).save(any()); // 2회 실패 + 1회 성공
 			verify(kafkaTemplate, times(1))
 				.send(eq("point.notification.requested"), eq(memberId.toString()), anyString());
+
+			verify(meterRegistry, times(1)).counter("point_accrual_successes");
+			verify(accrualCounter, times(1)).increment();
 		}
 
 		@Test
@@ -215,6 +244,8 @@ class PointCommandServiceImplTest {
 				"s", "c", "k", LocalDateTime.now()
 			)).isInstanceOf(PointHistoryException.class);
 			verifyNoInteractions(memberRepository, historyRepository, kafkaTemplate);
+
+			verifyNoInteractions(meterRegistry, accrualCounter, deductionCounter);
 		}
 	}
 
@@ -225,6 +256,7 @@ class PointCommandServiceImplTest {
 		@DisplayName("차감 성공 → 히스토리 저장 + Kafka 전송 1회")
 		void spend_success_publishes_kafka() {
 			when(redisProvider.getIfAvailable()).thenReturn(null);
+			stubCounters();
 
 			Long memberId = 1L;
 			int start = 200;
@@ -255,12 +287,16 @@ class PointCommandServiceImplTest {
 			assertThat(result.getBalanceAfter()).isEqualTo(150L);
 			verify(kafkaTemplate, times(1))
 				.send(eq("point.notification.requested"), eq(memberId.toString()), anyString());
+
+			verify(meterRegistry, times(1)).counter("point_deduction_successes");
+			verify(deductionCounter, times(1)).increment();
 		}
 
 		@Test
 		@DisplayName("멱등 선조회 hit → 기존 히스토리 반환, 저장/Kafka 전송 없음")
 		void spend_idempotent_hit_returns_existing_without_kafka() {
 			when(redisProvider.getIfAvailable()).thenReturn(null);
+			stubCounters();
 
 			Long memberId = 1L;
 			String dedup = "S-dup";
@@ -281,6 +317,9 @@ class PointCommandServiceImplTest {
 			verify(historyRepository, never()).save(any());
 			verify(memberRepository, never()).save(any());
 			verifyNoInteractions(kafkaTemplate);
+
+			verify(meterRegistry, times(1)).counter("point_deduction_successes");
+			verify(deductionCounter, times(1)).increment();
 		}
 
 		@Test
@@ -291,6 +330,8 @@ class PointCommandServiceImplTest {
 				"s", "c", "k", LocalDateTime.now()
 			)).isInstanceOf(PointHistoryException.class);
 			verifyNoInteractions(memberRepository, historyRepository, kafkaTemplate);
+
+			verifyNoInteractions(meterRegistry, accrualCounter, deductionCounter);
 		}
 	}
 }

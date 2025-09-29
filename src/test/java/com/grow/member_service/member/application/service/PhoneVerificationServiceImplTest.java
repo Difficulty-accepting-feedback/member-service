@@ -32,6 +32,9 @@ import com.grow.member_service.member.domain.repository.MemberRepository;
 import com.grow.member_service.member.domain.repository.PhoneVerificationRepository;
 import com.grow.member_service.member.domain.service.SmsService;
 
+// ✅ 메트릭 모킹 추가
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 
 @DisplayName("PhoneVerificationService 테스트")
 class PhoneVerificationServiceImplTest {
@@ -40,8 +43,11 @@ class PhoneVerificationServiceImplTest {
 	@Mock private SmsService smsService;
 	@Mock private MemberRepository memberRepo;
 	@Mock private MemberNotificationPublisher notificationPublisher;
-
 	@Mock private AchievementTriggerProducer achievementTriggerProducer;
+
+	@Mock private MeterRegistry meterRegistry;
+	@Mock private Counter sendCounter;   // phone_verify_send_successes
+	@Mock private Counter checkCounter;  // phone_verify_check_successes
 
 	@InjectMocks
 	private PhoneVerificationServiceImpl service;
@@ -53,6 +59,8 @@ class PhoneVerificationServiceImplTest {
 	@BeforeEach
 	void setUp() {
 		MockitoAnnotations.openMocks(this);
+		when(meterRegistry.counter("phone_verify_send_successes")).thenReturn(sendCounter);
+		when(meterRegistry.counter("phone_verify_check_successes")).thenReturn(checkCounter);
 	}
 
 	@Test
@@ -80,6 +88,9 @@ class PhoneVerificationServiceImplTest {
 		// 트리거/알림은 이 단계에서 안 보냄
 		verifyNoInteractions(achievementTriggerProducer);
 		verifyNoInteractions(notificationPublisher);
+
+		verify(meterRegistry, times(1)).counter("phone_verify_send_successes");
+		verify(sendCounter, times(1)).increment();
 	}
 
 	@Test
@@ -97,6 +108,8 @@ class PhoneVerificationServiceImplTest {
 		verify(smsService).send(any(), any());
 		verifyNoInteractions(achievementTriggerProducer);
 		verifyNoInteractions(notificationPublisher);
+
+		verify(sendCounter, never()).increment();
 	}
 
 	@Test
@@ -128,11 +141,12 @@ class PhoneVerificationServiceImplTest {
 		assertTrue(member.isPhoneVerified());
 		assertEquals(PHONE, member.getAdditionalInfo().getPhoneNumber());
 
-		// ✅ 인증 성공 알림 발행
 		verify(notificationPublisher, times(1)).publishPhoneVerifiedSuccess(MEMBER_ID);
 
-		// ✅ 업적 트리거 발행 (항상 발행)
 		verify(achievementTriggerProducer, times(1)).send(any());
+
+		verify(meterRegistry, times(1)).counter("phone_verify_check_successes");
+		verify(checkCounter, times(1)).increment();
 	}
 
 	@Test
@@ -153,5 +167,7 @@ class PhoneVerificationServiceImplTest {
 		verify(memberRepo, never()).save(any());
 		verifyNoInteractions(notificationPublisher);
 		verifyNoInteractions(achievementTriggerProducer);
+
+		verify(checkCounter, never()).increment();
 	}
 }
