@@ -12,6 +12,9 @@ import com.grow.member_service.quiz.result.domain.model.QuizResult;
 import com.grow.member_service.quiz.result.domain.repository.QuizResultRepository;
 import com.grow.member_service.quiz.result.domain.service.QuizResultStatisticsService;
 
+import io.micrometer.core.annotation.Counted;
+import io.micrometer.core.annotation.Timed;
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -21,8 +24,11 @@ public class QuizResultServiceImpl implements QuizResultService {
 
 	private final QuizResultRepository repository;
 	private final QuizResultStatisticsService statisticsService;
+	private final MeterRegistry meterRegistry;
 
 	@Override
+	@Timed(value="quiz_result_save_latency")
+	@Counted(value="quiz_result_save_total")
 	public QuizResult recordResult(Long memberId, Long quizId, Boolean isCorrect) {
 		// 필수 값 검증
 		if (isCorrect == null) throw new QuizResultException(ErrorCode.NULL_CORRECTNESS);
@@ -31,8 +37,13 @@ public class QuizResultServiceImpl implements QuizResultService {
 		repository.upsert(memberId, quizId, isCorrect);
 
 		// 저장된 결과 반환
-		return repository.findOne(memberId, quizId)
+		QuizResult saved = repository.findOne(memberId, quizId)
 			.orElseThrow(() -> new QuizResultException(ErrorCode.QUIZ_RESULT_NOT_FOUND));
+
+		// 성공으로 카운트
+		meterRegistry.counter("quiz_result_save_successes").increment();
+
+		return saved;
 	}
 
 

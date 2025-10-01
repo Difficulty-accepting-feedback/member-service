@@ -26,6 +26,9 @@ import com.grow.member_service.history.point.domain.repository.PointHistoryRepos
 import com.grow.member_service.member.domain.model.Member;
 import com.grow.member_service.member.domain.repository.MemberRepository;
 
+import io.micrometer.core.annotation.Counted;
+import io.micrometer.core.annotation.Timed;
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -40,12 +43,15 @@ public class PointCommandServiceImpl implements PointCommandService {
 	private final PointHistoryRepository historyRepository;
 	private final KafkaTemplate<String, String> kafkaTemplate;
 	private final ObjectProvider<StringRedisTemplate> redisProvider;
+	private final MeterRegistry meterRegistry;
 
 	/**
 	 * 포인트 적립 (양수만 허용)
 	 */
 	@Override
 	@Transactional
+	@Timed(value="point_accrual_latency")
+	@Counted(value="point_accrual_total", recordFailuresOnly=false, extraTags={"action","accrue"})
 	public PointHistory grant(Long memberId,
 		int amount,
 		PointActionType actionType,
@@ -67,6 +73,7 @@ public class PointCommandServiceImpl implements PointCommandService {
 			if (existed.isPresent()) {
 				log.info("[포인트][멱등] 기존 값 조회 - memberId={}, dedupKey={}, historyId={}",
 					memberId, dedupKey, existed.get().getPointHistoryId());
+				meterRegistry.counter("point_accrual_successes").increment();
 				return existed.get();
 			}
 		}
@@ -108,6 +115,7 @@ public class PointCommandServiceImpl implements PointCommandService {
 
 					log.info("[포인트] 적립 처리 완료 - memberId={}, historyId={}, amount={}, balanceAfter={}",
 						memberId, saved.getPointHistoryId(), amount, after);
+					meterRegistry.counter("point_accrual_successes").increment();
 					return saved;
 
 				} catch (DataIntegrityViolationException dup) {
@@ -116,6 +124,7 @@ public class PointCommandServiceImpl implements PointCommandService {
 					if (existed.isPresent()) {
 						log.info("[포인트][멱등] 기존 값 조회 - memberId={}, dedupKey={}, historyId={}",
 							memberId, dedupKey, existed.get().getPointHistoryId());
+						meterRegistry.counter("point_accrual_successes").increment();
 						return existed.get();
 					}
 					throw dup;
@@ -135,6 +144,8 @@ public class PointCommandServiceImpl implements PointCommandService {
 	 */
 	@Override
 	@Transactional
+	@Timed(value="point_deduction_latency")
+	@Counted(value="point_deduction_total", recordFailuresOnly=false, extraTags={"action","deduct"})
 	public PointHistory spend(Long memberId,
 		int amount,
 		PointActionType actionType,
@@ -156,6 +167,7 @@ public class PointCommandServiceImpl implements PointCommandService {
 			if (existed.isPresent()) {
 				log.info("[포인트][멱등] 기존 값 조회 - memberId={}, dedupKey={}, historyId={}",
 					memberId, dedupKey, existed.get().getPointHistoryId());
+				meterRegistry.counter("point_deduction_successes").increment();
 				return existed.get();
 			}
 		}
@@ -196,6 +208,7 @@ public class PointCommandServiceImpl implements PointCommandService {
 
 					log.info("[포인트] 차감 처리 완료 - memberId={}, historyId={}, amount=-{}, balanceAfter={}",
 						memberId, saved.getPointHistoryId(), amount, after);
+					meterRegistry.counter("point_deduction_successes").increment();
 					return saved;
 
 				} catch (DataIntegrityViolationException dup) {
@@ -204,6 +217,7 @@ public class PointCommandServiceImpl implements PointCommandService {
 					if (existed.isPresent()) {
 						log.info("[포인트][멱등] 기존 값 조회 - memberId={}, dedupKey={}, historyId={}",
 							memberId, dedupKey, existed.get().getPointHistoryId());
+						meterRegistry.counter("point_deduction_successes").increment();
 						return existed.get();
 					}
 					throw dup;

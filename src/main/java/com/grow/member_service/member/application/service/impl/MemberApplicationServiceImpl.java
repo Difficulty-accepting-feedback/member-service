@@ -29,6 +29,8 @@ import com.grow.member_service.member.domain.repository.MemberWithdrawalLogRepos
 import com.grow.member_service.member.domain.service.MemberService;
 import com.grow.member_service.member.presentation.dto.MemberUpdateRequest;
 
+import io.micrometer.core.annotation.Counted;
+import io.micrometer.core.annotation.Timed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -61,6 +63,8 @@ public class MemberApplicationServiceImpl implements MemberApplicationService {
 
 	@Override
 	@Transactional
+	@Timed(value="member_withdraw_latency")
+	@Counted(value="member_withdraw_total")
 	public void withdraw(Long memberId) {
 		Member member = memberRepository.findById(memberId)
 			.orElseThrow(() -> new MemberException(ErrorCode.MEMBER_NOT_FOUND));
@@ -83,8 +87,8 @@ public class MemberApplicationServiceImpl implements MemberApplicationService {
 		log.info("회원 탈퇴 처리 완료, GEO 삭제 - memberId={}, withdrawnAt={}", memberId, now);
 	}
 
-	@Transactional
 	@Override
+	@Transactional
 	public void updateMember(Long memberId, MemberUpdateRequest req) {
 		log.info("회원 정보 업데이트 요청 수신 - memberId={}", memberId);
 		log.debug("요청 본문 - nickname='{}', profileImage='{}', address='{}'",

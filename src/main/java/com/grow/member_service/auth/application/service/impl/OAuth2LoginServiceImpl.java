@@ -20,6 +20,9 @@ import com.grow.member_service.member.domain.model.MemberProfile;
 import com.grow.member_service.member.domain.model.enums.Platform;
 import com.grow.member_service.member.domain.repository.MemberRepository;
 
+import io.micrometer.core.annotation.Counted;
+import io.micrometer.core.annotation.Timed;
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -33,6 +36,7 @@ public class OAuth2LoginServiceImpl implements OAuth2LoginService {
 	private final MemberRepository memberRepository;
 	private final NicknameGeneratorPort nicknameGenerator;
 	private final Clock clock;
+	private final MeterRegistry meterRegistry;
 
 	/**
 	 * OAuth2 로그인 후 사용자 정보를 처리하는 메서드
@@ -42,6 +46,8 @@ public class OAuth2LoginServiceImpl implements OAuth2LoginService {
 	 */
 	@Override
 	@Transactional
+	@Timed(value = "oauth_login_process", description = "OAuth 로그인 처리 전체 시간")
+	@Counted(value = "oauth_login_requests", description = "OAuth 로그인 요청 횟수", recordFailuresOnly = false)
 	public Member processOAuth2User(String registrationId, Map<String, Object> rawAttrs) {
 		Platform platform = parsePlatform(registrationId);
 
@@ -61,8 +67,13 @@ public class OAuth2LoginServiceImpl implements OAuth2LoginService {
 
 		String platformId = extractPlatformId(attrs);
 		// 기존 회원 조회
-		return memberRepository.findByPlatformId(platformId, platform)
+		Member member = memberRepository.findByPlatformId(platformId, platform)
 			.orElseGet(() -> registerNewMember(attrs, platform));
+
+		// 성공 시점 카운트
+		meterRegistry.counter("oauth_login_successes").increment();
+
+		return member;
 	}
 
 	// 헬퍼 메서드
