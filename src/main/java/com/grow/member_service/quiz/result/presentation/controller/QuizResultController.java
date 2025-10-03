@@ -4,11 +4,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -40,7 +40,7 @@ public class QuizResultController {
 	@PostMapping("/{quizId}/results")
 	public ResponseEntity<RsData<QuizResultResponse>> recordResult(
 		@Parameter(hidden = true)
-		@AuthenticationPrincipal Long memberId,
+		@RequestHeader("X-Authorization-Id") Long memberId,
 		@PathVariable Long quizId,
 		@RequestBody QuizResultRequest quizResultRequest
 	) {
@@ -61,7 +61,7 @@ public class QuizResultController {
 	@GetMapping("/results")
 	public ResponseEntity<RsData<List<QuizResultResponse>>> getMyResults(
 		@Parameter(hidden = true)
-		@AuthenticationPrincipal Long memberId
+		@RequestHeader("X-Authorization-Id") Long memberId
 	) {
 		List<QuizResult> results = quizResultService.getResultsForMember(memberId);
 		List<QuizResultResponse> list = results.stream()
@@ -79,7 +79,7 @@ public class QuizResultController {
 	@GetMapping("/stats")
 	public ResponseEntity<RsData<QuizStatsResponse>> getMyStats(
 		@Parameter(hidden = true)
-		@AuthenticationPrincipal Long memberId
+		@RequestHeader("X-Authorization-Id") Long memberId
 	) {
 		long correctCount = quizResultService.countCorrectAnswers(memberId);
 		double successRate = quizResultService.getSuccessRate(memberId);
