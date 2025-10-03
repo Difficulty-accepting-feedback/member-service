@@ -8,11 +8,11 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -39,7 +39,7 @@ public class AccomplishedController {
 	@Operation(summary = "새 업적 달성", description = "challengeId를 받아 해당 업적을 새로 달성 처리")
 	@PostMapping("/me")
 	public ResponseEntity<RsData<AccomplishedResponse>> create(
-		@AuthenticationPrincipal Long memberId,
+		@RequestHeader("X-Authorization-Id") Long memberId,
 		@Valid @RequestBody CreateAccomplishedRequest req
 	) {
 		AccomplishedResponse res = accomplishedApplicationService.createAccomplishment(memberId, req);
@@ -49,7 +49,7 @@ public class AccomplishedController {
 	@Operation(summary = "내가 달성한 업적 조회", description = "옵션으로 기간을 파라미터로 받아 페이징/정렬하여 조회")
 	@GetMapping("/me")
 	public ResponseEntity<RsData<Page<AccomplishedResponse>>> search(
-		@AuthenticationPrincipal Long memberId,
+		@RequestHeader("X-Authorization-Id") Long memberId,
 
 		@RequestParam(required = false)
 		@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)

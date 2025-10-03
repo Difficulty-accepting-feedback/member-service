@@ -1,9 +1,9 @@
 package com.grow.member_service.member.presentation.controller;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -35,7 +35,7 @@ public class PhoneVerificationController {
 	@PostMapping("/request")
 	public ResponseEntity<RsData<Long>> requestCode(
 		@Parameter(hidden = true)
-		@AuthenticationPrincipal Long memberId,
+		@RequestHeader("X-Authorization-Id") Long memberId,
 		@RequestBody @Valid PhoneRequest request
 	) {
 		Long verificationId = phoneVerificationServiceImpl.requestVerification(
@@ -55,7 +55,7 @@ public class PhoneVerificationController {
 	@PostMapping("/verify")
 	public ResponseEntity<RsData<Void>> verifyCode(
 		@Parameter(hidden = true)
-		@AuthenticationPrincipal Long memberId,
+		@RequestHeader("X-Authorization-Id") Long memberId,
 		@RequestBody @Valid CodeRequest request
 	) {
 		phoneVerificationServiceImpl.verifyCode(memberId, request.getCode());

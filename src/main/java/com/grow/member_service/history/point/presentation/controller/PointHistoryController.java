@@ -8,9 +8,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -39,7 +39,7 @@ public class PointHistoryController {
 	)
 	@GetMapping("/me")
 	public ResponseEntity<RsData<Page<PointHistoryResponse>>> getMyPointHistories(
-		@AuthenticationPrincipal Long memberId,
+		@RequestHeader("X-Authorization-Id") Long memberId,
 
 		@Parameter(description = "조회 시작일시", example = "2025-07-01T00:00:00")
 		@RequestParam(required = false)

@@ -3,11 +3,11 @@ package com.grow.member_service.member.presentation.controller;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -42,7 +42,7 @@ public class LocationController {
 	)
 	@PutMapping("/me/region")
 	public ResponseEntity<RsData<Void>> updateRegion(
-		@Parameter(hidden = true) @AuthenticationPrincipal Long memberId,
+		@Parameter(hidden = true) @RequestHeader("X-Authorization-Id") Long memberId,
 		@RequestBody @Valid RegionReq req
 	) {
 		locationSvc.updateMyRegion(memberId, req.region(), req.sggCode());

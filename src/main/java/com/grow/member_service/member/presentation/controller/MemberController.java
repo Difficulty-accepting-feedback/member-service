@@ -3,13 +3,13 @@ package com.grow.member_service.member.presentation.controller;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -40,7 +40,7 @@ public class MemberController {
 	@GetMapping("/me")
 	public ResponseEntity<RsData<MemberInfoResponse>> getMyInfo(
 		@Parameter(hidden = true)
-		@AuthenticationPrincipal Long memberId
+		@RequestHeader("X-Authorization-Id") Long memberId
 	) {
 		MemberInfoResponse info = memberApplicationService.getMyInfo(memberId);
 		return ResponseEntity.ok(
@@ -52,7 +52,7 @@ public class MemberController {
 	@DeleteMapping("/withdraw")
 	public ResponseEntity<RsData<Void>> withdraw(
 		@Parameter(hidden = true)
-		@AuthenticationPrincipal Long memberId
+		@RequestHeader("X-Authorization-Id") Long memberId
 	) {
 		memberApplicationService.withdraw(memberId);
 		return ResponseEntity.ok(
@@ -63,7 +63,7 @@ public class MemberController {
 	@Operation(summary = "회원 정보 수정", description = "로그인한 사용자의 정보를 수정합니다.")
 	@PatchMapping("/me")
 	public ResponseEntity<RsData<Void>> updateMember(
-		@AuthenticationPrincipal Long memberId,
+		@RequestHeader("X-Authorization-Id") Long memberId,
 		@RequestBody MemberUpdateRequest req
 	) {
 		memberApplicationService.updateMember(memberId, req);
@@ -73,7 +73,7 @@ public class MemberController {
 	@PatchMapping("/me/matching")
 	@Operation(summary = "매칭 기능 활성화/비활성화")
 	public ResponseEntity<RsData<Void>> toggleMatching(
-		@AuthenticationPrincipal Long memberId,
+		@RequestHeader("X-Authorization-Id") Long memberId,
 		@RequestBody @Valid MatchingToggleRequest req
 	) {
 		memberApplicationService.toggleMatching(memberId, req.getIsEnabled());
