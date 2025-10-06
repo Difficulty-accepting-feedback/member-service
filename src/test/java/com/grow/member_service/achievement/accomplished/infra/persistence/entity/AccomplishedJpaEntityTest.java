@@ -1,4 +1,4 @@
-package com.grow.member_service.accomplished.infra.persistence.entity;
+package com.grow.member_service.achievement.accomplished.infra.persistence.entity;
 
 import static org.assertj.core.api.AssertionsForClassTypes.*;
 
@@ -10,10 +10,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.test.context.ActiveProfiles;
 
-import com.grow.member_service.achievement.accomplished.infra.persistence.entity.AccomplishedJpaEntity;
 import com.grow.member_service.achievement.accomplished.infra.persistence.repository.AccomplishedJpaRepository;
 
+@ActiveProfiles("test")
 @DataJpaTest
 class AccomplishedJpaEntityTest {
 

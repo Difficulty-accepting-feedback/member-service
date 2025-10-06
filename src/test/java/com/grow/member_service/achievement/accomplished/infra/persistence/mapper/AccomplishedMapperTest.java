@@ -1,4 +1,4 @@
-package com.grow.member_service.accomplished.infra.persistence.mapper;
+package com.grow.member_service.achievement.accomplished.infra.persistence.mapper;
 
 import static org.assertj.core.api.AssertionsForClassTypes.*;
 

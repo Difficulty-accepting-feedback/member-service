@@ -10,6 +10,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.grow.member_service.member.domain.model.enums.Platform;
@@ -33,6 +35,9 @@ class ScoreUpdateServiceImplTest {
 
     @Autowired
     private MemberJpaRepository memberJpaRepository;
+
+    @MockitoBean(name = "defaultRetryTopicKafkaTemplate")
+    private KafkaTemplate<Object, Object> defaultRetryTopicKafkaTemplate;
 
     private static final String TRUST_KEY = "member:trust:score:";
 

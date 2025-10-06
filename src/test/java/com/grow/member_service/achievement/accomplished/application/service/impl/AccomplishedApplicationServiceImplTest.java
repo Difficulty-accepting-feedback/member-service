@@ -1,4 +1,4 @@
-package com.grow.member_service.accomplished.application.service;
+package com.grow.member_service.achievement.accomplished.application.service.impl;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -28,7 +28,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import com.grow.member_service.achievement.accomplished.application.dto.AccomplishedResponse;
 import com.grow.member_service.achievement.accomplished.application.dto.CreateAccomplishedRequest;
-import com.grow.member_service.achievement.accomplished.application.service.impl.AccomplishedApplicationServiceImpl;
 import com.grow.member_service.achievement.accomplished.domain.model.Accomplished;
 import com.grow.member_service.achievement.accomplished.domain.repository.AccomplishedRepository;
 import com.grow.member_service.achievement.challenge.domain.model.Challenge;

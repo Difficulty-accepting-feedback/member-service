@@ -1,4 +1,4 @@
-package com.grow.member_service.member.application.service;
+package com.grow.member_service.member.application.service.impl;
 
 import static org.mockito.BDDMockito.*;
 
@@ -15,7 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 
-import com.grow.member_service.member.application.service.impl.ScoreUpdateServiceImpl;
+import com.grow.member_service.member.application.service.ScoreUpdateService;
 import com.grow.member_service.member.domain.model.MemberScoreInfo;
 import com.grow.member_service.member.domain.repository.MemberRepository;
 

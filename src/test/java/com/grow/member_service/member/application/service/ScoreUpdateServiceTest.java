@@ -1,25 +1,27 @@
 package com.grow.member_service.member.application.service;
 
-import com.grow.member_service.member.domain.model.enums.Platform;
-import com.grow.member_service.member.infra.persistence.entity.MemberJpaEntity;
-import com.grow.member_service.member.infra.persistence.repository.MemberJpaRepository;
-import jakarta.persistence.EntityManager;
+import static org.assertj.core.api.Assertions.*;
+
+import java.time.LocalDateTime;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.List;
+import com.grow.member_service.member.domain.model.enums.Platform;
+import com.grow.member_service.member.infra.persistence.entity.MemberJpaEntity;
+import com.grow.member_service.member.infra.persistence.repository.MemberJpaRepository;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import jakarta.persistence.EntityManager;
 
-@Transactional
 @SpringBootTest
+@Transactional
 class ScoreUpdateServiceTest {
 
     @Autowired
@@ -33,6 +35,9 @@ class ScoreUpdateServiceTest {
 
     @Autowired
     private MemberJpaRepository memberJpaRepository;
+
+    @MockitoBean(name = "defaultRetryTopicKafkaTemplate")
+    private KafkaTemplate<Object, Object> defaultRetryTopicKafkaTemplate;
 
     private static final String TRUST_KEY = "member:trust:score:";
 

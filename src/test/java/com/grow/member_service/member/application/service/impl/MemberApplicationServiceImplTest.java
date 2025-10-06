@@ -1,4 +1,4 @@
-package com.grow.member_service.member.application.service;
+package com.grow.member_service.member.application.service.impl;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -27,7 +27,6 @@ import com.grow.member_service.achievement.trigger.listener.AchievementTriggerPr
 import com.grow.member_service.common.exception.MemberException;
 import com.grow.member_service.member.application.dto.MemberInfoResponse;
 import com.grow.member_service.member.application.port.GeoIndexPort;
-import com.grow.member_service.member.application.service.impl.MemberApplicationServiceImpl;
 import com.grow.member_service.member.domain.exception.MemberDomainException;
 import com.grow.member_service.member.domain.model.Member;
 import com.grow.member_service.member.domain.model.enums.Platform;

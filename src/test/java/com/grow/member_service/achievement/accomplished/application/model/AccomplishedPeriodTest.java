@@ -1,4 +1,4 @@
-package com.grow.member_service.accomplished.application.model;
+package com.grow.member_service.achievement.accomplished.application.model;
 
 import static org.assertj.core.api.AssertionsForClassTypes.*;
 import static org.junit.jupiter.api.Assertions.*;
