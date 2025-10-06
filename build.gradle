@@ -159,6 +159,9 @@ dependencies {
 	implementation "io.micrometer:micrometer-registry-prometheus"
 	implementation "io.micrometer:micrometer-core"
 	implementation "org.springframework.boot:spring-boot-starter-aop"
+
+	// mysql
+	runtimeOnly 'com.mysql:mysql-connector-j'
 }
 
 tasks.named('test') {
