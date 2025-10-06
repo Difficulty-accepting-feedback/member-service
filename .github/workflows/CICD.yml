@@ -49,9 +49,18 @@ jobs:
         run: |
           mkdir -p src/test/resources
           echo "${{ secrets.APPLICATION_TEST_YML }}" | base64 --decode > src/test/resources/application-test.yml
+          
+      # 다음 스텝(Gradle 빌드)에서만 test 프로필 활성화
+      - name: enable test profile for next step only
+        run: echo "SPRING_PROFILES_ACTIVE=test" >> $GITHUB_ENV
+        
       # Gradle 빌드 실행 + 테스트를 포함
       - name: Build with Gradle
         run: ./gradlew clean build --no-daemon
+
+        # 이후 단계(도커 빌드/푸시)는 운영 프로필로 진행되도록 해제
+      - name: disable test profile for subsequent steps
+        run: echo "SPRING_PROFILES_ACTIVE=" >> $GITHUB_ENV
 
       # 이미지를 만들고 DockerHub 에 Push
       - name: Login to DockerHub
