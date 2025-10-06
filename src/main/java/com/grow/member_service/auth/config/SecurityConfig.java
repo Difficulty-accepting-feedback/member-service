@@ -2,8 +2,6 @@ package com.grow.member_service.auth.config;
 
 import static org.springframework.security.config.Customizer.*;
 
-import java.util.List;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -12,13 +10,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.header.writers.frameoptions.XFrameOptionsHeaderWriter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import com.grow.member_service.auth.infra.security.jwt.JwtAuthenticationFilter;
 import com.grow.member_service.auth.infra.security.oauth2.adapter.CustomOAuth2Service;
 import com.grow.member_service.auth.infra.security.oauth2.handler.OAuth2AuthenticationFailureHandler;
 import com.grow.member_service.auth.infra.security.oauth2.handler.OAuth2AuthenticationSuccessHandler;
@@ -33,9 +26,7 @@ public class SecurityConfig {
 	private final CustomOAuth2Service oauth2Service;
 	private final OAuth2AuthenticationSuccessHandler successHandler;
 	private final OAuth2AuthenticationFailureHandler failureHandler;
-	private final JwtAuthenticationFilter jwtFilter;
 
-	// 게이트웨이 미구현으로 인한 임시 설정 (추후 제거)
 	@Bean
 	@Order(0)
 	public SecurityFilterChain internalOpenSecurity(HttpSecurity http) throws Exception {
@@ -64,11 +55,10 @@ public class SecurityConfig {
 				.requestMatchers("/api/v1/members/resolve").permitAll() // 인증 제외
 				.requestMatchers("/api/v1/admin/members/**").permitAll() // 인증 제외
 				.requestMatchers("/api/v2/**", "/api/v3/members/**").permitAll()  // 인증 제외
-				.anyRequest().authenticated()
+				.anyRequest().permitAll()
 			)
 			.oauth2Login(o -> o.disable())
-			.formLogin(f -> f.disable())
-			.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+			.formLogin(f -> f.disable());
 
 		return http.build();
 	}
@@ -111,20 +101,5 @@ public class SecurityConfig {
 			);
 
 		return http.build();
-	}
-
-	//게이트웨이 미구현 상태에서 cors 허용하기 위해 추가
-	@Bean
-	public CorsConfigurationSource corsConfigurationSource() {
-		CorsConfiguration config = new CorsConfiguration();
-		config.setAllowedOrigins(List.of("http://localhost:3000")); // 프론트 도메인
-		config.setAllowedMethods(List.of("GET", "POST", "PATCH", "DELETE", "OPTIONS", "PUT"));
-		config.setAllowedHeaders(List.of("Content-Type", "Accept", "Authorization", "X-Requested-With"));
-		config.setAllowCredentials(true);
-		config.setMaxAge(3600L);
-
-		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-		source.registerCorsConfiguration("/**", config);
-		return source;
 	}
 }

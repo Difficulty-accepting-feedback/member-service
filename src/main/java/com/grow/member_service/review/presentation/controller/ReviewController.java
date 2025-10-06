@@ -3,11 +3,11 @@ package com.grow.member_service.review.presentation.controller;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -34,7 +34,7 @@ public class ReviewController {
 	@PostMapping("/{revieweeId}")
 	public ResponseEntity<RsData<Review>> submitReview(
 		@Parameter(hidden = true)
-		@AuthenticationPrincipal Long reviewerId,
+		@RequestHeader("X-Authorization-Id") Long reviewerId,
 		@PathVariable Long revieweeId,
 		@RequestBody ReviewSubmitRequest req
 	) {
@@ -56,7 +56,7 @@ public class ReviewController {
 	@GetMapping("/me")
 	public ResponseEntity<RsData<List<Review>>> getMyReviews(
 		@Parameter(hidden = true)
-		@AuthenticationPrincipal Long memberId
+		@RequestHeader("X-Authorization-Id") Long memberId
 	) {
 		List<Review> reviews = reviewApplicationService.getReviews(memberId);
 		return ResponseEntity.ok(
@@ -68,7 +68,7 @@ public class ReviewController {
 	@GetMapping("/candidates")
 	public ResponseEntity<RsData<List<ReviewCandidateResponse>>> getReviewCandidates(
 		@Parameter(hidden = true)
-		@AuthenticationPrincipal Long reviewerId
+		@RequestHeader("X-Authorization-Id") Long reviewerId
 	) {
 		List<ReviewCandidateResponse> candidates = reviewApplicationService.getReviewCandidates(reviewerId);
 		return ResponseEntity.ok(new RsData<>("200", "작성 가능한 리뷰 목록 조회 성공", candidates));
