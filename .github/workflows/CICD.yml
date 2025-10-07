@@ -76,4 +76,4 @@ jobs:
           script: |
             docker image prune -a -f 
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/grow-member-server:latest
-            kubectl apply -f deployment.yaml
+            kubectl rollout restart deployment grow-member-deployment
