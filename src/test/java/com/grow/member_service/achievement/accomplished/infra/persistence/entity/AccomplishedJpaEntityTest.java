@@ -5,6 +5,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.*;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +15,6 @@ import org.springframework.test.context.ActiveProfiles;
 
 import com.grow.member_service.achievement.accomplished.infra.persistence.repository.AccomplishedJpaRepository;
 
-@ActiveProfiles("test")
 @DataJpaTest
 class AccomplishedJpaEntityTest {
 
