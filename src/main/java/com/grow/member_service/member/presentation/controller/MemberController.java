@@ -83,14 +83,37 @@ public class MemberController {
 	@Operation(summary = "로그아웃", description = "로그아웃 처리 및 쿠키 삭제")
 	@PostMapping("/logout")
 	public ResponseEntity<RsData<Void>> logout() {
+
 		ResponseCookie a = ResponseCookie.from("access_token", "")
-			.httpOnly(true).secure(true).path("/").maxAge(0).sameSite("None").build();
+			.httpOnly(true)
+			.secure(true)
+			.domain(".groow.store")
+			.path("/")
+			.maxAge(0)
+			.sameSite("None")
+			.build();
+
 		ResponseCookie r = ResponseCookie.from("refresh_token", "")
-			.httpOnly(true).secure(true).path("/").maxAge(0).sameSite("None").build();
+			.httpOnly(true)
+			.secure(true)
+			.domain(".groow.store")
+			.path("/")
+			.maxAge(0)
+			.sameSite("None")
+			.build();
+
+		ResponseCookie j = ResponseCookie.from("JSESSIONID", "")
+			.path("/")
+			.domain(".groow.store")
+			.maxAge(0)
+			.sameSite("None")
+			.secure(true)
+			.build();
 
 		return ResponseEntity.ok()
 			.header(HttpHeaders.SET_COOKIE, a.toString())
 			.header(HttpHeaders.SET_COOKIE, r.toString())
+			.header(HttpHeaders.SET_COOKIE, j.toString())
 			.body(new RsData<>("200", "로그아웃 되었습니다.", null));
 	}
 
