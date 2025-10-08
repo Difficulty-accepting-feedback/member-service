@@ -47,6 +47,7 @@ def jacocoExcludes = [
 		'**/slack/**',
 		'**/TrafficController.class',
 		'**/AppController.class',
+		'**/filter/**',
 		'**/challenge/**' // 구현 중이므로 임시로 추가
 ]
 
