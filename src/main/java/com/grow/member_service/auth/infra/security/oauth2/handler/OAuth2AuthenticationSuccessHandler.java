@@ -147,6 +147,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 			.from(name, value)
 			.httpOnly(true)
 			.secure(true)
+			.domain(".groow.store")
 			.path("/")
 			.maxAge(maxAge)
 			.sameSite("None")
