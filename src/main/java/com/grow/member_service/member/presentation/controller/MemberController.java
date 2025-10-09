@@ -55,9 +55,37 @@ public class MemberController {
 		@RequestHeader("X-Authorization-Id") Long memberId
 	) {
 		memberApplicationService.withdraw(memberId);
-		return ResponseEntity.ok(
-			new RsData<>("200", "회원 탈퇴 성공", null)
-		);
+		ResponseCookie a = ResponseCookie.from("access_token", "")
+			.httpOnly(true)
+			.secure(true)
+			.domain(".groow.store")
+			.path("/")
+			.maxAge(0)
+			.sameSite("None")
+			.build();
+
+		ResponseCookie r = ResponseCookie.from("refresh_token", "")
+			.httpOnly(true)
+			.secure(true)
+			.domain(".groow.store")
+			.path("/")
+			.maxAge(0)
+			.sameSite("None")
+			.build();
+
+		ResponseCookie j = ResponseCookie.from("JSESSIONID", "")
+			.path("/")
+			.domain(".groow.store")
+			.maxAge(0)
+			.sameSite("None")
+			.secure(true)
+			.build();
+
+		return ResponseEntity.ok()
+			.header(HttpHeaders.SET_COOKIE, a.toString())
+			.header(HttpHeaders.SET_COOKIE, r.toString())
+			.header(HttpHeaders.SET_COOKIE, j.toString())
+			.body(new RsData<>("200", "회원 탈퇴 및 쿠키 삭제 완료", null));
 	}
 
 	@Operation(summary = "회원 정보 수정", description = "로그인한 사용자의 정보를 수정합니다.")
