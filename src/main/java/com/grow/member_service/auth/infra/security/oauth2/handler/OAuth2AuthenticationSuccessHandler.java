@@ -143,11 +143,13 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 	 * @param maxAge 쿠키 최대 유효 기간
 	 */
 	private void addAuthCookie(HttpServletResponse res, String name, String value, Duration maxAge) {
+		String domain = jwtProperties.getCookieDomain();
+
 		ResponseCookie cookie = ResponseCookie
 			.from(name, value)
 			.httpOnly(true)
 			.secure(true)
-			.domain(".groow.store")
+			.domain(domain)
 			.path("/")
 			.maxAge(maxAge)
 			.sameSite("None")

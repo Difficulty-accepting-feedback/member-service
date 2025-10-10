@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.grow.member_service.auth.infra.security.jwt.JwtProperties;
 import com.grow.member_service.global.dto.RsData;
 import com.grow.member_service.member.application.dto.MemberInfoResponse;
 import com.grow.member_service.member.application.dto.MemberPublicResponse;
@@ -35,6 +36,7 @@ import lombok.RequiredArgsConstructor;
 @Tag(name= "Member", description = "회원 관련 API")
 public class MemberController {
 	private final MemberApplicationService memberApplicationService;
+	private final JwtProperties jwtProperties;
 
 	@Operation(summary = "내 정보 조회", description = "로그인한 사용자의 정보를 조회합니다.")
 	@GetMapping("/me")
@@ -54,11 +56,12 @@ public class MemberController {
 		@Parameter(hidden = true)
 		@RequestHeader("X-Authorization-Id") Long memberId
 	) {
+		String domain = jwtProperties.getCookieDomain();
 		memberApplicationService.withdraw(memberId);
 		ResponseCookie a = ResponseCookie.from("access_token", "")
 			.httpOnly(true)
 			.secure(true)
-			.domain(".groow.store")
+			.domain(domain)
 			.path("/")
 			.maxAge(0)
 			.sameSite("None")
@@ -67,7 +70,7 @@ public class MemberController {
 		ResponseCookie r = ResponseCookie.from("refresh_token", "")
 			.httpOnly(true)
 			.secure(true)
-			.domain(".groow.store")
+			.domain(domain)
 			.path("/")
 			.maxAge(0)
 			.sameSite("None")
@@ -75,7 +78,7 @@ public class MemberController {
 
 		ResponseCookie j = ResponseCookie.from("JSESSIONID", "")
 			.path("/")
-			.domain(".groow.store")
+			.domain(domain)
 			.maxAge(0)
 			.sameSite("None")
 			.secure(true)
@@ -111,11 +114,12 @@ public class MemberController {
 	@Operation(summary = "로그아웃", description = "로그아웃 처리 및 쿠키 삭제")
 	@PostMapping("/logout")
 	public ResponseEntity<RsData<Void>> logout() {
+		String domain = jwtProperties.getCookieDomain();
 
 		ResponseCookie a = ResponseCookie.from("access_token", "")
 			.httpOnly(true)
 			.secure(true)
-			.domain(".groow.store")
+			.domain(domain)
 			.path("/")
 			.maxAge(0)
 			.sameSite("None")
@@ -124,7 +128,7 @@ public class MemberController {
 		ResponseCookie r = ResponseCookie.from("refresh_token", "")
 			.httpOnly(true)
 			.secure(true)
-			.domain(".groow.store")
+			.domain(domain)
 			.path("/")
 			.maxAge(0)
 			.sameSite("None")
@@ -132,7 +136,7 @@ public class MemberController {
 
 		ResponseCookie j = ResponseCookie.from("JSESSIONID", "")
 			.path("/")
-			.domain(".groow.store")
+			.domain(domain)
 			.maxAge(0)
 			.sameSite("None")
 			.secure(true)
