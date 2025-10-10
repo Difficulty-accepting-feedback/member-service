@@ -42,6 +42,34 @@
         </encoder>
     </appender>
 
+    <!-- LogstashTcpSocketAppender 추가: ELK EC2로 JSON 로그 전송 -->
+    <appender name="LOGSTASH_TCP" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+        <destination>http://monitoring-elk.groow.store:5001</destination>
+        <connectionTimeout>5000</connectionTimeout>
+        <keepAliveDuration>20 seconds</keepAliveDuration>
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <!-- JSON 필드: 타임스탬프, 레벨 등 기본 + MDC + 커스텀 message 패턴 -->
+            <providers>
+                <timestamp/>
+                <logLevel/>
+                <!-- message를 패턴으로 포맷팅: Spring Boot 가독성 형식 적용 -->
+                <message>
+                    <encoder class="net.logstash.logback.encoder.PatternLayoutJsonProvider">
+                        <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg %n</pattern>
+                        <charset>UTF-8</charset>
+                    </encoder>
+                </message>
+                <loggerName/>
+                <threadName/>
+                <mdc/>  <!-- MDC(예: traceId, requestUri)를 JSON 필드로 포함: {"traceId": "abc123", "requestUri": "/api/users"} -->
+                <contextName/>
+                <version/>
+            </providers>
+        </encoder>
+        <!-- 재연결 설정 -->
+        <includeCallerData>true</includeCallerData>
+    </appender>
+
     <!-- Hibernate 바인딩 파라미터 로그 전용 파일 -->
     <appender name="HIBERNATE_BIND_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_HOME}/hibernate-bind.log</file>
@@ -67,6 +95,7 @@
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="APP_FILE"/>
+        <appender-ref ref="LOGSTASH_TCP"/>
     </root>
 
 </configuration>
