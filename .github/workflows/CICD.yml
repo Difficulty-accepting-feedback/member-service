@@ -73,4 +73,5 @@ jobs:
           script: |
             docker image prune -a -f 
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/grow-member-server:latest
+            kubectl set env deployment/grow-member-deployment SPRING_PROFILES_ACTIVE=server
             kubectl rollout restart deployment grow-member-deployment
