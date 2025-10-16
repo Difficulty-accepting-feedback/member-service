@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -16,6 +17,9 @@ import java.util.UUID;
 @Order(Ordered.HIGHEST_PRECEDENCE) // 가장 먼저 실행되도록 설정
 @Component
 public class MicroserviceMDCFilter implements Filter {
+
+    @Value("${spring.application.name}")
+    private String applicationName;
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
@@ -42,13 +46,15 @@ public class MicroserviceMDCFilter implements Filter {
         httpResponse.addHeader("X-Trace-Id", traceId);
         httpResponse.addHeader("X-Client-Ip", clientIp);
         httpResponse.addHeader("X-Request-Uri", requestUri);
+        httpResponse.addHeader("X-Server-Name", applicationName); // 서버 명시
 
         // MDC에 값 삽입
         MDC.put("traceId", traceId);
         MDC.put("clientIp", clientIp);
         MDC.put("requestUri", requestUri);
+        MDC.put("serverName", applicationName);
 
-        log.info("[MDC] traceId={}, clientIp={}, requestUri={}", traceId, clientIp, requestUri);
+        log.debug("[MDC] traceId={}, clientIp={}, requestUri={}", traceId, clientIp, requestUri);
 
         try {
             filterChain.doFilter(servletRequest, servletResponse);
@@ -57,6 +63,7 @@ public class MicroserviceMDCFilter implements Filter {
             MDC.remove("traceId");
             MDC.remove("clientIp");
             MDC.remove("requestUri");
+            MDC.remove("serverName");
         }
     }
 

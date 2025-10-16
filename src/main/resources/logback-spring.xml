@@ -65,9 +65,6 @@
                 <contextName/>
                 <version/>
             </providers>
-            <customFields>
-                {"service": "${spring.application.name}"}
-            </customFields>
         </encoder>
         <!-- 재연결 설정 -->
         <includeCallerData>true</includeCallerData>
