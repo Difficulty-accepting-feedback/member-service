@@ -44,7 +44,7 @@
 
     <!-- LogstashTcpSocketAppender 추가: ELK EC2로 JSON 로그 전송 -->
     <appender name="LOGSTASH_TCP" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
-        <destination>http://monitoring-elk.groow.store:5001</destination>
+        <destination>monitoring-elk.groow.store:5001</destination>
         <connectionTimeout>5000</connectionTimeout>
         <keepAliveDuration>20 seconds</keepAliveDuration>
         <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
