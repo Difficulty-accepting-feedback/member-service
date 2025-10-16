@@ -65,6 +65,9 @@
                 <contextName/>
                 <version/>
             </providers>
+            <customFields>
+                {"service": "${application.name:member-service}"}
+            </customFields>
         </encoder>
         <!-- 재연결 설정 -->
         <includeCallerData>true</includeCallerData>
