@@ -20,7 +20,7 @@ public class AchievementAchievedDltConsumer {
 		groupId = "point-service-achievement-dlt"
 	)
 	public void consumeDlt(String message) {
-		log.info("[ACHV DLT] 업적 달성 이벤트 처리 실패 수신: {}", message == null ? "" : message.trim());
+		log.info("[ACHIEVEMENT][DLT] 업적 달성 이벤트 처리 실패 수신: {}", message == null ? "" : message.trim());
 
 		slackErrorSendService.sendError(
 			"업적 달성 → 포인트 지급 실패",
@@ -30,6 +30,6 @@ public class AchievementAchievedDltConsumer {
 			message
 		);
 
-		log.info("[ACHV DLT] 실패 이벤트 처리 완료");
+		log.info("[ACHIEVEMENT][DLT] 실패 이벤트 처리 완료");
 	}
 }

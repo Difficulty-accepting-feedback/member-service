@@ -71,7 +71,7 @@ public class PointCommandServiceImpl implements PointCommandService {
 		if (dedupKey != null) {
 			Optional<PointHistory> existed = historyRepository.findByDedupKey(dedupKey);
 			if (existed.isPresent()) {
-				log.info("[포인트][멱등] 기존 값 조회 - memberId={}, dedupKey={}, historyId={}",
+				log.info("[POINT][IDEMPOTENT] 기존 값 조회 완료 - memberId={}, dedupKey={}, historyId={}",
 					memberId, dedupKey, existed.get().getPointHistoryId());
 				meterRegistry.counter("point_accrual_successes").increment();
 				return existed.get();
@@ -113,7 +113,7 @@ public class PointCommandServiceImpl implements PointCommandService {
 					// 저장 성공 후 알림/후속처리를 위한 이벤트 발행
 					publishPointNotificationEvent(saved);
 
-					log.info("[포인트] 적립 처리 완료 - memberId={}, historyId={}, amount={}, balanceAfter={}",
+					log.info("[POINT] 적립 처리 완료 - memberId={}, historyId={}, amount={}, balanceAfter={}",
 						memberId, saved.getPointHistoryId(), amount, after);
 					meterRegistry.counter("point_accrual_successes").increment();
 					return saved;
@@ -122,7 +122,7 @@ public class PointCommandServiceImpl implements PointCommandService {
 					// dedup UNIQUE 충돌 -> 멱등 반환 (이벤트 발행 X)
 					Optional<PointHistory> existed = historyRepository.findByDedupKey(dedupKey);
 					if (existed.isPresent()) {
-						log.info("[포인트][멱등] 기존 값 조회 - memberId={}, dedupKey={}, historyId={}",
+						log.info("[POINT][IDEMPOTENT] 기존 값 조회 완료 - memberId={}, dedupKey={}, historyId={}",
 							memberId, dedupKey, existed.get().getPointHistoryId());
 						meterRegistry.counter("point_accrual_successes").increment();
 						return existed.get();
@@ -132,7 +132,7 @@ public class PointCommandServiceImpl implements PointCommandService {
 
 			} catch (ObjectOptimisticLockingFailureException e) {
 				retries++;
-				log.warn("[포인트] 적립 낙관락 충돌, 재시도 - memberId={}, attempt={}", memberId, retries);
+				log.warn("[POINT] 적립 낙관락 충돌, 재시도 - memberId={}, attempt={}", memberId, retries);
 				if (retries >= 3)
 					throw e;
 			}
@@ -165,7 +165,7 @@ public class PointCommandServiceImpl implements PointCommandService {
 		if (dedupKey != null) {
 			Optional<PointHistory> existed = historyRepository.findByDedupKey(dedupKey);
 			if (existed.isPresent()) {
-				log.info("[포인트][멱등] 기존 값 조회 - memberId={}, dedupKey={}, historyId={}",
+				log.info("[POINT][IDEMPOTENT] 기존 값 조회 완료 - memberId={}, dedupKey={}, historyId={}",
 					memberId, dedupKey, existed.get().getPointHistoryId());
 				meterRegistry.counter("point_deduction_successes").increment();
 				return existed.get();
@@ -206,7 +206,7 @@ public class PointCommandServiceImpl implements PointCommandService {
 					// 저장 성공 후 알림/후속처리를 위한 이벤트 발행
 					publishPointNotificationEvent(saved);
 
-					log.info("[포인트] 차감 처리 완료 - memberId={}, historyId={}, amount=-{}, balanceAfter={}",
+					log.info("[POINT] 차감 처리 완료 - memberId={}, historyId={}, amount=-{}, balanceAfter={}",
 						memberId, saved.getPointHistoryId(), amount, after);
 					meterRegistry.counter("point_deduction_successes").increment();
 					return saved;
@@ -215,7 +215,7 @@ public class PointCommandServiceImpl implements PointCommandService {
 					// 멱등 충돌 → 기존 반환 (이벤트 발행 X)
 					Optional<PointHistory> existed = historyRepository.findByDedupKey(dedupKey);
 					if (existed.isPresent()) {
-						log.info("[포인트][멱등] 기존 값 조회 - memberId={}, dedupKey={}, historyId={}",
+						log.info("[POINT][IDEMPOTENT] 기존 값 조회 완료 - memberId={}, dedupKey={}, historyId={}",
 							memberId, dedupKey, existed.get().getPointHistoryId());
 						meterRegistry.counter("point_deduction_successes").increment();
 						return existed.get();
@@ -225,7 +225,7 @@ public class PointCommandServiceImpl implements PointCommandService {
 
 			} catch (ObjectOptimisticLockingFailureException e) {
 				retries++;
-				log.warn("[포인트] 차감 낙관락 충돌, 재시도 - memberId={}, attempt={}", memberId, retries);
+				log.warn("[POINT] 차감 낙관락 충돌, 재시도 - memberId={}, attempt={}", memberId, retries);
 				if (retries >= 3)
 					throw e;
 			}
@@ -278,7 +278,7 @@ public class PointCommandServiceImpl implements PointCommandService {
 		if (r != null) {
 			Boolean ok = r.opsForValue().setIfAbsent(dedupeKey, "1", DEDUPE_TTL);
 			if (!Boolean.TRUE.equals(ok)) {
-				log.debug("[포인트][알림 스킵] DEDUPE HIT - key={}", dedupeKey);
+				log.debug("[POINT][NOTIFY][SKIP] 멱등 처리로 전송 스킵 - dedupeKey={}", dedupeKey);
 				return;
 			}
 		}
@@ -286,8 +286,8 @@ public class PointCommandServiceImpl implements PointCommandService {
 		String key = memberId.toString();
 		String payload = JsonUtils.toJsonString(event);
 		kafkaTemplate.send(TOPIC, key, payload);
-		log.info("[KAFKA][SENT] topic={}, key={}, code={}, title={}",
-			TOPIC, key, event.code(), event.title());
+		log.info("[POINT][KAFKA] 포인트 알림 전송 완료 -  code={}, title={}",
+			event.code(), event.title());
 	}
 
 	/**

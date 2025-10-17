@@ -35,8 +35,4 @@ public class Accomplished {
 		this.challengeId = challengeId;
 		this.accomplishedAt = accomplishedAt;
 	}
-
-	/**
-	 * 비즈니스 로직 메서드
-	 */
 }

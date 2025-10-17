@@ -82,7 +82,7 @@ public class AccomplishedApplicationServiceImpl implements AccomplishedApplicati
 			throw new AccomplishedException(ErrorCode.ACCOMPLISHED_DUPLICATE, dupe);
 		}
 
-		log.info("[업적] 저장 완료: accomplishedId={}, memberId={}, challengeId={}",
+		log.info("[ACHIEVEMENT] 업적 저장 완료 - accomplishedId={}, memberId={}, challengeId={}",
 			saved.getAccomplishedId(), memberId, req.getChallengeId());
 
 		// 성공 카운트
@@ -141,8 +141,8 @@ public class AccomplishedApplicationServiceImpl implements AccomplishedApplicati
 
 		String payload = JsonUtils.toJsonString(event);
 		kafkaTemplate.send(ACHIEVEMENT_TOPIC, key, payload);
-		log.info("[KAFKA][SENT] topic={}, key={}, memberId={}, challengeId={}, name={}, reward={}",
-			ACHIEVEMENT_TOPIC, key, memberId, saved.getChallengeId(), challenge.getName(), challenge.getPoint());
+		log.info("[ACHIEVEMENT][KAFKA] 메시지 전송 완료: memberId={}, challengeId={}, name={}, reward={}",
+			memberId, saved.getChallengeId(), challenge.getName(), challenge.getPoint());
 	}
 
 	/** 업적 멱등 키 생성 */

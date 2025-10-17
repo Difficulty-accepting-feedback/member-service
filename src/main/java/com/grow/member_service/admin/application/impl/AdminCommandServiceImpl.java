@@ -31,13 +31,13 @@ public class AdminCommandServiceImpl implements AdminCommandService {
 	public Long grant(Long memberId) {
 		// 이미 관리자면 그대로 종료
 		if (repository.existsByMemberId(memberId)) {
-			log.info("[멤버][관리자] 이미 관리자 권한을 가진 회원 - memberId={}", memberId);
+			log.info("[MEMBER][ADMIN] 이미 관리자 권한을 가진 회원 - memberId={}", memberId);
 			return memberId;
 		}
 		AdminAssignment saved = repository.save(
 			new AdminAssignment(memberId, LocalDateTime.now(clock))
 		);
-		log.info("[멤버][관리자] 관리자 권한 부여 완료 - memberId={}", memberId);
+		log.info("[MEMBER][ADMIN] 관리자 권한 부여 완료 - memberId={}", memberId);
 		return saved.getMemberId();
 	}
 
@@ -50,6 +50,6 @@ public class AdminCommandServiceImpl implements AdminCommandService {
 	public void revoke(Long memberId) {
 		// 존재하지 않아도 예외 없이 성공 처리
 		repository.deleteByMemberId(memberId);
-		log.info("[멤버][관리자] 관리자 권한 해제 완료 - memberId={}", memberId);
+		log.info("[MEMBER][ADMIN] 관리자 권한 해제 완료 - memberId={}", memberId);
 	}
 }

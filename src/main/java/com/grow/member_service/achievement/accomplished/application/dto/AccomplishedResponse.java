@@ -18,7 +18,7 @@ public class AccomplishedResponse {
 
 	private Long accomplishedId;
 	private Long challengeId;
-	private String challengeName;   // ✅ 확장 필드
+	private String challengeName;
 	private LocalDateTime accomplishedAt;
 
 	public static AccomplishedResponse from(Accomplished d) {
