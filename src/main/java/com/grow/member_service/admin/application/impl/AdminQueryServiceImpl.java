@@ -26,7 +26,7 @@ public class AdminQueryServiceImpl implements AdminQueryService {
 	@Transactional(readOnly = true)
 	public boolean isAdmin(Long memberId) {
 		boolean result = repository.existsByMemberId(memberId);
-		log.debug("[멤버][관리자] 관리자 여부 조회 - memberId={}, result={}", memberId, result);
+		log.debug("[MEMBER][ADMIN] 관리자 여부 조회 - memberId={}, result={}", memberId, result);
 		return result;
 	}
 }

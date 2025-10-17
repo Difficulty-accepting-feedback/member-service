@@ -17,7 +17,7 @@ public class PointCommandDltConsumer {
 
 	@KafkaListener(topics = "point.grant.requested.dlt", groupId = "point-service-dlt")
 	public void consumeGrantDlt(String message) {
-		log.info("[POINT DLT][GRANT] 포인트 지급 커맨드 실패 수신: {}", message == null ? "" : message.trim());
+		log.info("[POINT][DLT] 포인트 지급 커맨드 실패 수신: {}", message == null ? "" : message.trim());
 
 		slackErrorSendService.sendError(
 			"포인트 지급 커맨드 처리 실패",
@@ -32,7 +32,7 @@ public class PointCommandDltConsumer {
 
 	@KafkaListener(topics = "point.spend.requested.dlt", groupId = "point-service-dlt")
 	public void consumeSpendDlt(String message) {
-		log.info("[POINT DLT][SPEND] 포인트 차감 커맨드 실패 수신: {}", message == null ? "" : message.trim());
+		log.info("[POINT][DLT] 포인트 차감 커맨드 실패 수신: {}", message == null ? "" : message.trim());
 
 		slackErrorSendService.sendError(
 			"포인트 차감 커맨드 처리 실패",
@@ -42,6 +42,6 @@ public class PointCommandDltConsumer {
 			message
 		);
 
-		log.info("[POINT DLT][SPEND] 실패 이벤트 처리 완료");
+		log.info("[POINT][DLT] 실패 이벤트 처리 완료");
 	}
 }

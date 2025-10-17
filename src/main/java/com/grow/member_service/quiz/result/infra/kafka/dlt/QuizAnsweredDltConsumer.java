@@ -21,7 +21,7 @@ public class QuizAnsweredDltConsumer {
 		groupId = "member-service-quiz-dlt"
 	)
 	public void consumeDlt(String message) {
-		log.info("[QUIZ DLT] 퀴즈 정답 이벤트 처리 실패 수신: {}", message == null ? "" : message.trim());
+		log.info("[QUIZ][DLT] 퀴즈 정답 이벤트 처리 실패 수신: {}", message == null ? "" : message.trim());
 
 		slackErrorSendService.sendError(
 			"퀴즈 정답 기록 실패",
@@ -31,6 +31,6 @@ public class QuizAnsweredDltConsumer {
 			message
 		);
 
-		log.info("[QUIZ DLT] 실패 이벤트 처리 완료");
+		log.info("[QUIZ][DLT] 실패 이벤트 처리 완료");
 	}
 }

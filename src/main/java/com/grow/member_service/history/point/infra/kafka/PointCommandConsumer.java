@@ -45,8 +45,8 @@ public class PointCommandConsumer {
 			e.dedupKey(),
 			e.occurredAt()
 		);
-		log.info("[POINT][GRANT][RECV] topic={} part={} off={} key={} memberId={}",
-			rec.topic(), rec.partition(), rec.offset(), rec.key(), e.memberId());
+		log.info("[POINT][RECEIVE] 포인트 적립 요청 수신 완료 - memberId={}",
+			e.memberId());
 	}
 
 	@KafkaListener(
@@ -71,7 +71,7 @@ public class PointCommandConsumer {
 			e.dedupKey(),
 			e.occurredAt()
 		);
-		log.info("[POINT][SPEND][RECV] topic={} part={} off={} key={} memberId={}",
-			rec.topic(), rec.partition(), rec.offset(), rec.key(), e.memberId());
+		log.info("[POINT][RECEIVE] 포인트 차감 요청 수신 완료 - memberId={}",
+			e.memberId());
 	}
 }

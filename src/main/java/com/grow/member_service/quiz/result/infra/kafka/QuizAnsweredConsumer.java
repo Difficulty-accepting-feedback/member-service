@@ -39,7 +39,7 @@ public class QuizAnsweredConsumer {
 				ev.correct()
 			);
 
-			log.info("[QUIZ][RECV] memberId={} quizId={} correct={}",
+			log.info("[QUIZ][RECEIVE] memberId={} quizId={} correct={}",
 				ev.memberId(), ev.quizId(), ev.correct());
 		} catch (Exception e) {
 			log.error("[QUIZ][ERROR] payload={}", payload, e);

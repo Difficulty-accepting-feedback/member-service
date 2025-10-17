@@ -55,10 +55,10 @@ public class AchievementAchievedConsumer {
 				when
 			);
 
-			log.info("[ACHV][RECV] topic=achievement.achieved key={} memberId={} challengeId={} reward={}",
-				ev.memberId(), ev.memberId(), ev.challengeId(), ev.rewardPoint());
+			log.info("[ACHIEVEMENT][RECEIVE] 업적 이벤트 수신 완료 memberId={} challengeId={} reward={}",
+				ev.memberId(), ev.challengeId(), ev.rewardPoint());
 		} catch (Exception e) {
-			log.error("[ACHV][ERROR] payload={}", payload, e);
+			log.error("[ACHIEVEMENT][RECEIVE] 업적 이벤트 처리 실패 payload={}", payload, e);
 			throw e;
 		}
 	}

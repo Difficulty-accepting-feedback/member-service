@@ -58,6 +58,8 @@ public class MemberApplicationServiceImpl implements MemberApplicationService {
 		// 온보딩 리마인더 알림 발송 (중복 방지 포함)
 		publishOnboardingReminderEvent(member);
 
+		log.info("[MEMBER] 내 정보 조회 요청 - memberId={}", memberId);
+
 		return MemberInfoResponse.from(member);
 	}
 
@@ -84,14 +86,14 @@ public class MemberApplicationServiceImpl implements MemberApplicationService {
 			geoIndexPort.remove(memberId);
 		}
 
-		log.info("회원 탈퇴 처리 완료, GEO 삭제 - memberId={}, withdrawnAt={}", memberId, now);
+		log.info("[MEMBER] 탈퇴 처리 완료 - memberId={}, withdrawnAt={}", memberId, now);
 	}
 
 	@Override
 	@Transactional
 	public void updateMember(Long memberId, MemberUpdateRequest req) {
-		log.info("회원 정보 업데이트 요청 수신 - memberId={}", memberId);
-		log.debug("요청 본문 - nickname='{}', profileImage='{}', address='{}'",
+		log.info("[MEMBER] 회원 정보 업데이트 요청 - memberId={}", memberId);
+		log.debug("[MEMBER] 요청 본문 - nickname='{}', profileImage='{}', address='{}'",
 			req.getNickname(), req.getProfileImage(), req.getAddress());
 
 		Member m = memberRepository.findById(memberId)
@@ -106,22 +108,22 @@ public class MemberApplicationServiceImpl implements MemberApplicationService {
 			String next = req.getNickname().trim();
 			String current = m.getMemberProfile().getNickname();
 			if (!next.equals(current)) {
-				log.info("닉네임 변경 - '{}' -> '{}'", current, next);
+				log.info("[MEMBER] 닉네임 변경 - '{}' -> '{}'", current, next);
 				m.changeNickname(next, memberService);
 				nicknameChanged = true;
 			} else {
-				log.debug("닉네임 변경 스킵 - 동일 값('{}')", current);
+				log.debug("[MEMBER] 닉네임 변경 스킵 - 동일 값('{}')", current);
 			}
 		}
 
 		// 프로필 이미지는 null 포함 항상 덮어쓰기
 		if (!Objects.equals(req.getProfileImage(), m.getMemberProfile().getProfileImage())) {
-			log.info("프로필 이미지 변경 - '{}' -> '{}'",
+			log.info("[MEMBER] 프로필 이미지 변경 - '{}' -> '{}'",
 				m.getMemberProfile().getProfileImage(), req.getProfileImage());
 			m.changeProfileImage(req.getProfileImage());
 			imageChanged = true;
 		} else {
-			log.debug("프로필 이미지 변경 스킵 - 동일 값");
+			log.debug("[MEMBER] 프로필 이미지 변경 스킵 - 동일 값");
 		}
 
 		// 주소-> 값이 들어왔고 실제로 바뀐 경우에만 변경 (구 단위 문자열)
@@ -129,11 +131,11 @@ public class MemberApplicationServiceImpl implements MemberApplicationService {
 			String nextAddr = req.getAddress().trim();
 			String currAddr = m.getAdditionalInfo().getAddress();
 			if (!Objects.equals(nextAddr, currAddr)) {
-				log.info("주소 변경 - '{}' -> '{}'", currAddr, nextAddr);
+				log.info("[MEMBER] 주소 변경 - '{}' -> '{}'", currAddr, nextAddr);
 				m.changeAddress(nextAddr);
 				addressChanged = true;
 			} else {
-				log.debug("주소 변경 스킵 - 동일 값");
+				log.debug("[MEMBER] 주소 변경 스킵 - 동일 값");
 			}
 		}
 
@@ -151,14 +153,14 @@ public class MemberApplicationServiceImpl implements MemberApplicationService {
 						LocalDateTime.now()
 					)
 				);
-				log.info("[ACHV][TRIGGER] ADDRESS_SET sent - memberId={}", memberId);
+				log.info("[MEMBER][ACHIEVEMENT] ADDRESS_SET 트리거 전송 완료 - memberId={}", memberId);
 			} catch (Exception ex) {
-				log.warn("[ACHV][TRIGGER][SEND-FAIL] ADDRESS_SET - memberId={}, err={}",
+				log.warn("[MEMBER][ACHIEVEMENT] ADDRESS_SET 트리거 전송 실패 - memberId={}, err={}",
 					memberId, ex.toString(), ex);
 			}
 		}
 
-		log.info("회원 정보 업데이트 완료 - memberId={}, changed[nickname={}, image={}, address={}]",
+		log.info("[MEMBER] 회원 정보 업데이트 완료 - memberId={}, changed[nickname={}, image={}, address={}]",
 			memberId, nicknameChanged, imageChanged, addressChanged);
 	}
 
@@ -174,7 +176,7 @@ public class MemberApplicationServiceImpl implements MemberApplicationService {
 			.orElseThrow(() -> new MemberException(ErrorCode.MEMBER_NOT_FOUND));
 
 		if (member.isMatchingEnabled() == enabled) {
-			log.debug("매칭 기능 변경 스킵 - 이미 동일 상태, memberId={}, enabled={}", memberId, enabled);
+			log.debug("[MEMBER] 매칭 기능 변경 스킵 - 이미 동일 상태, memberId={}, enabled={}", memberId, enabled);
 			return;
 		}
 
@@ -185,7 +187,7 @@ public class MemberApplicationServiceImpl implements MemberApplicationService {
 		}
 
 		memberRepository.save(member);
-		log.info("매칭 기능 상태 변경 - memberId={}, enabled={}", memberId, enabled);
+		log.info("[MEMBER] 매칭 기능 상태 변경 - memberId={}, enabled={}", memberId, enabled);
 	}
 
 	/**
@@ -251,13 +253,13 @@ public class MemberApplicationServiceImpl implements MemberApplicationService {
 	 */
 	private void sendIfDedupeOk(String dedupeKey, MemberNotificationEvent event) {
 		if (!acquireOnce(dedupeKey, DEDUPE_TTL)) {
-			log.debug("[알림 스킵] dedupe hit - key={}", dedupeKey);
+			log.debug("[MEMBER][NOTIFY] 알림 전송 스킵 - dedupe hit, key={}", dedupeKey);
 			return;
 		}
 		String key = event.memberId().toString();
 		String payload = JsonUtils.toJsonString(event);
 		kafkaTemplate.send(TOPIC, key, payload);
-		log.info("[KAFKA][SENT] topic={}, key={}, code={}", TOPIC, key, event.code());
+		log.info("[MEMBER][KAFKA][NOTIFY] Kafka 전송 완료 - code={}", event.code());
 	}
 
 	/**

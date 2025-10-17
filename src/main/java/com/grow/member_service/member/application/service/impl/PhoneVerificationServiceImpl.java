@@ -53,6 +53,7 @@ public class PhoneVerificationServiceImpl implements PhoneVerificationService {
 		PhoneVerification saved = repository.save(verification);
 		smsService.send(saved.getPhoneNumber(), "인증 코드: " + saved.getCode());
 		meterRegistry.counter("phone_verify_send_successes").increment();
+		log.info("[MEMBER] 인증 코드 전송 완료 - memberId={}, phoneNumber='{}'", memberId, phoneNumber);
 		return saved.getId();
 	}
 
@@ -93,9 +94,9 @@ public class PhoneVerificationServiceImpl implements PhoneVerificationService {
 					LocalDateTime.now()
 				)
 			);
-			log.info("[ACHV][TRIGGER] PHONE_VERIFIED sent - memberId={}", memberId);
+			log.info("[MEMBER][ACHIEVEMENT] PHONE_VERIFIED 트리거 전송 완료 - memberId={}", memberId);
 		} catch (Exception ex) {
-			log.warn("[ACHV][TRIGGER][SEND-FAIL] PHONE_VERIFIED - memberId={}, err={}",
+			log.warn("[MEMBER][ACHIEVEMENT] PHONE_VERIFIED 트리거 전송 실패 - memberId={}, err={}",
 				memberId, ex.toString(), ex);
 		}
 	}

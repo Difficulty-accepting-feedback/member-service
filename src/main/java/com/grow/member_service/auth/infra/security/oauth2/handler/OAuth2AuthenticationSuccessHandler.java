@@ -75,14 +75,14 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 			var when = java.time.LocalDateTime.now();
 			var result = attendanceService.checkInAndReward(memberId, when);
 			if (result.attended()) {
-				log.info("[Member] 로그인 출석 완료 - memberId={}, day={}, streak={}, best={}, granted={}, balanceAfter={}",
+				log.info("[MEMBER][LOGIN] 로그인 출석 완료 - memberId={}, day={}, streak={}, best={}, granted={}, balanceAfter={}",
 					memberId, result.day(), result.streak(), result.bestStreak(), result.grantedAmount(), result.balanceAfter());
 			} else {
-				log.debug("[Member] 로그인 출석 스킵(이미 처리됨) - memberId={}, day={}", memberId, result.day());
+				log.debug("[MEMBER][LOGIN] 로그인 출석 스킵(이미 처리됨) - memberId={}, day={}", memberId, result.day());
 			}
 		} catch (Exception ex) {
 			// 로그인은 성공했으니 출석/포인트 실패가 흐름을 막지 않도록
-			log.warn("[LOGIN][POST] 출석/포인트 처리 실패 - memberId={}, err={}", memberId, ex.toString(), ex);
+			log.warn("[MEMBER][LOGIN] 출석/포인트 처리 실패 - memberId={}, err={}", memberId, ex.toString(), ex);
 		}
 
 		// 첫 로그인 업적 트리거 발행
@@ -96,9 +96,9 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 					java.time.LocalDateTime.now()
 				)
 			);
-			log.info("[ACHV][TRIGGER] FIRST_LOGIN sent - memberId={}", memberId);
+			log.info("[ACHIEVEMENT][TRIGGER] 첫 로그인 업적 전송 완료 - memberId={}", memberId);
 		} catch (Exception ex) {
-			log.warn("[ACHV][TRIGGER][SEND-FAIL] FIRST_LOGIN - memberId={}, err={}", memberId, ex.toString(), ex);
+			log.warn("[ACHIEVEMENT][TRIGGER] 첫 로그인 업적 전송 실패 - memberId={}, err={}", memberId, ex.toString(), ex);
 		}
 
 		// 핸드폰 인증 여부 확인

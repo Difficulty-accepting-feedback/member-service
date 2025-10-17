@@ -65,12 +65,12 @@ public class ScoreUpdateServiceImpl implements ScoreUpdateService {
 
         if (currentScore == null) { // 기존 값이 없으면 새로 저장
             redisTemplate.opsForValue().set(key, score); // Double 타입으로 저장
-            log.info("[SCORE SAVE] {} 멤버의 score를 Redis에 저장했습니다.", memberId);
+            log.info("[MEMBER][SCORE] {} 멤버의 score를 Redis에 저장했습니다.", memberId);
         } else if (!currentScore.equals(score)) { // 변경된 내용이 있는 경우
             redisTemplate.opsForValue().set(key, score);
-            log.info("[SCORE UPDATE] {} 멤버의 score를 Redis에 업데이트했습니다.", memberId);
+            log.info("[MEMBER][SCORE] {} 멤버의 score를 Redis에 업데이트했습니다.", memberId);
         } else { // 변경된 내용이 없는 경우: 아무 작업도 하지 않음
-            log.info("[SCORE SKIP] {} 멤버의 score는 변경되지 않았습니다.", memberId);
+            log.info("[MEMBER][SCORE] {} 멤버의 score는 변경되지 않았습니다.", memberId);
         }
     }
 
@@ -97,18 +97,18 @@ public class ScoreUpdateServiceImpl implements ScoreUpdateService {
                 ); // Redis에 score 업데이트
             } catch (Exception e) {
                 failedUpdates.add(scoreInfo); // 실패한 회원들 저장
-                log.error("[SCORE SAVE ERROR] {} 멤버의 score를 Redis에 저장하지 못했습니다.",
+                log.error("[MEMBER][SCORE] {} 멤버의 score를 Redis에 저장하지 못했습니다.",
                         scoreInfo.getMemberId(), e);
             }
         }
 
         // 모든 작업이 끝난 후 실패 처리
         if (!failedUpdates.isEmpty()) {
-            log.warn("[SCORE UPDATE FAILED] 총 {} 명의 멤버의 score를 Redis에 저장하지 못했습니다.",
+            log.warn("[MEMBER][SCORE] 총 {} 명의 멤버의 score를 Redis에 저장하지 못했습니다.",
                     failedUpdates.size());
             retryFailedUpdates(failedUpdates);  // 재시도 메서드 호출
         }
-        log.info("[REDIS SCHEDULED] 모든 멤버의 점수를 체크하고 Redis에 업데이트했습니다.");
+        log.info("[MEMBER][SCORE][SCHEDULE] 모든 멤버의 점수를 체크하고 Redis에 업데이트했습니다.");
     }
 
     /**
@@ -134,17 +134,17 @@ public class ScoreUpdateServiceImpl implements ScoreUpdateService {
                 try {
                     saveMemberScoreToRedis(score.getMemberId(), score.getScore());
                     success = true;
-                    log.info("[SCORE RETRY] {} 멤버의 score를 Redis에 재시도 성공 (시도 횟수: {})",
+                    log.info("[MEMBER][SCORE][RETRY] {} 멤버의 score를 Redis에 재시도 성공 (시도 횟수: {})",
                             score.getMemberId(), retryCount.get() + 1);  // +1로 실제 시도 횟수 업데이트
                 } catch (Exception e) {
                     retryCount.incrementAndGet();  // 실패 시 카운트 증가
-                    log.error("[SCORE RETRY ERROR] {} 멤버의 score 재시도 실패 (현재 시도: {}, 오류: {})",
+                    log.error("[MEMBER][SCORE][RETRY] {} 멤버의 score 재시도 실패 (현재 시도: {}, 오류: {})",
                             score.getMemberId(), retryCount.get(), e.getMessage());
                 }
             }
 
             if (!success) {
-                log.error("[SCORE RETRY FAILED] {} 멤버의 업데이트를 최종 실패 (총 시도: {})",
+                log.error("[MEMBER][SCORE][RETRY] {} 멤버의 업데이트를 최종 실패 (총 시도: {})",
                         score.getMemberId(), maxRetries);
                 // TODO: 영구 실패 처리 (DB에 실패 로그 저장, 슬랙 알림 전송, 또는 별도 큐로 이동 등)
             }
