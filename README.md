@@ -25,11 +25,15 @@
 `application` 계층에서는 트랜잭션 단위의 유스케이스(예: 회원 탈퇴, 포인트 적립, 업적 트리거)를 조합하고,  
 `presentation` 계층에서는 REST API를 통해 게이트웨이와 통신합니다.
 
-<img width="1541" height="1241" alt="image" src="https://github.com/user-attachments/assets/8a40b1c6-0bdb-4414-86b4-eee9f298d6ca" />
 
 ---
 
 ## 🧩 운영 구조
+
+모든 마이크로서비스(member, payment, notification 등)는 Kubernetes 환경에서 컨테이너 단위로 배포되며,
+게이트웨이와 데이터 계층, 외부 연동 API까지 완전한 클라우드 네이티브 구조로 설계되었습니다.
+
+<img width="1541" height="1241" alt="image" src="https://github.com/user-attachments/assets/8a40b1c6-0bdb-4414-86b4-eee9f298d6ca" />
 
 서비스 간 연결은 **Gateway, Kafka, Redis, Kubernetes**를 중심으로 구성되어 있습니다.
 
