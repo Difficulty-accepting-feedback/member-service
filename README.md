@@ -5,12 +5,6 @@
 회원의 **인증·인가(OAuth2 기반 소셜 로그인)**부터 **프로필 관리, 휴대폰 인증, 탈퇴 및 개인정보 보호**,  
 그리고 **업적·포인트·퀴즈 결과·멤버 온도(평판)** 등 성장 지표를 통합 관리합니다.
 
-서비스는 **DDD(Domain-Driven Design)** 원칙을 중심으로 **Hexagonal Architecture (Ports & Adapters)** 구조로 구현되어,  
-도메인 로직과 인프라 의존성을 명확히 분리하고 높은 응집도와 낮은 결합도를 유지합니다.  
-비즈니스 규칙은 `domain` 계층에서 관리되고, 외부 연동(예: Kafka, Redis, JPA, 외부 API)은 `infra` 어댑터를 통해 주입됩니다.  
-`application` 계층에서는 트랜잭션 단위의 유스케이스(예: 회원 탈퇴, 포인트 적립, 업적 트리거)를 조합하며,  
-`presentation` 계층에서는 REST API를 통해 게이트웨이와 통신합니다.
-
 ---
 
 ## 👥 팀
@@ -23,6 +17,13 @@
 ---
 
 ## 🏗️ 아키텍처 개요
+
+서비스는 **DDD(Domain-Driven Design)** 원칙을 중심으로 **Hexagonal Architecture (Ports & Adapters)** 구조로 설계되어,  
+도메인 로직과 인프라 의존성을 명확히 분리하고 **높은 응집도와 낮은 결합도**를 유지합니다.  
+핵심 비즈니스 규칙은 `domain` 계층에서 관리되며,  
+외부 연동(예: Kafka, Redis, JPA, 외부 API)은 `infra` 어댑터를 통해 주입됩니다.  
+`application` 계층에서는 트랜잭션 단위의 유스케이스(예: 회원 탈퇴, 포인트 적립, 업적 트리거)를 조합하고,  
+`presentation` 계층에서는 REST API를 통해 게이트웨이와 통신합니다.
 
 <img width="1541" height="1241" alt="image" src="https://github.com/user-attachments/assets/8a40b1c6-0bdb-4414-86b4-eee9f298d6ca" />
 
